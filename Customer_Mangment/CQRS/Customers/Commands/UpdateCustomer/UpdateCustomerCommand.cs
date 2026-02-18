@@ -4,5 +4,5 @@ using MediatR;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 {
-    public sealed record UpdateCustomerCommand(int UserId, string? Name, string? Mobile) : IRequest<Result<CustomerDto>>;
+    public sealed record UpdateCustomerCommand(int UserId, Guid CustomerId, string? Name, string? Mobile) : IRequest<Result<CustomerDto>>;
 }
