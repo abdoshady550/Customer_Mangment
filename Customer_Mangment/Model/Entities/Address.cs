@@ -1,0 +1,44 @@
+﻿using Customer_Mangment.Model.Results;
+
+namespace Customer_Mangment.Model.Entities
+{
+    public class Address
+    {
+        public Guid Id { get; private set; }
+        public Guid CustomerId { get; private set; }
+        public AdressType Type { get; private set; }
+        public string Value { get; private set; } = string.Empty;
+        public Customer Customer { get; private set; }
+        private Address() { }
+
+        Address(AdressType type, string value)
+        {
+            Id = Guid.NewGuid();
+            Type = type;
+            Value = value;
+        }
+        public static Result<Address> CreateAddress(AdressType type, string value)
+        {
+
+            if (string.IsNullOrWhiteSpace(value))
+                return Error.Failure("Invalide_Address", "Address cannot be null or empty");
+            return new Address(type, value);
+        }
+        public Result<Updated> UpdateAddress(AdressType? type, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                Value = value;
+            if (type.HasValue)
+                Type = type.Value;
+
+            return Result.Updated;
+        }
+    }
+
+    public enum AdressType
+    {
+        Home,
+        Work,
+        Other
+    }
+}

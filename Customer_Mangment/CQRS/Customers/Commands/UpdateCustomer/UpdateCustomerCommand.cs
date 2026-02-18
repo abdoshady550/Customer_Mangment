@@ -1,0 +1,8 @@
+﻿using Customer_Mangment.CQRS.Customers.DTOS;
+using Customer_Mangment.Model.Results;
+using MediatR;
+
+namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
+{
+    public sealed record UpdateCustomerCommand(int UserId, string? Name, string? Mobile) : IRequest<Result<CustomerDto>>;
+}
