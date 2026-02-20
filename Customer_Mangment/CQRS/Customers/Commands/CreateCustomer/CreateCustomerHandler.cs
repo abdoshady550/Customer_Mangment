@@ -21,11 +21,11 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
         public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken ct = default)
         {
-            var user = await _userRepo.FindAsync(request.userId, ct);
+            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)
             {
-                _logger.LogWarning("User with ID {UserId} not found.", request.userId);
-                return Error.NotFound("UserNotFound", $"User with ID {request.userId} not found.");
+                _logger.LogWarning("User with ID {UserId} not found.", request.UserId);
+                return Error.NotFound("UserNotFound", $"User with ID {request.UserId} not found.");
             }
 
             var mobileNumber = request.Mobile.Trim().ToLower();
@@ -36,24 +36,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                 _logger.LogWarning("Customer with mobile {Mobile} already exists.", request.Mobile);
                 return Error.Conflict("CustomerAlreadyExists", $"Customer with mobile {request.Mobile} already exists.");
             }
-            List<Address> addresses = new();
-            foreach (var a in request.Adresses)
-            {
-                var addressResult = Address.CreateAddress(a.Type, a.Value);
-                if (addressResult.IsError)
-                {
-                    _logger.LogWarning("Invalid address: {Errors}", string.Join(", ", addressResult.Errors.Select(e => e.Description)));
-                    return addressResult.Errors;
-                }
-                var existedAddress = addresses.Any(ad => ad.Type == a.Type);
-                if (existedAddress)
-                {
-                    _logger.LogWarning("Duplicate address type: {Type}", a.Type);
-                    return Error.Validation("DuplicateAddressType", $"Duplicate address type: {a.Type}");
-                }
-                addresses.Add(addressResult.Value);
-            }
-            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, addresses);
+            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, request.Adresses.Select(a => (a.Type, a.Value)));
             if (customerResult.IsError)
             {
                 _logger.LogWarning("Failed to create customer: {Errors}", string.Join(", ", customerResult.Errors.Select(e => e.Description)));
@@ -62,7 +45,6 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
             var customer = customerResult.Value;
             await _repo.AddAsync(customer, ct);
-            await _repo.SaveChangesAsync(ct);
             _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
 
             var customerHistory = CustomerHistory.CreateCustomerHistory(customer.Id, customer.Name, customer.Mobile, user.UserName!);

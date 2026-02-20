@@ -18,7 +18,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 
             RuleFor(x => x.Mobile)
                 .Matches(@"^01[0-9]{9}$")
-                .When(x => x.Mobile != null)
+                .When(x => !string.IsNullOrEmpty(x.Mobile))
                 .WithMessage("Mobile number is not valid");
         }
 

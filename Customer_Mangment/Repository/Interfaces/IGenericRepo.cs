@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using System.Linq.Expressions;
 
 namespace Customer_Mangment.Repository.Interfaces
 {
@@ -25,7 +26,11 @@ namespace Customer_Mangment.Repository.Interfaces
         void Remove(T entity);
         void RemoveRange(IEnumerable<T> entities);
 
+        Task<int> ExecuteDeleteAsync(CancellationToken ct = default);
+
         Task<int> SaveChangesAsync(CancellationToken ct = default);
+
+        Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
     }
 
 }

@@ -1,4 +1,6 @@
-﻿using Customer_Mangment.Model.Entities;
+﻿using AutoMapper;
+using Customer_Mangment.CQRS.Customers.DTOS;
+using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using MediatR;
@@ -8,36 +10,41 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 {
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
-                                              IGenericRepo<CustomerHistory> historyRepo,
+                                              IGenericRepo<CustomerHistory> historyRepo, IMapper mapper,
                                               ILogger<DeleteCustomerHandler> logger) : IRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<CustomerHistory> _historyRepo = historyRepo;
+        private readonly IMapper _mapper = mapper;
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
         public async Task<Result<Deleted>> Handle(DeleteCustomerCommand request, CancellationToken ct = default)
         {
-            var user = await _userRepo.FindAsync(request.UserId, ct);
+            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)
             {
                 _logger.LogWarning("User with ID {UserId} not found.", request.UserId);
                 return Error.NotFound("UserNotFound", $"User with ID {request.UserId} not found.");
             }
-            var customer = await _customerRepo.FirstOrDefaultAsync(c => c.Id == request.CustomerId, ct);
+            var customer = await _customerRepo.Include(a => a.Addresses).FirstOrDefaultAsync(c => c.Id == request.CustomerId, ct);
             if (customer == null)
             {
                 _logger.LogWarning("Customer with ID {CustomerId} not found.", request.CustomerId);
                 return Error.NotFound("CustomerNotFound", $"Customer with ID {request.CustomerId} not found.");
             }
-            _customerRepo.Remove(customer);
+            customer.DeleteCustomer();
+            _customerRepo.Update(customer);
             _logger.LogInformation("Customer with ID {CustomerId} deleted by User with ID {UserId}.", request.CustomerId, request.UserId);
+            var customerDto = _mapper.Map<CustomerDto>(customer);
+            var firstHistoryEntry = await historyRepo.FirstOrDefaultAsync(h => h.CustomerId == customer.Id, ct);
 
             var historyEntry = CustomerHistory.UpdateCustomerHistory(
                 customer.Id,
                 user.UserName!,
                 action: "Deleted",
-                oldCustomer: JsonSerializer.Serialize(customer),
+                firstHistoryEntry.CreatedAt, firstHistoryEntry.CreatedBy,
+                oldCustomer: JsonSerializer.Serialize(customerDto),
                 newCustomer: "N/A"
             );
             if (historyEntry.IsError)

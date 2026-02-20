@@ -2,7 +2,7 @@
 
 namespace Customer_Mangment.Model.Entities
 {
-    public class CustomerHistory
+    public sealed class CustomerHistory
     {
         public Guid Id { get; private set; }
         public Guid CustomerId { get; private set; }
@@ -23,16 +23,22 @@ namespace Customer_Mangment.Model.Entities
             CustomerId = customerId;
             CreatedAt = DateTime.Now;
             CreatedBy = user;
+            UpdatedAt = CreatedAt;
+            UpdatedBy = user;
             Action = $"Created new Customer with name :{name} , mobile:{mobile}";
         }
         private CustomerHistory(Guid customerId,
                                 string user,
                                 string action,
+                                DateTime createdAt,
+                                string createdBy,
                                 string oldCustomer,
                                 string newCustomer)
         {
             Id = Guid.NewGuid();
             CustomerId = customerId;
+            CreatedAt = createdAt;
+            CreatedBy = createdBy;
             UpdatedAt = DateTime.Now;
             UpdatedBy = user;
             Action = action;
@@ -52,15 +58,17 @@ namespace Customer_Mangment.Model.Entities
             return new CustomerHistory(customerId, name, mobile, user);
         }
         public static Result<CustomerHistory> UpdateCustomerHistory(Guid customerId,
-                                                             string user,
-                                                             string action,
-                                                             string oldCustomer,
-                                                             string newCustomer)
+                                                                    string user,
+                                                                    string action,
+                                                                    DateTime createdAt,
+                                                                    string createdBy,
+                                                                    string oldCustomer,
+                                                                    string newCustomer)
         {
             if (Guid.Empty == customerId)
                 return Error.NotFound("Invalide_Customer", "Customer cannot be null");
 
-            return new CustomerHistory(customerId, user, action, oldCustomer, newCustomer);
+            return new CustomerHistory(customerId, user, action, createdAt, createdBy, oldCustomer, newCustomer);
         }
     }
 }

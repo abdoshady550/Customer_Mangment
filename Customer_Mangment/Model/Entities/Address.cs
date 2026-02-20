@@ -2,7 +2,7 @@
 
 namespace Customer_Mangment.Model.Entities
 {
-    public class Address
+    public sealed class Address
     {
         public Guid Id { get; private set; }
         public Guid CustomerId { get; private set; }
@@ -33,12 +33,17 @@ namespace Customer_Mangment.Model.Entities
 
             return Result.Updated;
         }
+        public void SetCustomer(Customer customer)
+        {
+            Customer = customer;
+            CustomerId = customer.Id;
+        }
     }
 
     public enum AdressType
     {
-        Home,
-        Work,
-        Other
+        Home = 1,
+        Work = 2,
+        Other = 3
     }
 }

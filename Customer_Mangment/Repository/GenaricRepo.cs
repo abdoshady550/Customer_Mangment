@@ -1,20 +1,15 @@
 ﻿using Customer_Mangment.Data;
 using Customer_Mangment.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq.Expressions;
 
 namespace Customer_Mangment.Repository
 {
-    public class GenericRepo<T> : IGenericRepo<T> where T : class
+    public class GenericRepo<T>(AppDbContext context) : IGenericRepo<T> where T : class
     {
-        private readonly AppDbContext _context;
-        private IQueryable<T> _query;
-
-        public GenericRepo(AppDbContext context)
-        {
-            _context = context;
-            _query = context.Set<T>();
-        }
+        private readonly AppDbContext _context = context;
+        private IQueryable<T> _query = context.Set<T>();
 
         public IGenericRepo<T> AsNoTracking()
         {
@@ -92,9 +87,14 @@ namespace Customer_Mangment.Repository
 
         public void RemoveRange(IEnumerable<T> entities)
             => _context.Set<T>().RemoveRange(entities);
+        public async Task<int> ExecuteDeleteAsync(CancellationToken ct = default)
+            => await _query.ExecuteDeleteAsync(ct);
 
 
         public async Task<int> SaveChangesAsync(CancellationToken ct = default)
             => await _context.SaveChangesAsync(ct);
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
+            => await _context.Database.BeginTransactionAsync(ct);
     }
 }

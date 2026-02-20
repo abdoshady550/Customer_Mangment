@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
-    public sealed record CreateCustomerCommand(int userId,
+    public sealed record CreateCustomerCommand(string UserId,
                                                string Name,
                                                string Mobile,
                                                List<CreateAddressCommand> Adresses) : IRequest<Result<CustomerDto>>;

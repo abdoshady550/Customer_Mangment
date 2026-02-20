@@ -9,6 +9,7 @@ namespace Customer_Mangment.Data
         DbSet<Customer> Customers { get; set; }
         DbSet<Address> Addresses { get; set; }
         DbSet<CustomerHistory> CustomersHistory { get; set; }
+        DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

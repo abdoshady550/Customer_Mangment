@@ -7,7 +7,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
     {
         public CreateCustomerValidator()
         {
-            RuleFor(c => c.userId).NotEmpty().WithMessage("You have to be login first");
+            RuleFor(c => c.UserId).NotEmpty().WithMessage("You have to be login first");
             RuleFor(x => x.Name)
                 .NotEmpty()
                 .WithMessage("Name is required");

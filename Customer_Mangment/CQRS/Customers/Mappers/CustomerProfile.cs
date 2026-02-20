@@ -13,9 +13,7 @@ namespace Customer_Mangment.CQRS.Customers.Mappers
 
             CreateMap<Address, AddressDto>();
 
+            CreateMap<CustomerHistory, CustomerHistoryDto>();
         }
-
-
-
     }
 }

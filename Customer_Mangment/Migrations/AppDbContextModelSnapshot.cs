@@ -51,6 +51,9 @@ namespace Customer_Mangment.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasMaxLength(15)
@@ -108,6 +111,26 @@ namespace Customer_Mangment.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("CustomersHistory");
+                });
+
+            modelBuilder.Entity("Customer_Mangment.Model.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresOnUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Token")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Customer_Mangment.Model.Entities.User", b =>
@@ -322,9 +345,9 @@ namespace Customer_Mangment.Migrations
             modelBuilder.Entity("Customer_Mangment.Model.Entities.CustomerHistory", b =>
                 {
                     b.HasOne("Customer_Mangment.Model.Entities.Customer", "Customer")
-                        .WithMany()
+                        .WithMany("CustomerHistory")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Customer");
@@ -384,6 +407,8 @@ namespace Customer_Mangment.Migrations
             modelBuilder.Entity("Customer_Mangment.Model.Entities.Customer", b =>
                 {
                     b.Navigation("Addresses");
+
+                    b.Navigation("CustomerHistory");
                 });
 #pragma warning restore 612, 618
         }

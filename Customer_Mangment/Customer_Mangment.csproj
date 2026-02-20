@@ -29,11 +29,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddressById\" />
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddresses\" />
-    <Folder Include="CQRS\Customers\Queries\GetCustomerById\" />
-    <Folder Include="CQRS\Customers\Queries\GetCustomers\" />
   </ItemGroup>
 
 </Project>
