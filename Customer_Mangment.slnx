@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Customer_Mangment.Test/Customer_Mangment.Test.csproj" Id="2c087e37-60c8-4b00-8bf1-42f8ec6fb709" />
   <Project Path="Customer_Mangment/Customer_Mangment.csproj" />
 </Solution>

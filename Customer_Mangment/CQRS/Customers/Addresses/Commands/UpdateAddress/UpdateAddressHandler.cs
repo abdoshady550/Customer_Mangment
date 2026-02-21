@@ -71,7 +71,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
                 var newCustomerData = JsonSerializer.Serialize(newCustomerDto);
 
                 var auditEntry = CustomerHistory.UpdateCustomerHistory(customer.Id,
-                                                                       user.Id,
+                                                                       user.UserName,
                                                                        $"Updated address with id {address.Id}",
                                                                        firstHistoryEntry.CreatedAt,
                                                                        firstHistoryEntry.CreatedBy,

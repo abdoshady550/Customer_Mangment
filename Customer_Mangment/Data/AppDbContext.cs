@@ -16,6 +16,8 @@ namespace Customer_Mangment.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+            modelBuilder.Entity<Address>()
+                        .HasQueryFilter(a => !a.Customer.IsDeleted);
         }
 
     }

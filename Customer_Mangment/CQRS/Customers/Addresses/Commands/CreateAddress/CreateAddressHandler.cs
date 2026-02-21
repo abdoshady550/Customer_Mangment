@@ -65,7 +65,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                 var firstHistoryEntry = await _auditRepo.FirstOrDefaultAsync(h => h.CustomerId == customer.Id, ct);
 
                 var auditEntry = CustomerHistory.UpdateCustomerHistory(customer.Id,
-                                                                  user.Id,
+                                                                  user.UserName!,
                                                                   $"Added address with id {address.Value.Id}",
                                                                   firstHistoryEntry.CreatedAt,
                                                                   firstHistoryEntry.CreatedBy,

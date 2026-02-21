@@ -1,6 +1,6 @@
 using Customer_Mangment.Behaviors;
 using Customer_Mangment.Data;
-using Customer_Mangment.Middleware;
+using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository;
@@ -63,6 +63,7 @@ namespace Customer_Mangment
             ).AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
             builder.Services.AddScoped<ApplicationDbContextInitialiser>();
+            builder.Services.AddTransient<LoggerMiddleware>();
 
 
             builder.Services.AddAuthentication(option =>
@@ -99,9 +100,23 @@ namespace Customer_Mangment
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
-                app.UseSwaggerUI();
-                app.MapScalarApiReference();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("openapi/v1.json", "Customer Management API V1");
+
+                    options.EnableDeepLinking();
+                    options.DisplayRequestDuration();
+                    options.EnableFilter();
+                });
+
+                app.MapScalarApiReference(options =>
+                {
+                    options.Title = "Customer Management API Reference";
+
+                    options.WithTheme(Scalar.AspNetCore.ScalarTheme.DeepSpace);
+                });
             }
+            app.UseMiddleware<LoggerMiddleware>();
             app.UseExceptionHandler();
 
             app.UseHttpsRedirection();

@@ -72,7 +72,6 @@ namespace Customer_Mangment.Model.Entities
             _addresses.Add(address);
 
             return address;
-
         }
 
         public void DeleteCustomer()

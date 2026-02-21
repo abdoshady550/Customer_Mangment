@@ -45,8 +45,10 @@ namespace Customer_Mangment.Model.Entities
             OldData = oldCustomer;
             NewData = newCustomer;
         }
-        public static Result<CustomerHistory> CreateCustomerHistory(Guid customerId, string name, string mobile,
-                                                             string user)
+        public static Result<CustomerHistory> CreateCustomerHistory(Guid customerId,
+                                                                    string name,
+                                                                    string mobile,
+                                                                    string user)
         {
             if (Guid.Empty == customerId)
                 return Error.NotFound("Invalide_Customer", "Customer cannot be null");
