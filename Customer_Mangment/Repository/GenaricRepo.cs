@@ -53,7 +53,61 @@ namespace Customer_Mangment.Repository
             _query = _query.Take(count);
             return this;
         }
+        public IGenericRepo<T> TemporalAll()
+        {
+            _query = _context.Set<T>()
+                .TemporalAll();
 
+            return this;
+        }
+        public IGenericRepo<T> TemporalBetween(DateTime from, DateTime to)
+        {
+            _query = _context.Set<T>()
+                .TemporalBetween(from, to);
+
+            return this;
+        }
+        public IGenericRepo<T> TemporalFromTo(DateTime from, DateTime to)
+        {
+            _query = _context.Set<T>()
+                .TemporalFromTo(from, to);
+
+            return this;
+        }
+        public IGenericRepo<T> TemporalAsOf(DateTime dateTime)
+        {
+            _query = _context.Set<T>()
+                .TemporalAsOf(dateTime);
+
+            return this;
+        }
+        public IGenericRepo<T> OrderByDescending(Expression<Func<T, object>> keySelector)
+        {
+            _query = _query.OrderByDescending(keySelector);
+
+            return this;
+        }
+        public IGenericRepo<T> OrderBy(Expression<Func<T, object>> keySelector)
+        {
+            _query = _query.OrderBy(keySelector);
+
+            return this;
+        }
+
+
+        public async Task<List<TResult>> SelectAsync<TResult>(
+            Expression<Func<T, TResult>> selector,
+            CancellationToken ct = default)
+        {
+            return await _query
+                .Select(selector)
+                .ToListAsync(ct);
+        }
+
+        public IQueryable<TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
+        {
+            return _query.Select(selector);
+        }
         public async Task<List<T>> ToListAsync(CancellationToken ct = default)
             => await _query.ToListAsync(ct);
 

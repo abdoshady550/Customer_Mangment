@@ -20,13 +20,17 @@ namespace Customer_Mangment.Data.Configrations
                    .HasForeignKey(a => a.CustomerId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(c => c.CustomerHistory)
-                   .WithOne(h => h.Customer)
-                   .HasForeignKey(h => h.CustomerId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            builder.ToTable("Customers", b => b.IsTemporal(
+                  t =>
+                  {
+                      t.HasPeriodStart("ValidFrom");
+                      t.HasPeriodEnd("ValidTo");
+                      t.UseHistoryTable("CustomerHistory");
+                  }));
 
             builder.HasQueryFilter(c => !c.IsDeleted);
 
         }
     }
+
 }

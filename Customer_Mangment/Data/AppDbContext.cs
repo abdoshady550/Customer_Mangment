@@ -1,4 +1,5 @@
 ﻿using Customer_Mangment.Model.Entities;
+using Customer_Mangment.Model.Entities.History;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,12 +9,14 @@ namespace Customer_Mangment.Data
     {
         DbSet<Customer> Customers { get; set; }
         DbSet<Address> Addresses { get; set; }
-        DbSet<CustomerHistory> CustomersHistory { get; set; }
         DbSet<RefreshToken> RefreshTokens { get; set; }
+        DbSet<CustomerHistory> CustomerHistory { get; set; }
+        DbSet<AddressHistory> AddressHistory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
             modelBuilder.Entity<Address>()

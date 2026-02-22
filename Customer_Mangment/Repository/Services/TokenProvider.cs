@@ -29,15 +29,18 @@ public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshTok
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
+        var jwtSettings = _configuration.GetSection("Jwt");
+
         var tokenValidationParameters = new TokenValidationParameters
         {
+
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!)),
             ValidateIssuer = true,
-            ValidIssuer = _configuration["JwtSettings:Issuer"],
+            ValidIssuer = jwtSettings["Issuer"]!,
             ValidateAudience = true,
-            ValidAudience = _configuration["JwtSettings:Audience"],
-            ValidateLifetime = false, // Ignore token expiration
+            ValidAudience = jwtSettings["Audience"]!,
+            ValidateLifetime = false,
             ClockSkew = TimeSpan.Zero
         };
 

@@ -11,8 +11,7 @@ namespace Customer_Mangment.Model.Entities
 
         private readonly List<Address> _addresses = new();
         public IReadOnlyCollection<Address> Addresses => _addresses;
-        private readonly List<CustomerHistory> _customerHistories = new();
-        public IReadOnlyCollection<CustomerHistory> CustomerHistory => _customerHistories;
+
 
         private Customer() { }
         private Customer(string name, string mobile)
@@ -20,14 +19,6 @@ namespace Customer_Mangment.Model.Entities
             Id = Guid.NewGuid();
             Name = name;
             Mobile = mobile;
-        }
-
-        private Customer(string name, string mobile, List<Address> addresses)
-        {
-            Id = Guid.NewGuid();
-            Name = name;
-            Mobile = mobile;
-            _addresses.AddRange(addresses);
         }
         public static Result<Customer> CreateCustomer(string name, string mobile, IEnumerable<(AdressType type, string value)> addresses)
         {

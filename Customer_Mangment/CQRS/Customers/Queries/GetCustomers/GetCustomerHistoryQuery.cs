@@ -4,5 +4,5 @@ using MediatR;
 
 namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 {
-    public sealed record GetCustomerHistoryQuery(string UserId, Guid CustomerId) : IRequest<Result<List<CustomerHistoryDto>>>;
+    public sealed record GetCustomerHistoryQuery(string UserId, Guid CustomerId) : IRequest<Result<CustomerAddressHistoryDto>>;
 }

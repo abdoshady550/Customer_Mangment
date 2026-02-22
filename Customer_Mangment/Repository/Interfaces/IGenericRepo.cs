@@ -12,6 +12,13 @@ namespace Customer_Mangment.Repository.Interfaces
         IGenericRepo<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> keySelector);
         IGenericRepo<T> Skip(int count);
         IGenericRepo<T> Take(int count);
+        IGenericRepo<T> TemporalAll();
+
+        IGenericRepo<T> TemporalAsOf(DateTime dateTime);
+
+        IGenericRepo<T> TemporalBetween(DateTime from, DateTime to);
+
+        IGenericRepo<T> TemporalFromTo(DateTime from, DateTime to);
 
         Task<List<T>> ToListAsync(CancellationToken ct = default);
         Task<T?> FirstOrDefaultAsync(CancellationToken ct = default);
@@ -31,6 +38,10 @@ namespace Customer_Mangment.Repository.Interfaces
         Task<int> SaveChangesAsync(CancellationToken ct = default);
 
         Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
+        Task<List<TResult>> SelectAsync<TResult>(Expression<Func<T, TResult>> selector, CancellationToken ct = default);
+        IGenericRepo<T> OrderByDescending(Expression<Func<T, object>> keySelector);
+        IGenericRepo<T> OrderBy(Expression<Func<T, object>> keySelector);
+        IQueryable<TResult> Select<TResult>(Expression<Func<T, TResult>> selector);
     }
 
 }

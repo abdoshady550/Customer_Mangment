@@ -12,7 +12,6 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
     public class CreateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
-                                             IGenericRepo<CustomerHistory> auditRepo,
                                              IMapper mapper,
                                              ILogger<CreateAddressHandler> logger) : IRequestHandler<AddAddressCommand, Result<AddressDto>>
 
@@ -20,7 +19,6 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
-        private readonly IGenericRepo<CustomerHistory> _auditRepo = auditRepo;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<CreateAddressHandler> _logger = logger;
 
@@ -54,45 +52,18 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                 _logger.LogWarning("Address of type {AddressType} already exists for customer with id {CustomerId}", request.Type, address.Value.CustomerId);
                 return Error.Conflict("DuplicateAddress", $"Address of type {request.Type} already exists for customer with id {address.Value.CustomerId}");
             }
-            using var transaction = await _adressRepo.BeginTransactionAsync(ct);
-            try
-            {
 
-                await _adressRepo.AddAsync(address.Value, ct);
 
-                _customerRepo.Update(customer);
-                await _customerRepo.SaveChangesAsync(ct);
-                var firstHistoryEntry = await _auditRepo.FirstOrDefaultAsync(h => h.CustomerId == customer.Id, ct);
+            await _adressRepo.AddAsync(address.Value, ct);
 
-                var auditEntry = CustomerHistory.UpdateCustomerHistory(customer.Id,
-                                                                  user.UserName!,
-                                                                  $"Added address with id {address.Value.Id}",
-                                                                  firstHistoryEntry.CreatedAt,
-                                                                  firstHistoryEntry.CreatedBy,
-                                                                  oldCustomerData,
-                                                                  JsonSerializer.Serialize(_mapper.Map<CustomerDto>(customer)));
+            _customerRepo.Update(customer);
+            await _customerRepo.SaveChangesAsync(ct);
 
-                if (auditEntry.IsError)
-                {
-                    await transaction.RollbackAsync(ct);
-                    _logger.LogWarning("Failed to create audit entry for updating address with id {AddressId}: {Errors}", address.Value.Id, string.Join(", ", auditEntry.Errors.Select(e => e.Description)));
-                    return auditEntry.Errors;
-                }
-                await _auditRepo.AddAsync(auditEntry.Value, ct);
-                await _auditRepo.SaveChangesAsync(ct);
-                await transaction.CommitAsync(ct);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(ct);
-                _logger.LogError("An error occurred while updating address with id {AddressId}", address.Value.Id);
-                return Error.Failure("UpdateFailed", $"An error occurred while updating address with id {address.Value.Id}");
-            }
+
             var addressDto = _mapper.Map<AddressDto>(address.Value);
 
             return addressDto;
 
-            throw new NotImplementedException();
         }
     }
 }

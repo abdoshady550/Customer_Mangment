@@ -3,13 +3,27 @@
     public class CustomerHistoryDto
     {
         public Guid Id { get; set; }
-        public Guid CustomerId { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
-        public DateTime UpdatedAt { get; set; }
-        public string UpdatedBy { get; set; } = string.Empty;
-        public string Action { get; set; } = string.Empty;
-        public string OldData { get; set; } = string.Empty;
-        public string NewData { get; set; } = string.Empty;
+        public string Name { get; set; }
+        public string Mobile { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidTo { get; set; }
+
     }
+
+    public class AddressHistoryDto
+    {
+        public Guid Id { get; set; }
+        public Guid CustomerId { get; set; }
+        public int Type { get; set; }
+        public string Value { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidTo { get; set; }
+    }
+    public class CustomerAddressHistoryDto
+    {
+        public List<CustomerHistoryDto> CustomerHistoryDtos { get; set; } = new();
+        public List<AddressHistoryDto> AddressHistoryDtos { get; set; } = new();
+
+    }
+
 }

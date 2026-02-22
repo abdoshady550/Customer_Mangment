@@ -8,13 +8,11 @@ using MediatR;
 namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
     public sealed class CreateCustomerHandler(IGenericRepo<Customer> repo,
-                                              IGenericRepo<CustomerHistory> auditRepo,
                                               IGenericRepo<User> userRepo,
                                               IMapper mapper,
                                               ILogger<CreateCustomerHandler> logger) : IRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
-        private readonly IGenericRepo<CustomerHistory> _auditRepo = auditRepo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
@@ -45,17 +43,9 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
             var customer = customerResult.Value;
             await _repo.AddAsync(customer, ct);
-            _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
+            await _repo.SaveChangesAsync(ct);
 
-            var customerHistory = CustomerHistory.CreateCustomerHistory(customer.Id, customer.Name, customer.Mobile, user.UserName!);
-            if (customerHistory.IsError)
-            {
-                _logger.LogWarning("Failed to create customer history: {Errors}", string.Join(", ", customerHistory.Errors.Select(e => e.Description)));
-                return customerHistory.Errors;
-            }
-            await _auditRepo.AddAsync(customerHistory.Value, ct);
-            await _auditRepo.SaveChangesAsync(ct);
-            _logger.LogInformation("Customer history for customer ID {CustomerId} created successfully.", customer.Id);
+            _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
 
             var customerDto = _mapper.Map<CustomerDto>(customer);
 

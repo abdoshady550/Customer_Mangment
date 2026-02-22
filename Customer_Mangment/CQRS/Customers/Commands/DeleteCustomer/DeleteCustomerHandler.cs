@@ -1,21 +1,18 @@
 ﻿using AutoMapper;
-using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using MediatR;
-using System.Text.Json;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 {
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
-                                              IGenericRepo<CustomerHistory> historyRepo, IMapper mapper,
+                                              IMapper mapper,
                                               ILogger<DeleteCustomerHandler> logger) : IRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
-        private readonly IGenericRepo<CustomerHistory> _historyRepo = historyRepo;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
@@ -35,27 +32,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
             }
             customer.DeleteCustomer();
             _customerRepo.Update(customer);
+            await _customerRepo.SaveChangesAsync(ct);
             _logger.LogInformation("Customer with ID {CustomerId} deleted by User with ID {UserId}.", request.CustomerId, request.UserId);
-            var customerDto = _mapper.Map<CustomerDto>(customer);
-            var firstHistoryEntry = await historyRepo.FirstOrDefaultAsync(h => h.CustomerId == customer.Id, ct);
-
-            var historyEntry = CustomerHistory.UpdateCustomerHistory(
-                customer.Id,
-                user.UserName!,
-                action: "Deleted",
-                firstHistoryEntry.CreatedAt, firstHistoryEntry.CreatedBy,
-                oldCustomer: JsonSerializer.Serialize(customerDto),
-                newCustomer: "N/A"
-            );
-            if (historyEntry.IsError)
-            {
-                _logger.LogError("Failed to create customer history for Customer ID {CustomerId}. Error: {Error}", customer.Id, historyEntry.TopError);
-                return historyEntry.Errors;
-            }
-            await _historyRepo.AddAsync(historyEntry.Value, ct);
-            await _historyRepo.SaveChangesAsync(ct);
-            _logger.LogInformation("Customer history entry created for Customer ID {CustomerId}.", customer.Id);
-
             return Result.Deleted;
         }
     };

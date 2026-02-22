@@ -24,24 +24,26 @@ namespace Customer_Mangment.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [EndpointSummary("AddAddress")]
         [EndpointDescription("This endpoint allows the authenticated user with role admin to create a new address. The request body should contain the address details, including the type and value.")]
-        public async Task<IActionResult> AddAddress([FromBody] AddAddressReq req, CancellationToken ct)
+        public async Task<IActionResult> AddAddress([FromQuery] Guid CustomerId, [FromBody] AddAddressReq req, CancellationToken ct)
         {
-            var result = await sender.Send(new AddAddressCommand(GetCurrentUserId(), req.AddrssId, req.Type, req.Value), ct);
+            var result = await sender.Send(new AddAddressCommand(GetCurrentUserId(), CustomerId, req.Type, req.Value), ct);
             return result.Match(
                response => Ok(response),
                Problem);
         }
 
-        [HttpPost]
+        [HttpPut]
         [Route("update")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Updated), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [EndpointSummary("UpdateAddress")]
         [EndpointDescription("This endpoint allows the authenticated user with role admin to update an existing one. The request body should contain the address details, including the address ID (for updates), type, and value.")]
@@ -59,6 +61,7 @@ namespace Customer_Mangment.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [EndpointSummary("DeleteAddress")]
         [EndpointDescription("This endpoint allows the authenticated user  with role admin to delete an existing address. The request should include the address ID as a query parameter.")]

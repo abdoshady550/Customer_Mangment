@@ -2,6 +2,7 @@
 using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
 using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Entities;
+using Customer_Mangment.Model.Entities.History;
 
 namespace Customer_Mangment.CQRS.Customers.Mappers
 {
@@ -9,11 +10,20 @@ namespace Customer_Mangment.CQRS.Customers.Mappers
     {
         public CustomerProfile()
         {
+
             CreateMap<Customer, CustomerDto>();
 
-            CreateMap<Address, AddressDto>();
-
             CreateMap<CustomerHistory, CustomerHistoryDto>();
+
+
+
+            CreateMap<Address, AddressDto>();
+            CreateMap<AddressHistory, AddressHistoryDto>();
+
+
+            CreateMap<Address, AddressHistoryDto>();
+
+
         }
     }
 }
