@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -43,12 +42,12 @@ namespace Customer_Mangment
 
             builder.Services.AddMediatR(optoin =>
             {
-                optoin.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                optoin.RegisterServicesFromAssembly(typeof(IAssmblyMarker).Assembly);
             });
 
-            builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
 
-            builder.Services.AddAutoMapper(optoin => optoin.AddMaps(Assembly.GetExecutingAssembly()));
+            builder.Services.AddAutoMapper(optoin => optoin.AddMaps(typeof(IAssmblyMarker).Assembly));
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 

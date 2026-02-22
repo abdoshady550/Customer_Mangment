@@ -21,6 +21,7 @@ namespace Customer_Mangment.Controllers
         private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         [HttpGet]
+        [Route("get")]
         [ProducesResponseType(typeof(List<CustomerDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -52,6 +53,7 @@ namespace Customer_Mangment.Controllers
                Problem);
         }
         [HttpPost]
+        [Route("add")]
         [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -68,6 +70,7 @@ namespace Customer_Mangment.Controllers
                Problem);
         }
         [HttpPut]
+        [Route("update")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Updated), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -84,6 +87,7 @@ namespace Customer_Mangment.Controllers
             Problem);
         }
         [HttpDelete]
+        [Route("delete")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(Deleted), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
