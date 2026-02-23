@@ -8,15 +8,13 @@ namespace Customer_Mangment_Integrate.Test.Common
     {
         protected readonly WebApplicationFactory<IAssmblyMarker> _factory = factory;
 
+
         protected Client CreateApiClient()
         {
             var httpClient = _factory.CreateClient();
-            var apiClient = new Client(httpClient);
-
-
-            apiClient.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
-
-            return apiClient;
+            var client = new Client(httpClient);
+            client.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
+            return client;
         }
 
         protected Client CreateApiClient(string accessToken)
@@ -24,23 +22,29 @@ namespace Customer_Mangment_Integrate.Test.Common
             var httpClient = _factory.CreateClient();
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
-
-            var apiClient = new Client(httpClient);
-            apiClient.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
-
-            return apiClient;
+            var client = new Client(httpClient);
+            client.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
+            return client;
         }
 
-
-        protected async Task<string> GetTokenAsync(
-            string email = "admin@test.com",
-            string password = "Test@123")
+        protected async Task<string> GetAdminTokenAsync()
         {
             var client = CreateApiClient();
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
-                Email = email,
-                Password = password
+                Email = "admin@test.com",
+                Password = "Admin@123"
+            });
+            return response.AccessToken;
+        }
+
+        protected async Task<string> GetUserTokenAsync()
+        {
+            var client = CreateApiClient();
+            var response = await client.GenerateTokenAsync(new GenerateTokenQuery
+            {
+                Email = "user@test.com",
+                Password = "User@123"
             });
             return response.AccessToken;
         }
@@ -48,16 +52,18 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected async Task<CustomerDto> CreateTestCustomerAsync(
             Client authClient,
             string name = "Test Customer",
-            string mobile = "01012345678")
+            string? mobile = null)
         {
-            return await authClient.CustomerPOSTAsync(new CreateCustomerReq
+            var uniqueMobile = mobile ?? $"010{new Random().Next(10000000, 99999999)}";
+
+            return await authClient.Add2Async(new CreateCustomerReq
             {
                 Name = name,
-                Mobile = mobile,
+                Mobile = uniqueMobile,
                 Adresses = new List<CreateAddressReq>
-                {
-                    new CreateAddressReq { Type = 1, Value = "123 Test Street, Cairo" }
-                }
+        {
+            new CreateAddressReq { Type = 1, Value = "123 Test St, Cairo" }
+        }
             });
         }
     }

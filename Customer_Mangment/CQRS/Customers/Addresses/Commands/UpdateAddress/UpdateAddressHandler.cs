@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Customer_Mangment.Model.Entities;
+﻿using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using MediatR;
@@ -9,15 +8,12 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
     public sealed class UpdateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
-
-                                             IMapper mapper,
                                              ILogger<UpdateAddressHandler> logger) : IRequestHandler<UpdateAddressCommand, Result<Updated>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
         public async Task<Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
@@ -46,7 +42,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
                 _logger.LogWarning("Customer with id {CustomerId} not found", address.CustomerId);
                 return Error.NotFound("CustomerNotFound", $"Customer with id {address.CustomerId} not found");
             }
-            var updateResult = address.UpdateAddress(request.Type, request.Value);
+            var updateResult = address.UpdateAddress(request.Type, request.Value, user.UserName!);
             if (updateResult.IsError)
             {
                 _logger.LogWarning("Failed to update address with id {AddressId}: {Errors}", request.AddressId, string.Join(", ", updateResult.Errors.Select(e => e.Description)));

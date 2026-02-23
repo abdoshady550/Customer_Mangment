@@ -8,19 +8,26 @@ namespace Customer_Mangment.Model.Entities
         public string Name { get; private set; } = string.Empty;
         public string Mobile { get; private set; }
         public bool IsDeleted { get; private set; } = false;
+        public string CreatedBy { get; private set; }
+
+        public string UpdatedBy { get; set; }
+
 
         private readonly List<Address> _addresses = new();
         public IReadOnlyCollection<Address> Addresses => _addresses;
 
 
         private Customer() { }
-        private Customer(string name, string mobile)
+        private Customer(string name, string mobile, string createdBy)
         {
             Id = Guid.NewGuid();
             Name = name;
             Mobile = mobile;
+            CreatedBy = createdBy;
+            UpdatedBy = createdBy;
+
         }
-        public static Result<Customer> CreateCustomer(string name, string mobile, IEnumerable<(AdressType type, string value)> addresses)
+        public static Result<Customer> CreateCustomer(string name, string mobile, string createdBy, IEnumerable<(AdressType type, string value)> addresses)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return Error.Failure("Invalide_Name", "Name cannot be null or empty");
@@ -28,7 +35,7 @@ namespace Customer_Mangment.Model.Entities
             if (string.IsNullOrWhiteSpace(mobile))
                 return Error.Failure("Invalide_Mobile", "Mobile number cannot be null or empty");
 
-            var customer = new Customer(name, mobile);
+            var customer = new Customer(name, mobile, createdBy);
 
             foreach (var a in addresses)
             {
@@ -39,12 +46,13 @@ namespace Customer_Mangment.Model.Entities
 
             return customer;
         }
-        public Result<Updated> UpdateCustomer(string? name, string? mobile)
+        public Result<Updated> UpdateCustomer(string? name, string? mobile, string updatedBy)
         {
             if (!string.IsNullOrWhiteSpace(name))
                 Name = name;
             if (!string.IsNullOrWhiteSpace(mobile))
                 Mobile = mobile;
+            UpdatedBy = updatedBy;
             return Result.Updated;
         }
         public Result<Address> AddAddress(AdressType type, string value)

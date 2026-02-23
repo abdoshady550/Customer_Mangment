@@ -8,37 +8,55 @@ namespace Customer_Mangment_Integrate.Test
     {
         public CustomerAddressTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
 
+        // ----- Add Address -----
+
         [Fact]
         public async Task AddAddress_ValidData_ReturnsAddressDto()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
 
-            var customer = await CreateTestCustomerAsync(client, "Address Customer", "01011110000");
+            var customer = await CreateTestCustomerAsync(client, "Address Customer", "01011110001");
 
-            var address = await client.CustomerAddressPOSTAsync(new AddAddressReq
+            var address = await client.AddAsync(customer.Id, new AddAddressReq
             {
-                AddrssId = customer.Id,
-                Type = 1,
+                Type = 2,
                 Value = "New Cairo, 5th Settlement"
             });
 
             Assert.NotEqual(Guid.Empty, address.Id);
             Assert.Equal(customer.Id, address.CustomerId);
-            Assert.Equal(1, address.Type);
+            Assert.Equal(2, address.Type);
             Assert.Equal("New Cairo, 5th Settlement", address.Value);
+        }
+
+        [Fact]
+        public async Task AddAddress_AppearsInCustomerAddresses()
+        {
+            var token = await GetAdminTokenAsync();
+            var client = CreateApiClient(token);
+
+            var customer = await CreateTestCustomerAsync(client, "Verify Address");
+
+            var address = await client.AddAsync(customer.Id, new AddAddressReq
+            {
+                Type = 2,
+                Value = "Alexandria, Smouha"
+            });
+
+            var updated = (await client.GetAsync(customer.Id)).First();
+            Assert.Contains(updated.Addresses, a => a.Id == address.Id);
         }
 
         [Fact]
         public async Task AddAddress_NonExistentCustomer_ThrowsNotFound()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
 
             var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
-                () => client.CustomerAddressPOSTAsync(new AddAddressReq
+                () => client.AddAsync(Guid.NewGuid(), new AddAddressReq
                 {
-                    AddrssId = Guid.NewGuid(),
                     Type = 1,
                     Value = "Some Address"
                 }));
@@ -51,10 +69,9 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient();
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
-                () => client.CustomerAddressPOSTAsync(new AddAddressReq
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                () => client.AddAsync(Guid.NewGuid(), new AddAddressReq
                 {
-                    AddrssId = Guid.NewGuid(),
                     Type = 1,
                     Value = "Test"
                 }));
@@ -62,40 +79,47 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(401, ex.StatusCode);
         }
 
+        // ----- Update Address -----
+
         [Fact]
-        public async Task UpdateAddress_ValidData_ReturnsUpdated()
+        public async Task UpdateAddress_ValidData_UpdatesSuccessfully()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
-
-            var customer = await CreateTestCustomerAsync(client, "Update Address Customer", "01022220000");
-            var address = await client.CustomerAddressPOSTAsync(new AddAddressReq
+            try
             {
-                AddrssId = customer.Id,
-                Type = 1,
-                Value = "Old Address Value"
-            });
+                var customer = await CreateTestCustomerAsync(client, "Update Addr Customer");
 
-            var result = await client.UpdateAsync(new UpdateAddressReq
+                var address = await client.AddAsync(customer.Id, new AddAddressReq
+                {
+                    Type = 1,
+                    Value = "Old Address"
+                });
+
+                await client.UpdateAsync(new UpdateAddressReq
+                {
+                    AddressId = address.Id,
+                    Type = 2,
+                    Value = "Updated Address"
+                });
+
+                var updated = (await client.GetAsync(customer.Id)).First();
+                var updatedAddr = updated.Addresses.FirstOrDefault(a => a.Id == address.Id);
+                Assert.NotNull(updatedAddr);
+                Assert.Equal(2, updatedAddr.Type);
+                Assert.Equal("Updated Address", updatedAddr.Value);
+            }
+            catch (ApiException ex)
             {
-                AddressId = address.Id,
-                Type = 2,
-                Value = "Updated Address Value"
-            });
+                throw new Exception($"AddAsync failed: Status={ex.StatusCode}, Detail={ex.Message}, Response={ex.Response}");
+            }
 
-            Assert.NotNull(result);
-
-            var updated = (await client.CustomerAllAsync(customer.Id)).First();
-            var updatedAddr = updated.Addresses.FirstOrDefault(a => a.Id == address.Id);
-            Assert.NotNull(updatedAddr);
-            Assert.Equal(2, updatedAddr.Type);
-            Assert.Equal("Updated Address Value", updatedAddr.Value);
         }
 
         [Fact]
         public async Task UpdateAddress_NonExistentAddressId_ThrowsNotFound()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
 
             var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
@@ -114,7 +138,7 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient();
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
                 () => client.UpdateAsync(new UpdateAddressReq
                 {
                     AddressId = Guid.NewGuid(),
@@ -125,35 +149,35 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(401, ex.StatusCode);
         }
 
+        // ----- Delete Address -----
+
         [Fact]
         public async Task DeleteAddress_ValidId_DeletesSuccessfully()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
 
-            var customer = await CreateTestCustomerAsync(client, "Delete Address Customer", "01033330000");
-            var address = await client.CustomerAddressPOSTAsync(new AddAddressReq
+            var customer = await CreateTestCustomerAsync(client, "Delete Addr Customer");
+            var address = await client.AddAsync(customer.Id, new AddAddressReq
             {
-                AddrssId = customer.Id,
                 Type = 1,
                 Value = "Address To Delete"
             });
 
-            var result = await client.CustomerAddressDELETEAsync(address.Id);
-            Assert.NotNull(result);
+            await client.DeleteAsync(address.Id);
 
-            var updated = (await client.CustomerAllAsync(customer.Id)).First();
+            var updated = (await client.GetAsync(customer.Id)).First();
             Assert.DoesNotContain(updated.Addresses, a => a.Id == address.Id);
         }
 
         [Fact]
         public async Task DeleteAddress_NonExistentId_ThrowsNotFound()
         {
-            var token = await GetTokenAsync();
+            var token = await GetAdminTokenAsync();
             var client = CreateApiClient(token);
 
             var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
-                () => client.CustomerAddressDELETEAsync(Guid.NewGuid()));
+                () => client.DeleteAsync(Guid.NewGuid()));
 
             Assert.Equal(404, ex.StatusCode);
         }
@@ -163,8 +187,8 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient();
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
-                () => client.CustomerAddressDELETEAsync(Guid.NewGuid()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                () => client.DeleteAsync(Guid.NewGuid()));
 
             Assert.Equal(401, ex.StatusCode);
         }

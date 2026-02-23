@@ -24,12 +24,13 @@ namespace Customer_Mangment.Model.Entities
                 return Error.Failure("Invalide_Address", "Address cannot be null or empty");
             return new Address(type, value);
         }
-        public Result<Updated> UpdateAddress(AdressType? type, string? value)
+        public Result<Updated> UpdateAddress(AdressType? type, string? value, string updatedBy)
         {
             if (!string.IsNullOrWhiteSpace(value))
                 Value = value;
             if (type.HasValue)
                 Type = type.Value;
+            Customer.UpdatedBy = updatedBy;
 
             return Result.Updated;
         }

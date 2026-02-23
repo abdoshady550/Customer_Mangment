@@ -34,7 +34,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                 _logger.LogWarning("Customer with mobile {Mobile} already exists.", request.Mobile);
                 return Error.Conflict("CustomerAlreadyExists", $"Customer with mobile {request.Mobile} already exists.");
             }
-            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, request.Adresses.Select(a => (a.Type, a.Value)));
+            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, user.UserName!, request.Adresses.Select(a => (a.Type, a.Value)));
             if (customerResult.IsError)
             {
                 _logger.LogWarning("Failed to create customer: {Errors}", string.Join(", ", customerResult.Errors.Select(e => e.Description)));

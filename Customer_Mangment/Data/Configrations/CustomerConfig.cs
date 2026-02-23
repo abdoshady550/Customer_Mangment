@@ -13,7 +13,8 @@ namespace Customer_Mangment.Data.Configrations
                    .IsRequired();
 
             builder.HasIndex(c => c.Mobile)
-                   .IsUnique();
+                   .IsUnique()
+                   .HasFilter("[IsDeleted] = 0");
 
             builder.HasMany(c => c.Addresses)
                    .WithOne(a => a.Customer)

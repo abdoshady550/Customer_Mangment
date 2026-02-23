@@ -12,9 +12,10 @@ namespace Customer_Mangment.Test.Domain
 
             string firstName = null;
             string secoundName = "";
+            string name = "null";
 
-            var firstcustomerResult = Customer.CreateCustomer(firstName, "01000000000", addresses);
-            var secoundcustomerResult = Customer.CreateCustomer(secoundName, "01000000000", addresses);
+            var firstcustomerResult = Customer.CreateCustomer(firstName, "01000000000", name, addresses);
+            var secoundcustomerResult = Customer.CreateCustomer(secoundName, "01000000000", name, addresses);
 
             Assert.False(firstcustomerResult.IsSuccess);
             Assert.False(secoundcustomerResult.IsSuccess);
@@ -27,9 +28,11 @@ namespace Customer_Mangment.Test.Domain
 
             string firstMobile = null;
             string secoundMobile = "";
+            string name = "null";
 
-            var firstcustomerResult = Customer.CreateCustomer("a", firstMobile, addresses);
-            var secoundcustomerResult = Customer.CreateCustomer("a", secoundMobile, addresses);
+
+            var firstcustomerResult = Customer.CreateCustomer("a", firstMobile, name, addresses);
+            var secoundcustomerResult = Customer.CreateCustomer("a", secoundMobile, name, addresses);
 
             Assert.False(firstcustomerResult.IsSuccess);
             Assert.False(secoundcustomerResult.IsSuccess);
@@ -39,8 +42,10 @@ namespace Customer_Mangment.Test.Domain
         [Fact]
         public void UpdateCustomer_ShouldRetunError_WhenAddDuplicateAddressType()
         {
+            string name = "null";
+
             var addresses = new List<(AdressType type, string value)>();
-            var customerResult = Customer.CreateCustomer("Ahmed", "01000000000", addresses);
+            var customerResult = Customer.CreateCustomer("Ahmed", "01000000000", name, addresses);
             var customer = customerResult.Value;
 
 

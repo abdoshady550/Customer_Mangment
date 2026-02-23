@@ -30,7 +30,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
                 return Error.NotFound("CustomerNotFound", $"Customer with ID {request.CustomerId} not found.");
             }
 
-            var updateResult = customer.UpdateCustomer(request.Name, request.Mobile);
+            var updateResult = customer.UpdateCustomer(request.Name, request.Mobile, user.UserName!);
             if (updateResult.IsError)
             {
                 _logger.LogWarning("Validation failed for updating customer with ID {CustomerId}. Errors: {Errors}", request.CustomerId, updateResult.Errors);
