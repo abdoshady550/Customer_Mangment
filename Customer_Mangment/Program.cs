@@ -1,4 +1,3 @@
-using Customer_Mangment.Behaviors;
 using Customer_Mangment.Data;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
@@ -9,7 +8,6 @@ using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AppMediator;
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +15,8 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
+using Wolverine;
+using Wolverine.FluentValidation;
 
 namespace Customer_Mangment
 {
@@ -41,17 +41,17 @@ namespace Customer_Mangment
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-
-            builder.Services.AddMediatR(optoin =>
+            builder.Host.UseWolverine(opts =>
             {
-                optoin.RegisterServicesFromAssembly(typeof(IAssmblyMarker).Assembly);
+                opts.Discovery.IncludeAssembly(typeof(IAssmblyMarker).Assembly);
+                opts.UseFluentValidation();
             });
+            builder.Services.AddScoped<IDispatcher, AppDispatcher>();
 
             builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
 
             builder.Services.AddAutoMapper(optoin => optoin.AddMaps(typeof(IAssmblyMarker).Assembly));
 
-            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             builder.Services.AddDbContext<AppDbContext>
             (option => option.UseSqlServer((builder.Configuration.GetConnectionString("DefaultConnection"))));
@@ -92,7 +92,6 @@ namespace Customer_Mangment
             builder.Services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
-            builder.Services.AddScoped<IDispatcher, AppDispatcher>();
 
 
 

@@ -51,5 +51,6 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
             return customerDto;
         }
+
     };
 }
