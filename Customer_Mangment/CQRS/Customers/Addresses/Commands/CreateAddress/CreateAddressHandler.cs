@@ -4,7 +4,7 @@ using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 using System.Text.Json;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
@@ -13,7 +13,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
                                              IMapper mapper,
-                                             ILogger<CreateAddressHandler> logger) : IRequestHandler<AddAddressCommand, Result<AddressDto>>
+                                             ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Result<AddressDto>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;

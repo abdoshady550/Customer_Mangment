@@ -1,15 +1,17 @@
 ﻿using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 using Customer_Mangment.CQRS.Identity.Queries.RefreshTokens;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public sealed class AuthController(ISender sender) : ApiController
+    public sealed class AuthController(IDispatcher sender) : ApiController
     {
+        private readonly IDispatcher _sender = sender;
+
         [HttpPost("token/generate")]
         [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -21,7 +23,7 @@ namespace Customer_Mangment.Controllers
         [EndpointName("GenerateToken")]
         public async Task<IActionResult> GenerateToken([FromBody] GenerateTokenQuery request, CancellationToken ct)
         {
-            var result = await sender.Send(request, ct);
+            var result = await _sender.Send(request, ct);
             return result.Match(
                 response => Ok(response),
                 Problem);
@@ -39,7 +41,7 @@ namespace Customer_Mangment.Controllers
         [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenQuery request, CancellationToken ct)
         {
-            var result = await sender.Send(request, ct);
+            var result = await _sender.Send(request, ct);
             return result.Match(
                 response => Ok(response),
                 Problem);

@@ -5,7 +5,9 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Services;
+using Customer_Mangment.Repository.Services.AppMediator;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -90,6 +92,8 @@ namespace Customer_Mangment
             builder.Services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
+            builder.Services.AddScoped<IDispatcher, AppDispatcher>();
+
 
 
             var app = builder.Build();

@@ -3,7 +3,7 @@ using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 using System.Security.Claims;
 
 namespace Customer_Mangment.CQRS.Identity.Queries.RefreshTokens;
@@ -12,7 +12,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
                                       IIdentityService identityService,
                                       IGenericRepo<RefreshToken> repo,
                                       ITokenProvider tokenProvider)
-    : IRequestHandler<RefreshTokenQuery, Result<TokenResponse>>
+    : IAppRequestHandler<RefreshTokenQuery, Result<TokenResponse>>
 {
     private readonly ILogger<RefreshTokenQueryHandler> _logger = logger;
     private readonly IIdentityService _identityService = identityService;

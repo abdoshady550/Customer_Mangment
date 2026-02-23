@@ -1,9 +1,9 @@
 ﻿using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Results;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 {
-    public sealed record GetCustomersQuery(string UserId, Guid? CustomerId) : IRequest<Result<List<CustomerDto>>>;
+    public sealed record GetCustomersQuery(string UserId, Guid? CustomerId) : IAppRequest<Result<List<CustomerDto>>>;
 
 }

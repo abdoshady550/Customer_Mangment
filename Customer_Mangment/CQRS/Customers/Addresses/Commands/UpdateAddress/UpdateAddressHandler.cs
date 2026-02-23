@@ -1,14 +1,14 @@
 ﻿using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
 {
     public sealed class UpdateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
-                                             ILogger<UpdateAddressHandler> logger) : IRequestHandler<UpdateAddressCommand, Result<Updated>>
+                                             ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;

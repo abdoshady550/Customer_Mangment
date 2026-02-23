@@ -2,14 +2,14 @@
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
 {
     public sealed class DeleteAddressHandler(IGenericRepo<Address> addressRepo,
                                              IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
-                                             IMapper mapper, ILogger<DeleteAddressHandler> logger) : IRequestHandler<DeleteAddressCommand, Result<Deleted>>
+                                             IMapper mapper, ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
         private readonly IGenericRepo<User> _userRepo = userRepo;

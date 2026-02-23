@@ -1,12 +1,12 @@
 using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 
 public class GenerateTokenQueryHandler(ILogger<GenerateTokenQueryHandler> logger, IIdentityService identityService, ITokenProvider tokenProvider)
-    : IRequestHandler<GenerateTokenQuery, Result<TokenResponse>>
+    : IAppRequestHandler<GenerateTokenQuery, Result<TokenResponse>>
 {
     private readonly ILogger<GenerateTokenQueryHandler> _logger = logger;
     private readonly IIdentityService _identityService = identityService;

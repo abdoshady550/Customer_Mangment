@@ -3,14 +3,14 @@ using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
     public sealed class CreateCustomerHandler(IGenericRepo<Customer> repo,
                                               IGenericRepo<User> userRepo,
                                               IMapper mapper,
-                                              ILogger<CreateCustomerHandler> logger) : IRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
+                                              ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
         private readonly IGenericRepo<User> _userRepo = userRepo;

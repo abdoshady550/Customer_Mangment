@@ -2,14 +2,14 @@
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 {
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
                                               IMapper mapper,
-                                              ILogger<DeleteCustomerHandler> logger) : IRequestHandler<DeleteCustomerCommand, Result<Deleted>>
+                                              ILogger<DeleteCustomerHandler> logger) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;

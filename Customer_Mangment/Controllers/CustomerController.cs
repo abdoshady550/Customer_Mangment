@@ -5,8 +5,8 @@ using Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer;
 using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
 using Customer_Mangment.Model.Results;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Req;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,9 +15,9 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize]
-    public class CustomerController(ISender sender) : ApiController
+    public class CustomerController(IDispatcher sender) : ApiController
     {
-        private readonly ISender _sender = sender;
+        private readonly IDispatcher _sender = sender;
         private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         [HttpGet]

@@ -4,7 +4,7 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
-using MediatR;
+using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 {
@@ -14,7 +14,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
                                           IGenericRepo<CustomerHistory> customerHistoryRepo,
                                           IGenericRepo<AddressHistory> addressHistoryRepo,
                                           IMapper mapper,
-                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IRequestHandler<GetCustomerHistoryQuery, Result<CustomerAddressHistoryDto>>
+                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetCustomerHistoryQuery, Result<CustomerAddressHistoryDto>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
