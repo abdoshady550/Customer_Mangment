@@ -1,14 +1,13 @@
 ﻿using Customer_Mangment.Repository.Interfaces.AppMediator;
-using MediatR;
+using Wolverine;
 
 namespace Customer_Mangment.Repository.Services.AppMediator
 {
-    public class AppDispatcher(IMediator mediator) : IDispatcher
+    public class AppDispatcher(IMessageBus bus) : IDispatcher
     {
-        private readonly IMediator _mediator = mediator;
+        private readonly IMessageBus _bus = bus;
 
         public Task<TResponse> Send<TResponse>(IAppRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => _mediator.Send(request, cancellationToken);
-
+            => _bus.InvokeAsync<TResponse>(request, cancellationToken);
     }
 }
