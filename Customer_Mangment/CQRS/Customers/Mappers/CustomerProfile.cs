@@ -1,29 +1,33 @@
-﻿using AutoMapper;
-using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+﻿using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
 using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
+using Riok.Mapperly.Abstractions;
 
 namespace Customer_Mangment.CQRS.Customers.Mappers
 {
-    public class CustomerProfile : Profile
+    [Mapper(
+     PropertyNameMappingStrategy = PropertyNameMappingStrategy.CaseInsensitive,
+     RequiredMappingStrategy = RequiredMappingStrategy.Source
+)]
+    public partial class CustomerMapper : ICustomerMapper
     {
-        public CustomerProfile()
-        {
-
-            CreateMap<Customer, CustomerDto>();
-
-            CreateMap<CustomerHistory, CustomerHistoryDto>();
+        [MapperIgnoreSource(nameof(Customer.IsDeleted))]
+        public partial CustomerDto ToCustomerDto(Customer customer);
+        public partial List<CustomerDto> ToCustomerDtoList(List<Customer> customers);
 
 
+        public partial CustomerHistoryDto ToCustomerHistoryDto(CustomerHistory history);
+        public partial List<CustomerHistoryDto> ToCustomerHistoryDtoList(List<CustomerHistory> history);
 
-            CreateMap<Address, AddressDto>();
-            CreateMap<AddressHistory, AddressHistoryDto>();
+        [MapperIgnoreSource(nameof(Address.Customer))]
+        public partial AddressDto ToAddressDto(Address address);
+        public partial List<AddressDto> ToAddressDtoList(List<Address> addresses);
+
+        public partial AddressHistoryDto ToAddressHistoryDto(AddressHistory history);
+        public partial List<AddressHistoryDto> ToAddressHistoryDtoList(List<AddressHistory> history);
 
 
-            CreateMap<Address, AddressHistoryDto>();
-
-
-        }
     }
+
 }

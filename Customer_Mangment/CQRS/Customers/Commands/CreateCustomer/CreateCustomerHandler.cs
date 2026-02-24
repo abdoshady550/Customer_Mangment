@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Customer_Mangment.CQRS.Customers.DTOS;
+﻿using Customer_Mangment.CQRS.Customers.DTOS;
+using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
@@ -9,12 +9,12 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
     public sealed class CreateCustomerHandler(IGenericRepo<Customer> repo,
                                               IGenericRepo<User> userRepo,
-                                              IMapper mapper,
+                                              ICustomerMapper mapper,
                                               ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
-        private readonly IMapper _mapper = mapper;
+        private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
 
         public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken ct = default)
@@ -47,7 +47,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
             _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
 
-            var customerDto = _mapper.Map<CustomerDto>(customer);
+            var customerDto = _mapper.ToCustomerDto(customer);
 
             return customerDto;
         }

@@ -1,25 +1,23 @@
-﻿using AutoMapper;
-using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
-using Customer_Mangment.CQRS.Customers.DTOS;
+﻿using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
-using System.Text.Json;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 {
     public class CreateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
-                                             IMapper mapper,
+                                             ICustomerMapper mapper,
                                              ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Result<AddressDto>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
-        private readonly IMapper _mapper = mapper;
+        private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateAddressHandler> _logger = logger;
 
         public async Task<Result<AddressDto>> Handle(AddAddressCommand request, CancellationToken ct)
@@ -37,8 +35,6 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                 _logger.LogWarning("Customer with id {CustomerId} not found", request.CustomerId);
                 return Error.NotFound("CustomerNotFound", $"Customer with id {request.CustomerId} not found");
             }
-            var oldCustomerDto = _mapper.Map<CustomerDto>(customer);
-            var oldCustomerData = JsonSerializer.Serialize(oldCustomerDto);
             var address = customer.AddAddress(request.Type, request.Value);
             if (address.IsError)
             {
@@ -60,7 +56,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
             await _customerRepo.SaveChangesAsync(ct);
 
 
-            var addressDto = _mapper.Map<AddressDto>(address.Value);
+            var addressDto = _mapper.ToAddressDto(address.Value);
 
             return addressDto;
 

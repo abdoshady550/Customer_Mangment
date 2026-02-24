@@ -1,3 +1,4 @@
+using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Data;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
@@ -50,8 +51,6 @@ namespace Customer_Mangment
 
             builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
 
-            builder.Services.AddAutoMapper(optoin => optoin.AddMaps(typeof(IAssmblyMarker).Assembly));
-
 
             builder.Services.AddDbContext<AppDbContext>
             (option => option.UseSqlServer((builder.Configuration.GetConnectionString("DefaultConnection"))));
@@ -92,8 +91,7 @@ namespace Customer_Mangment
             builder.Services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
-
-
+            builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
 
             var app = builder.Build();
 

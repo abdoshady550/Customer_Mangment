@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Customer_Mangment.CQRS.Customers.DTOS;
+﻿using Customer_Mangment.CQRS.Customers.DTOS;
+using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
 using Customer_Mangment.Model.Results;
@@ -13,7 +13,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
                                           IGenericRepo<Address> AddressRepo,
                                           IGenericRepo<CustomerHistory> customerHistoryRepo,
                                           IGenericRepo<AddressHistory> addressHistoryRepo,
-                                          IMapper mapper,
+                                          ICustomerMapper mapper,
                                           ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetCustomerHistoryQuery, Result<CustomerAddressHistoryDto>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
@@ -21,7 +21,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
         private readonly IGenericRepo<Address> _addressRepo = AddressRepo;
         private readonly IGenericRepo<CustomerHistory> _customerHistoryRepo = customerHistoryRepo;
         private readonly IGenericRepo<AddressHistory> _addressHistoryRepo = addressHistoryRepo;
-        private readonly IMapper _mapper = mapper;
+        private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<GetCustomerHistoryQueryHandler> _logger = logger;
         public async Task<Result<CustomerAddressHistoryDto>> Handle(GetCustomerHistoryQuery request, CancellationToken ct)
         {
@@ -42,8 +42,8 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 
             var result = new CustomerAddressHistoryDto
             {
-                CustomerHistoryDtos = _mapper.Map<List<CustomerHistoryDto>>(customerHistory),
-                AddressHistoryDtos = _mapper.Map<List<AddressHistoryDto>>(addressHistory)
+                CustomerHistoryDtos = _mapper.ToCustomerHistoryDtoList(customerHistory),
+                AddressHistoryDtos = _mapper.ToAddressHistoryDtoList(addressHistory)
             };
 
             return result;
