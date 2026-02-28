@@ -1,15 +1,13 @@
-﻿using Customer_Mangment.Model.Entities;
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 {
-    public sealed class CreateAddressValidator : AbstractValidator<CreateAddressCommand>
+    public sealed class AddAddressValidator : AbstractValidator<AddAddressCommand>
     {
-        public CreateAddressValidator()
+        public AddAddressValidator()
         {
 
-            RuleFor(x => x.Type).NotEmpty().Must(x => x.GetType() == typeof(AdressType));
-
+            RuleFor(x => x.Type).IsInEnum();
             RuleFor(x => x.Value).NotEmpty();
 
         }

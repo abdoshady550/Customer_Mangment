@@ -45,7 +45,10 @@ namespace Customer_Mangment
             builder.Host.UseWolverine(opts =>
             {
                 opts.Discovery.IncludeAssembly(typeof(IAssmblyMarker).Assembly);
+
                 opts.UseFluentValidation();
+
+                opts.UseFluentValidation(RegistrationBehavior.ExplicitRegistration);
             });
             builder.Services.AddScoped<IDispatcher, AppDispatcher>();
 
@@ -102,7 +105,7 @@ namespace Customer_Mangment
                 app.MapOpenApi();
                 app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint("openapi/v1.json", "Customer Management API V1");
+                    options.SwaggerEndpoint("/openapi/v1.json", "Customer Management API V1");
 
                     options.EnableDeepLinking();
                     options.DisplayRequestDuration();

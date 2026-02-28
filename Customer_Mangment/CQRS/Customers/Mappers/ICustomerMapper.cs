@@ -10,11 +10,12 @@ namespace Customer_Mangment.CQRS.Customers.Mappers
         CustomerDto ToCustomerDto(Customer customer);
         CustomerHistoryDto ToCustomerHistoryDto(CustomerHistory history);
         AddressDto ToAddressDto(Address address);
-        AddressHistoryDto ToAddressHistoryDto(AddressHistory addressHistory);
         List<CustomerHistoryDto> ToCustomerHistoryDtoList(List<CustomerHistory> history);
-        List<AddressHistoryDto> ToAddressHistoryDtoList(List<AddressHistory> history);
+
         List<AddressDto> ToAddressDtoList(List<Address> addresses);
         List<CustomerDto> ToCustomerDtoList(List<Customer> customers);
+        List<AddressHistoryDto> ToAddressHistoryDtoList(List<Address> history);
+        AddressHistoryDto ToAddressHistoryDto(Address address);
     }
 
 

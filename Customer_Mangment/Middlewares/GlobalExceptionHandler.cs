@@ -36,8 +36,26 @@ namespace Customer_Mangment.Middlewares
             var modelStateDictionary = new ModelStateDictionary();
             var statusCode = StatusCodes.Status500InternalServerError;
 
+            if (exception is FluentValidation.ValidationException validationException)
+            {
+                var modelState = new ModelStateDictionary();
+
+                foreach (var error in validationException.Errors)
+                {
+                    modelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
+                }
+
+                return new ValidationProblemDetails(modelState)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation error occurred",
+                    Type = GetRfcUri(400)
+                };
+            }
             // Handle Identity errors specially
-            if (exception.Message.Contains("PasswordRequires") ||
+            else if (exception.Message.Contains("PasswordRequires") ||
                 exception.Message.Contains("Password") ||
                 exception.Data.Contains("IdentityErrors"))
             {

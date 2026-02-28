@@ -7,6 +7,7 @@ namespace Customer_Mangment.Controllers;
 [ApiController]
 public class ApiController : ControllerBase
 {
+    [NonAction]
     protected ActionResult Problem(List<Error> errors)
     {
         if (errors.Count is 0)

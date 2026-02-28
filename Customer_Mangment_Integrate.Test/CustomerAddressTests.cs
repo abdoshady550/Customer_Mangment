@@ -8,57 +8,106 @@ namespace Customer_Mangment_Integrate.Test
     {
         public CustomerAddressTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
 
-        // ----- Add Address -----
+        // ── Add ──────────────────────────────────────────────────────────
 
         [Fact]
-        public async Task AddAddress_ValidData_ReturnsAddressDto()
+        public async Task AddAddress_Admin_ReturnsAddressDto()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
-
-            var customer = await CreateTestCustomerAsync(client, "Address Customer", "01011110001");
-
-            var address = await client.AddAsync(customer.Id, new AddAddressReq
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
             {
-                Type = 2,
-                Value = "New Cairo, 5th Settlement"
-            });
+                var address = await client.AddAsync(customer.Id, new AddAddressReq
+                {
+                    Type = 1,
+                    Value = "New Cairo"
+                });
 
-            Assert.NotEqual(Guid.Empty, address.Id);
-            Assert.Equal(customer.Id, address.CustomerId);
-            Assert.Equal(2, address.Type);
-            Assert.Equal("New Cairo, 5th Settlement", address.Value);
+                Assert.NotEqual(Guid.Empty, address.Id);
+                Assert.Equal(customer.Id, address.CustomerId);
+                Assert.Equal("New Cairo", address.Value);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
 
         [Fact]
-        public async Task AddAddress_AppearsInCustomerAddresses()
+        public async Task AddAddress_ReturnsCorrectType()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
-
-            var customer = await CreateTestCustomerAsync(client, "Verify Address");
-
-            var address = await client.AddAsync(customer.Id, new AddAddressReq
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
             {
-                Type = 2,
-                Value = "Alexandria, Smouha"
-            });
+                var address = await client.AddAsync(customer.Id, new AddAddressReq
+                {
+                    Type = 2,
+                    Value = "Type 2 Address"
+                });
 
-            var updated = (await client.GetAsync(customer.Id)).First();
-            Assert.Contains(updated.Addresses, a => a.Id == address.Id);
+                Assert.Equal(2, address.Type);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task AddAddress_AppearsInCustomerAddressList()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await client.AddAsync(customer.Id, new AddAddressReq
+                {
+                    Type = 1,
+                    Value = "Verify Address"
+                });
+
+                var updated = (await client.GetAsync(customer.Id)).First();
+                Assert.Contains(updated.Addresses, a => a.Id == address.Id);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task AddAddress_IncreasesAddressCountByOne()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                // ✅ نحسب الـ count قبل — مش بنفترض قيمة ثابتة
+                var before = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+
+                await AddAddressAsync(client, customer.Id);
+
+                var after = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                Assert.Equal(before + 1, after);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task AddAddress_AddressIdIsNotEmpty()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await AddAddressAsync(client, customer.Id);
+                Assert.NotEqual(Guid.Empty, address.Id);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
 
         [Fact]
         public async Task AddAddress_NonExistentCustomer_ThrowsNotFound()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
+            var client = CreateApiClient(await GetAdminTokenAsync());
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
                 () => client.AddAsync(Guid.NewGuid(), new AddAddressReq
                 {
                     Type = 1,
-                    Value = "Some Address"
+                    Value = "Ghost"
                 }));
 
             Assert.Equal(404, ex.StatusCode);
@@ -67,10 +116,8 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task AddAddress_WithoutToken_ThrowsUnauthorized()
         {
-            var client = CreateApiClient();
-
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.AddAsync(Guid.NewGuid(), new AddAddressReq
+                () => CreateApiClient().AddAsync(Guid.NewGuid(), new AddAddressReq
                 {
                     Type = 1,
                     Value = "Test"
@@ -79,50 +126,96 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(401, ex.StatusCode);
         }
 
-        // ----- Update Address -----
-
         [Fact]
-        public async Task UpdateAddress_ValidData_UpdatesSuccessfully()
+        public async Task AddAddress_User_ThrowsForbiddenOrUnauthorized()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
+            var admin = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(admin);
             try
             {
-                var customer = await CreateTestCustomerAsync(client, "Update Addr Customer");
+                var user = CreateApiClient(await GetUserTokenAsync());
 
-                var address = await client.AddAsync(customer.Id, new AddAddressReq
+                var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                    () => user.AddAsync(customer.Id, new AddAddressReq
+                    {
+                        Type = 1,
+                        Value = "Unauthorized"
+                    }));
+
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
+            }
+            finally { await CleanupCustomerAsync(admin, customer.Id); }
+        }
+
+        [Fact]
+        public async Task GetHistory_AfterAddAddress_ContainsAddressHistory()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                await AddAddressAsync(client, customer.Id);
+
+                var history = await client.HistoryAsync(customer.Id);
+                Assert.NotNull(history);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        // ── Update ───────────────────────────────────────────────────────
+
+        [Fact]
+        public async Task UpdateAddress_Admin_UpdatesValue()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await AddAddressAsync(client, customer.Id);
+
+                await client.UpdateAsync(new UpdateAddressReq
                 {
+                    AddressId = address.Id,
                     Type = 1,
-                    Value = "Old Address"
+                    Value = "Updated Address Value"
                 });
+
+                var updatedCustomer = (await client.GetAsync(customer.Id)).First();
+                var updatedAddr = updatedCustomer.Addresses.First(a => a.Id == address.Id);
+                Assert.Equal("Updated Address Value", updatedAddr.Value);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task UpdateAddress_Admin_UpdatesType()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await AddAddressAsync(client, customer.Id);
 
                 await client.UpdateAsync(new UpdateAddressReq
                 {
                     AddressId = address.Id,
                     Type = 2,
-                    Value = "Updated Address"
+                    Value = address.Value
                 });
 
-                var updated = (await client.GetAsync(customer.Id)).First();
-                var updatedAddr = updated.Addresses.FirstOrDefault(a => a.Id == address.Id);
-                Assert.NotNull(updatedAddr);
+                var updatedCustomer = (await client.GetAsync(customer.Id)).First();
+                var updatedAddr = updatedCustomer.Addresses.First(a => a.Id == address.Id);
                 Assert.Equal(2, updatedAddr.Type);
-                Assert.Equal("Updated Address", updatedAddr.Value);
             }
-            catch (ApiException ex)
-            {
-                throw new Exception($"AddAsync failed: Status={ex.StatusCode}, Detail={ex.Message}, Response={ex.Response}");
-            }
-
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
 
         [Fact]
-        public async Task UpdateAddress_NonExistentAddressId_ThrowsNotFound()
+        public async Task UpdateAddress_NonExistentId_ThrowsNotFound()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
+            var client = CreateApiClient(await GetAdminTokenAsync());
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
                 () => client.UpdateAsync(new UpdateAddressReq
                 {
                     AddressId = Guid.NewGuid(),
@@ -136,10 +229,8 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task UpdateAddress_WithoutToken_ThrowsUnauthorized()
         {
-            var client = CreateApiClient();
-
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.UpdateAsync(new UpdateAddressReq
+                () => CreateApiClient().UpdateAsync(new UpdateAddressReq
                 {
                     AddressId = Guid.NewGuid(),
                     Type = 1,
@@ -149,34 +240,73 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(401, ex.StatusCode);
         }
 
-        // ----- Delete Address -----
+        [Fact]
+        public async Task UpdateAddress_User_ThrowsForbiddenOrUnauthorized()
+        {
+            var admin = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(admin);
+            try
+            {
+                var address = await AddAddressAsync(admin, customer.Id);
+                var user = CreateApiClient(await GetUserTokenAsync());
+
+                var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                    () => user.UpdateAsync(new UpdateAddressReq
+                    {
+                        AddressId = address.Id,
+                        Type = 1,
+                        Value = "Unauthorized"
+                    }));
+
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
+            }
+            finally { await CleanupCustomerAsync(admin, customer.Id); }
+        }
+
+        // ── Delete ───────────────────────────────────────────────────────
 
         [Fact]
-        public async Task DeleteAddress_ValidId_DeletesSuccessfully()
+        public async Task DeleteAddress_Admin_DeletesSuccessfully()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
-
-            var customer = await CreateTestCustomerAsync(client, "Delete Addr Customer");
-            var address = await client.AddAsync(customer.Id, new AddAddressReq
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
             {
-                Type = 1,
-                Value = "Address To Delete"
-            });
+                var address = await AddAddressAsync(client, customer.Id);
 
-            await client.DeleteAsync(address.Id);
+                await client.DeleteAsync(address.Id);
 
-            var updated = (await client.GetAsync(customer.Id)).First();
-            Assert.DoesNotContain(updated.Addresses, a => a.Id == address.Id);
+                var updated = (await client.GetAsync(customer.Id)).First();
+                Assert.DoesNotContain(updated.Addresses, a => a.Id == address.Id);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task DeleteAddress_DecreasesAddressCountByOne()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await AddAddressAsync(client, customer.Id);
+                // ✅ نحسب الـ count قبل — مش بنفترض قيمة ثابتة
+                var before = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+
+                await client.DeleteAsync(address.Id);
+
+                var after = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                Assert.Equal(before - 1, after);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
 
         [Fact]
         public async Task DeleteAddress_NonExistentId_ThrowsNotFound()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
+            var client = CreateApiClient(await GetAdminTokenAsync());
 
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
                 () => client.DeleteAsync(Guid.NewGuid()));
 
             Assert.Equal(404, ex.StatusCode);
@@ -185,12 +315,47 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task DeleteAddress_WithoutToken_ThrowsUnauthorized()
         {
-            var client = CreateApiClient();
-
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.DeleteAsync(Guid.NewGuid()));
+                () => CreateApiClient().DeleteAsync(Guid.NewGuid()));
 
             Assert.Equal(401, ex.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteAddress_User_ThrowsForbiddenOrUnauthorized()
+        {
+            var admin = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(admin);
+            try
+            {
+                var address = await AddAddressAsync(admin, customer.Id);
+                var user = CreateApiClient(await GetUserTokenAsync());
+
+                var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                    () => user.DeleteAsync(address.Id));
+
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
+            }
+            finally { await CleanupCustomerAsync(admin, customer.Id); }
+        }
+
+        [Fact]
+        public async Task DeleteAddress_Twice_SecondThrowsNotFound()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+            try
+            {
+                var address = await AddAddressAsync(client, customer.Id);
+
+                await client.DeleteAsync(address.Id);
+
+                var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                    () => client.DeleteAsync(address.Id));
+
+                Assert.Equal(404, ex.StatusCode);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
     }
 

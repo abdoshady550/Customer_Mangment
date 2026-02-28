@@ -29,33 +29,51 @@ public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshTok
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
-        var jwtSettings = _configuration.GetSection("Jwt");
-
-        var tokenValidationParameters = new TokenValidationParameters
+        try
         {
+            var jwtSettings = _configuration.GetSection("Jwt");
 
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!)),
-            ValidateIssuer = true,
-            ValidIssuer = jwtSettings["Issuer"]!,
-            ValidateAudience = true,
-            ValidAudience = jwtSettings["Audience"]!,
-            ValidateLifetime = false,
-            ClockSkew = TimeSpan.Zero
-        };
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtSettings["Key"]!)
+                ),
+                ValidateIssuer = true,
+                ValidIssuer = jwtSettings["Issuer"]!,
+                ValidateAudience = true,
+                ValidAudience = jwtSettings["Audience"]!,
+                ValidateLifetime = false,
+                ClockSkew = TimeSpan.Zero
+            };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            var tokenHandler = new JwtSecurityTokenHandler();
 
-        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new SecurityTokenException("Invalid token.");
+            var principal = tokenHandler.ValidateToken(
+                token,
+                tokenValidationParameters,
+                out SecurityToken securityToken
+            );
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(
+                    SecurityAlgorithms.HmacSha256,
+                    StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return principal;
         }
-
-        return principal;
+        catch (SecurityTokenException)
+        {
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
-
     private async Task<Result<TokenResponse>> CreateAsync(AppUserDto user, CancellationToken ct = default)
     {
         var jwtSettings = _configuration.GetSection("Jwt");

@@ -33,7 +33,6 @@
 
   <ItemGroup>
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddressById\" />
-    <Folder Include="CQRS\Customers\Addresses\Queries\GetAddresses\" />
   </ItemGroup>
 
 </Project>

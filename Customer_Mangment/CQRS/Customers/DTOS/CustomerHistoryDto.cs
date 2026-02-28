@@ -1,4 +1,6 @@
-﻿namespace Customer_Mangment.CQRS.Customers.DTOS
+﻿using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+
+namespace Customer_Mangment.CQRS.Customers.DTOS
 {
     public class CustomerHistoryDto
     {
@@ -23,9 +25,12 @@
     }
     public class CustomerAddressHistoryDto
     {
-        public List<CustomerHistoryDto> CustomerHistoryDtos { get; set; } = new();
-        public List<AddressHistoryDto> AddressHistoryDtos { get; set; } = new();
+        //public List<CustomerHistoryDto> CustomerHistoryDtos { get; set; } = new();
+        //public List<AddressHistoryDto> AddressHistoryDtos { get; set; } = new();
+        public List<CustomerDto> CustomerHistoryDtos { get; set; } = new();
+        public List<AddressDto> AddressHistoryDtos { get; set; } = new();
 
     }
+
 
 }

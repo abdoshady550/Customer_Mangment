@@ -4,36 +4,52 @@ using System.Net.Http.Headers;
 
 namespace Customer_Mangment_Integrate.Test.Common
 {
-    public class TestBase(WebApplicationFactory<IAssmblyMarker> factory) : IClassFixture<WebApplicationFactory<IAssmblyMarker>>
+    public class TestBase : IClassFixture<WebApplicationFactory<IAssmblyMarker>>
     {
-        protected readonly WebApplicationFactory<IAssmblyMarker> _factory = factory;
+        protected readonly WebApplicationFactory<IAssmblyMarker> _factory;
 
+        protected const string AdminEmail = "admin@test.com";
+        protected const string AdminPassword = "Admin@123";
+        protected const string UserEmail = "user@test.com";
+        protected const string UserPassword = "User@123";
+
+        public TestBase(WebApplicationFactory<IAssmblyMarker> factory) => _factory = factory;
+
+        // Client
 
         protected Client CreateApiClient()
         {
-            var httpClient = _factory.CreateClient();
-            var client = new Client(httpClient);
-            client.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
-            return client;
+            var http = _factory.CreateClient();
+            return new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
         }
 
         protected Client CreateApiClient(string accessToken)
         {
-            var httpClient = _factory.CreateClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", accessToken);
-            var client = new Client(httpClient);
-            client.BaseUrl = httpClient.BaseAddress?.ToString() ?? "https://localhost:7063/";
-            return client;
+            var http = _factory.CreateClient();
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            return new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
         }
 
+        // Tokens
+        protected async Task<string> GetTokenAsync(
+            string email = "admin@test.com",
+            string password = "Test@123")
+        {
+            var client = CreateApiClient();
+            var response = await client.GenerateTokenAsync(new GenerateTokenQuery
+            {
+                Email = email,
+                Password = password
+            });
+            return response.AccessToken;
+        }
         protected async Task<string> GetAdminTokenAsync()
         {
             var client = CreateApiClient();
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
-                Email = "admin@test.com",
-                Password = "Admin@123"
+                Email = AdminEmail,
+                Password = AdminPassword
             });
             return response.AccessToken;
         }
@@ -43,28 +59,41 @@ namespace Customer_Mangment_Integrate.Test.Common
             var client = CreateApiClient();
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
-                Email = "user@test.com",
-                Password = "User@123"
+                Email = UserEmail,
+                Password = UserPassword
             });
             return response.AccessToken;
         }
 
+
+        protected static string UniqueMobile()
+            => "01" + Random.Shared.Next(100000000, 999999999).ToString();
+
         protected async Task<CustomerDto> CreateTestCustomerAsync(
             Client authClient,
-            string name = "Test Customer",
-            string? mobile = null)
+            string? name = "Test Customer",
+            string? mobile = null,
+            List<CreateAddressReq>? addresses = null)
         {
-            var uniqueMobile = mobile ?? $"010{new Random().Next(10000000, 99999999)}";
-
             return await authClient.Add2Async(new CreateCustomerReq
             {
-                Name = name,
-                Mobile = uniqueMobile,
-                Adresses = new List<CreateAddressReq>
-        {
-            new CreateAddressReq { Type = 1, Value = "123 Test St, Cairo" }
-        }
+                Name = name ?? "Test Customer",
+                Mobile = mobile ?? UniqueMobile(),
+                Adresses = addresses ?? null
+
             });
+        }
+
+        protected async Task<AddressDto> AddAddressAsync(Client authClient, Guid customerId, int? type = 1)
+            => await authClient.AddAsync(customerId, new AddAddressReq
+            {
+                Type = type ?? 1,
+                Value = "Secondary Address"
+            });
+        protected async Task CleanupCustomerAsync(Client adminClient, Guid customerId)
+        {
+            try { await adminClient.Delete2Async(customerId); }
+            catch { /* already deleted or never existed */ }
         }
     }
 

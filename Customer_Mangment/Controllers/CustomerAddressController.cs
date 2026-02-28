@@ -2,6 +2,7 @@
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Req;
@@ -31,6 +32,23 @@ namespace Customer_Mangment.Controllers
         public async Task<IActionResult> AddAddress([FromQuery] Guid CustomerId, [FromBody] AddAddressReq req, CancellationToken ct)
         {
             var result = await _sender.Send(new AddAddressCommand(GetCurrentUserId(), CustomerId, req.Type, req.Value), ct);
+            return result.Match(
+               response => Ok(response),
+               Problem);
+        }
+        [HttpGet]
+        [Route("history")]
+        [ProducesResponseType(typeof(List<AddressDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("GetAddressHistory")]
+        [EndpointDescription("Retrieves the Address history of a specific customer based on the provided CustomerId.")]
+        public async Task<IActionResult> GetCustomerHistory([FromQuery] Guid CustomerId, CancellationToken ct)
+        {
+            var result = await _sender.Send(new GetAddressHistoryQuery(GetCurrentUserId(), CustomerId), ct);
             return result.Match(
                response => Ok(response),
                Problem);

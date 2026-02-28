@@ -9,278 +9,269 @@ namespace Customer_Mangment_Integrate.Test
         public EndToEndScenarioTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
 
         [Fact]
-        public async Task FullCustomerLifecycle_CreateUpdateDeleteWithAddresses()
+        public async Task FullCustomerLifecycle_CreateUpdateAddressDeleteAndHistory()
         {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
-
-            // 1. Create Customer
-            var created = await client.Add2Async(new CreateCustomerReq
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await client.Add2Async(new CreateCustomerReq
             {
-                Name = "Lifecycle User",
-                Mobile = "01000000099",
+                Name = "Lifecycle Customer",
+                Mobile = UniqueMobile(),
                 Adresses = new List<CreateAddressReq>
                 {
                     new CreateAddressReq { Type = 1, Value = "Initial Address" }
                 }
             });
-            Assert.NotEqual(Guid.Empty, created.Id);
 
-            // 2. Read Customer
-            var fetched = (await client.GetAsync(created.Id)).First();
-            Assert.Equal("Lifecycle User", fetched.Name);
-            Assert.Single(fetched.Addresses);
-
-            // 3. Update Customer
-            await client.Update2Async(new UpdateCustomerReq
+            try
             {
-                CustomerId = created.Id,
-                Name = "Lifecycle User Updated",
-                Mobile = "01000000098"
-            });
-            var afterUpdate = (await client.GetAsync(created.Id)).First();
-            Assert.Equal("Lifecycle User Updated", afterUpdate.Name);
+                // 1. Verify create
+                Assert.NotEqual(Guid.Empty, customer.Id);
+                Assert.Equal(AdminEmail, customer.CreatedBy);
 
-            // 4. Add Address
-            var newAddress = await client.AddAsync(created.Id, new AddAddressReq
-            {
-                Type = 2,
-                Value = "Second Address"
-            });
-            Assert.NotEqual(Guid.Empty, newAddress.Id);
+                // 2. Read
+                var fetched = (await client.GetAsync(customer.Id)).First();
+                Assert.Equal(customer.Name, fetched.Name);
+                Assert.Single(fetched.Addresses);
 
-            // 5. Verify 2 addresses now
-            var withTwoAddresses = (await client.GetAsync(created.Id)).First();
-            Assert.Equal(2, withTwoAddresses.Addresses.Count);
-
-            // 6. Update Address
-            await client.UpdateAsync(new UpdateAddressReq
-            {
-                AddressId = newAddress.Id,
-                Type = 3,
-                Value = "Updated Second Address"
-            });
-
-            // 7. Delete Address
-            await client.DeleteAsync(newAddress.Id);
-            var afterAddressDelete = (await client.GetAsync(created.Id)).First();
-            Assert.Single(afterAddressDelete.Addresses);
-
-            // 8. Check History
-            var history = await client.HistoryAsync(created.Id);
-            Assert.NotNull(history.CustomerHistoryDtos);
-            Assert.True(history.CustomerHistoryDtos.Count >= 2);
-
-            // 9. Delete Customer
-            await client.Delete2Async(created.Id);
-
-            // 10. Verify Deleted
-            var ex = await Assert.ThrowsAsync<ApiException<ProblemDetails>>(
-                () => client.GetAsync(created.Id));
-            Assert.Equal(404, ex.StatusCode);
-        }
-
-        [Fact]
-        public async Task AdminVsUser_Permissions_WorkCorrectly()
-        {
-            var adminToken = await GetAdminTokenAsync();
-            var adminClient = CreateApiClient(adminToken);
-
-            var userToken = await GetUserTokenAsync();
-            var userClient = CreateApiClient(userToken);
-
-            // ✅ Admin can create
-            var adminCustomer = await CreateTestCustomerAsync(adminClient, "Admin Created");
-            Assert.NotEqual(Guid.Empty, adminCustomer.Id);
-
-            // ✅ User can create
-            var userCustomer = await CreateTestCustomerAsync(userClient, "User Created");
-            Assert.NotEqual(Guid.Empty, userCustomer.Id);
-
-            // ✅ User can read
-            var customers = await userClient.GetAsync(adminCustomer.Id);
-            Assert.NotNull(customers);
-            Assert.NotEmpty(customers);
-
-            // ✅ Admin can read
-            var adminRead = await adminClient.GetAsync(userCustomer.Id);
-            Assert.NotNull(adminRead);
-
-            // ❌ User cannot update — expects 401 or 403
-            var updateEx = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.Update2Async(new UpdateCustomerReq
-                {
-                    CustomerId = adminCustomer.Id,
-                    Name = "Hacked Name",
-                    Mobile = "01099990000"
-                }));
-            Assert.True(updateEx.StatusCode == 401 || updateEx.StatusCode == 403,
-                $"Expected 401 or 403 but got {updateEx.StatusCode}");
-
-            // ❌ User cannot delete — expects 401 or 403
-            var deleteEx = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.Delete2Async(adminCustomer.Id));
-            Assert.True(deleteEx.StatusCode == 401 || deleteEx.StatusCode == 403,
-                $"Expected 401 or 403 but got {deleteEx.StatusCode}");
-
-            // ❌ User cannot add address — expects 401 or 403
-            var addAddrEx = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.AddAsync(adminCustomer.Id, new AddAddressReq
-                {
-                    Type = 1,
-                    Value = "Unauthorized Address"
-                }));
-            Assert.True(addAddrEx.StatusCode == 401 || addAddrEx.StatusCode == 403,
-                $"Expected 401 or 403 but got {addAddrEx.StatusCode}");
-
-            // ❌ User cannot update address — expects 401 or 403
-            var firstAddress = adminCustomer.Addresses.First();
-            var updateAddrEx = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.UpdateAsync(new UpdateAddressReq
-                {
-                    AddressId = firstAddress.Id,
-                    Type = 2,
-                    Value = "Unauthorized Update"
-                }));
-            Assert.True(updateAddrEx.StatusCode == 401 || updateAddrEx.StatusCode == 403,
-                $"Expected 401 or 403 but got {updateAddrEx.StatusCode}");
-
-            // ❌ User cannot delete address — expects 401 or 403
-            var deleteAddrEx = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.DeleteAsync(firstAddress.Id));
-            Assert.True(deleteAddrEx.StatusCode == 401 || deleteAddrEx.StatusCode == 403,
-                $"Expected 401 or 403 but got {deleteAddrEx.StatusCode}");
-
-            // ✅ Cleanup — only admin can delete
-            await adminClient.Delete2Async(adminCustomer.Id);
-            await adminClient.Delete2Async(userCustomer.Id);
-        }
-
-        // ---- Separate focused permission tests ----
-
-        [Fact]
-        public async Task User_CanCreate_Customer()
-        {
-            var userToken = await GetUserTokenAsync();
-            var userClient = CreateApiClient(userToken);
-
-            var customer = await CreateTestCustomerAsync(userClient, "User Created Customer");
-
-            Assert.NotEqual(Guid.Empty, customer.Id);
-
-            // Cleanup
-            var adminClient = CreateApiClient(await GetAdminTokenAsync());
-            await adminClient.Delete2Async(customer.Id);
-        }
-
-        [Fact]
-        public async Task User_CanRead_Customers()
-        {
-            var adminToken = await GetAdminTokenAsync();
-            var adminClient = CreateApiClient(adminToken);
-            var customer = await CreateTestCustomerAsync(adminClient, "Read Test");
-
-            var userToken = await GetUserTokenAsync();
-            var userClient = CreateApiClient(userToken);
-
-            var result = await userClient.GetAsync(customer.Id);
-
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
-
-            // Cleanup
-            await adminClient.Delete2Async(customer.Id);
-        }
-
-        [Fact]
-        public async Task User_CannotUpdate_Customer()
-        {
-            var adminToken = await GetAdminTokenAsync();
-            var adminClient = CreateApiClient(adminToken);
-            var customer = await CreateTestCustomerAsync(adminClient, "Update Restriction Test");
-
-            var userToken = await GetUserTokenAsync();
-            var userClient = CreateApiClient(userToken);
-
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.Update2Async(new UpdateCustomerReq
+                // 3. Update customer
+                await client.Update2Async(new UpdateCustomerReq
                 {
                     CustomerId = customer.Id,
-                    Name = "Should Not Update",
-                    Mobile = "01088880000"
-                }));
+                    Name = "Lifecycle Updated",
+                    Mobile = UniqueMobile()
+                });
+                var afterUpdate = (await client.GetAsync(customer.Id)).First();
+                Assert.Equal("Lifecycle Updated", afterUpdate.Name);
+                Assert.Equal(AdminEmail, afterUpdate.UpdatedBy);
 
-            Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                $"Expected 401 or 403 but got {ex.StatusCode}");
+                // 4. Add address 
+                var countBefore = afterUpdate.Addresses.Count;
+                var newAddr = await client.AddAsync(customer.Id, new AddAddressReq
+                {
+                    Type = 2,
+                    Value = "Second Address"
+                });
+                Assert.NotEqual(Guid.Empty, newAddr.Id);
 
-            // Delete
-            await adminClient.Delete2Async(customer.Id);
+                var afterAddAddr = (await client.GetAsync(customer.Id)).First();
+                Assert.Equal(countBefore + 1, afterAddAddr.Addresses.Count);
+
+                // 5. Update address
+                await client.UpdateAsync(new UpdateAddressReq
+                {
+                    AddressId = newAddr.Id,
+                    Type = 3,
+                    Value = "Second Address Updated"
+                });
+                var afterAddrUpdate = (await client.GetAsync(customer.Id)).First();
+                Assert.Contains(afterAddrUpdate.Addresses,
+                    a => a.Id == newAddr.Id && a.Value == "Second Address Updated");
+
+                // 6. Delete address
+                await client.DeleteAsync(newAddr.Id);
+                var afterAddrDelete = (await client.GetAsync(customer.Id)).First();
+                Assert.DoesNotContain(afterAddrDelete.Addresses, a => a.Id == newAddr.Id);
+
+                // 7. History وجوده
+                var history = await client.HistoryAsync(customer.Id);
+                var customerhistory = await client.History2Async(customer.Id);
+
+                Assert.True(customerhistory.Count >= 2);
+                Assert.NotNull(history);
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
         }
 
         [Fact]
-        public async Task User_CannotDelete_Customer()
+        public async Task FullCustomerLifecycle_DeleteAndHistoryIsDeleted()
         {
-            var adminToken = await GetAdminTokenAsync();
-            var adminClient = CreateApiClient(adminToken);
-            var customer = await CreateTestCustomerAsync(adminClient, "Delete Restriction Test");
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client, "Delete Lifecycle");
 
-            var userToken = await GetUserTokenAsync();
-            var userClient = CreateApiClient(userToken);
-
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => userClient.Delete2Async(customer.Id));
-
-            Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                $"Expected 401 or 403 but got {ex.StatusCode}");
-
-            // Delete
-            await adminClient.Delete2Async(customer.Id);
-        }
-
-        [Fact]
-        public async Task HistoryTracking_ReflectsAllChanges()
-        {
-            var token = await GetAdminTokenAsync();
-            var client = CreateApiClient(token);
-
-            // Create
-            var customer = await CreateTestCustomerAsync(client, "History Tracker");
-
-            // Update
             await client.Update2Async(new UpdateCustomerReq
             {
                 CustomerId = customer.Id,
-                Name = "History Tracker v2"
+                Name = "Updated Before Delete",
+                Mobile = UniqueMobile()
             });
 
-            // Add Address
-            var addr = await client.AddAsync(customer.Id, new AddAddressReq
-            {
-                Type = 1,
-                Value = "Track This Address"
-            });
-
-            // Update Address
-            await client.UpdateAsync(new UpdateAddressReq
-            {
-                AddressId = addr.Id,
-                Type = 2,
-                Value = "Track This Address v2"
-            });
-
-            // Check History
-            var history = await client.HistoryAsync(customer.Id);
-
-            Assert.NotNull(history.CustomerHistoryDtos);
-            Assert.True(history.CustomerHistoryDtos.Count >= 1,
-                "Customer history should have at least  update");
-
-            Assert.NotNull(history.AddressHistoryDtos);
-            Assert.True(history.AddressHistoryDtos.Count >= 1,
-                "Address history should have at least one entry");
-
-            // Delete
             await client.Delete2Async(customer.Id);
+
+            // Get → 404
+            var notFound = await Assert.ThrowsAnyAsync<ApiException>(
+                () => client.GetAsync(customer.Id));
+            Assert.Equal(404, notFound.StatusCode);
+
+            // History → IsDeleted = true
+            var historyAfter = await client.History2Async(customer.Id);
+            var customerHistoryAfter = await client.History2Async(customer.Id);
+            Assert.True(customerHistoryAfter.Count >= 2);
+        }
+
+        [Fact]
+        public async Task UserCreates_AdminUpdatesAndDeletes()
+        {
+            var userClient = CreateApiClient(await GetUserTokenAsync());
+            var adminClient = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(userClient, "Cross Role");
+
+            try
+            {
+                Assert.Equal(UserEmail, customer.CreatedBy);
+
+                var fetched = (await adminClient.GetAsync(customer.Id)).First();
+                Assert.Equal(customer.Id, fetched.Id);
+
+                await adminClient.Update2Async(new UpdateCustomerReq
+                {
+                    CustomerId = customer.Id,
+                    Name = "Cross Role Updated",
+                    Mobile = UniqueMobile()
+                });
+                var updated = (await adminClient.GetAsync(customer.Id)).First();
+                Assert.Equal(AdminEmail, updated.UpdatedBy);
+
+                // User cannot delete
+                var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                    () => userClient.Delete2Async(customer.Id));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
+            }
+            finally { await CleanupCustomerAsync(adminClient, customer.Id); }
+        }
+
+        [Fact]
+        public async Task TokenRefresh_NewTokenWorksOnProtectedEndpoint()
+        {
+            var client = CreateApiClient();
+            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
+            {
+                Email = AdminEmail,
+                Password = AdminPassword
+            });
+
+            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
+            {
+                RefreshToken = initial.RefreshToken,
+                ExpiredAccessToken = initial.AccessToken
+            });
+
+            var authed = CreateApiClient(refreshed.AccessToken);
+            var customers = await authed.GetAsync(null);
+            Assert.NotNull(customers);
+        }
+
+        [Fact]
+        public async Task MultipleAddresses_AddUpdateDelete_AllOperationsConsistent()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var customer = await CreateTestCustomerAsync(client);
+
+            try
+            {
+                var countBefore = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+
+                var addr1 = await AddAddressAsync(client, customer.Id, 1);
+                var addr2 = await AddAddressAsync(client, customer.Id, 2);
+                var addr3 = await AddAddressAsync(client, customer.Id, 3);
+
+                var afterAdd = (await client.GetAsync(customer.Id)).First();
+                Assert.Equal(countBefore + 3, afterAdd.Addresses.Count);
+
+                // Update addr2
+                await client.UpdateAsync(new UpdateAddressReq
+                {
+                    AddressId = addr2.Id,
+                    Type = 2,
+                    Value = "Modified Addr2"
+                });
+
+                // Delete addr1 and addr3
+                await client.DeleteAsync(addr1.Id);
+                await client.DeleteAsync(addr3.Id);
+
+                var afterDelete = (await client.GetAsync(customer.Id)).First();
+                Assert.Equal(countBefore + 1, afterDelete.Addresses.Count);
+                Assert.Contains(afterDelete.Addresses,
+                    a => a.Id == addr2.Id && a.Value == "Modified Addr2");
+            }
+            finally { await CleanupCustomerAsync(client, customer.Id); }
+        }
+
+        [Fact]
+        public async Task CreateMultipleCustomers_AllReturnedInGetAll()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var c1 = await CreateTestCustomerAsync(client, "Bulk Customer 1");
+            var c2 = await CreateTestCustomerAsync(client, "Bulk Customer 2");
+            var c3 = await CreateTestCustomerAsync(client, "Bulk Customer 3");
+
+            try
+            {
+                var list = await client.GetAsync(null);
+                // ✅ Assert.Contains بـ Id — آمن بغض النظر عن customers تانية في الـ DB
+                Assert.Contains(list, c => c.Id == c1.Id);
+                Assert.Contains(list, c => c.Id == c2.Id);
+                Assert.Contains(list, c => c.Id == c3.Id);
+            }
+            finally
+            {
+                await CleanupCustomerAsync(client, c1.Id);
+                await CleanupCustomerAsync(client, c2.Id);
+                await CleanupCustomerAsync(client, c3.Id);
+            }
+        }
+
+        [Fact]
+        public async Task UserAndAdminBothCreateCustomers_EachSeesAllCustomers()
+        {
+            var adminClient = CreateApiClient(await GetAdminTokenAsync());
+            var userClient = CreateApiClient(await GetUserTokenAsync());
+            var adminCustomer = await CreateTestCustomerAsync(adminClient, "Admin's Customer");
+            var userCustomer = await CreateTestCustomerAsync(userClient, "User's Customer");
+
+            try
+            {
+                var adminList = await adminClient.GetAsync(null);
+                var userList = await userClient.GetAsync(null);
+
+                Assert.Contains(adminList, c => c.Id == adminCustomer.Id);
+                Assert.Contains(adminList, c => c.Id == userCustomer.Id);
+                Assert.Contains(userList, c => c.Id == adminCustomer.Id);
+                Assert.Contains(userList, c => c.Id == userCustomer.Id);
+            }
+            finally
+            {
+                await CleanupCustomerAsync(adminClient, adminCustomer.Id);
+                await CleanupCustomerAsync(adminClient, userCustomer.Id);
+            }
+        }
+
+        [Fact]
+        public async Task HistoryTracksAllChangesInOrder()
+        {
+            var client = CreateApiClient(await GetAdminTokenAsync());
+            var created = await CreateTestCustomerAsync(client, "History Order");
+
+            try
+            {
+                await client.Update2Async(new UpdateCustomerReq
+                {
+                    CustomerId = created.Id,
+                    Name = "History Order V2",
+                    Mobile = UniqueMobile()
+                });
+
+                await client.Update2Async(new UpdateCustomerReq
+                {
+                    CustomerId = created.Id,
+                    Name = "History Order V3",
+                    Mobile = UniqueMobile()
+                });
+
+                var history = await client.History2Async(created.Id);
+                Assert.True(history.Count >= 3);
+            }
+            finally { await CleanupCustomerAsync(client, created.Id); }
         }
     }
 

@@ -7,8 +7,8 @@ namespace Customer_Mangment.Data
 {
     public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
     {
-        DbSet<Customer> Customers { get; set; }
-        DbSet<Address> Addresses { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Address> Addresses { get; set; }
         DbSet<RefreshToken> RefreshTokens { get; set; }
         DbSet<CustomerHistory> CustomerHistory { get; set; }
         DbSet<AddressHistory> AddressHistory { get; set; }
