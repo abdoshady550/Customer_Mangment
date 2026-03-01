@@ -3,7 +3,6 @@ using Customer_Mangment.Data;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
-using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Services;
@@ -11,7 +10,6 @@ using Customer_Mangment.Repository.Services.AppMediator;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -54,9 +52,8 @@ namespace Customer_Mangment
 
             builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
 
+            builder.Services.AddDataBaseConfig(builder.Configuration);
 
-            builder.Services.AddDbContext<AppDbContext>
-            (option => option.UseSqlServer((builder.Configuration.GetConnectionString("DefaultConnection"))));
 
             builder.Services.AddIdentity<User, IdentityRole>(
                options =>
@@ -65,7 +62,6 @@ namespace Customer_Mangment
                }
             ).AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
-            builder.Services.AddScoped<ApplicationDbContextInitialiser>();
             builder.Services.AddTransient<LoggerMiddleware>();
 
 
@@ -91,7 +87,6 @@ namespace Customer_Mangment
             builder.Services.AddAuthorization();
 
 
-            builder.Services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();

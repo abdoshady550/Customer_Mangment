@@ -91,17 +91,33 @@ namespace Customer_Mangment.Data
         }
     }
 
-    public static class InitialiserExtensions
+    public static class InitialiserExtension
     {
         public static async Task InitialiseDatabaseAsync(this WebApplication app)
         {
             using var scope = app.Services.CreateScope();
 
-            var initialiser = scope.ServiceProvider
-                .GetRequiredService<ApplicationDbContextInitialiser>();
+            var flags = scope.ServiceProvider
+                .GetRequiredService<IConfiguration>()
+                .GetSection(FeatureFlags.SectionName)
+                .Get<FeatureFlags>() ?? new FeatureFlags();
 
-            await initialiser.InitialiseAsync();
-            await initialiser.SeedAsync();
+            if (flags.UseMongoDb)
+            {
+                var mongoInitialiser = scope.ServiceProvider
+                    .GetRequiredService<MongoDbInitialiser>();
+
+                await mongoInitialiser.SeedAsync();
+            }
+            else
+            {
+                var sqlInitialiser = scope.ServiceProvider
+                    .GetRequiredService<ApplicationDbContextInitialiser>();
+
+                await sqlInitialiser.InitialiseAsync();
+                await sqlInitialiser.SeedAsync();
+            }
         }
     }
+
 }
