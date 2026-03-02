@@ -3,7 +3,10 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
 using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
+using Customer_Mangment.Repository.Interfaces.Audit;
 using Customer_Mangment.Repository.Services;
+using Customer_Mangment.Repository.Services.AuditServices;
+using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -39,11 +42,11 @@ namespace Customer_Mangment
             IConfiguration configuration)
         {
 
-
             services.AddScoped<ApplicationDbContextInitialiser>();
 
-
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
+            services.AddScoped<ISnapshotService, SqlSnapshotService>();
+            services.AddScoped<IHistoryService, SqlHistoryService>();
 
             return services;
         }
@@ -73,10 +76,14 @@ namespace Customer_Mangment
             RegisterCollection<Address>(services, "Addresses");
             RegisterCollection<RefreshToken>(services, "RefreshTokens");
             RegisterCollection<User>(services, "Users");
-            RegisterCollection<CustomerHistory>(services, "CustomerHistory");
-            RegisterCollection<AddressHistory>(services, "AddressHistory");
+
+            RegisterCollection<CustomerSnapshot>(services, "CustomerSnapshots");
+            RegisterCollection<AddressSnapshot>(services, "AddressSnapshots");
+
 
             services.AddScoped(typeof(IGenericRepo<>), typeof(MongoGenericRepo<>));
+            services.AddScoped<ISnapshotService, MongoSnapshotService>();
+            services.AddScoped<IHistoryService, MongoHistoryService>();
 
             return services;
         }

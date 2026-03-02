@@ -21,7 +21,7 @@ namespace Customer_Mangment.Model.Entities
         public IReadOnlyCollection<Address> Addresses => _addresses;
 
 
-        private Customer() { }
+        public Customer() { }
         private Customer(string name, string mobile, string createdBy)
         {
             Id = Guid.NewGuid();

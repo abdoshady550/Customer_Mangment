@@ -16,7 +16,7 @@ namespace Customer_Mangment.Model.Entities
         public Customer Customer { get; private set; }
         private Address() { }
 
-        Address(AdressType type, string value)
+        public Address(AdressType type, string value)
         {
             Id = Guid.NewGuid();
             Type = type;

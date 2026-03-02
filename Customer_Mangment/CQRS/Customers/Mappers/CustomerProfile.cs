@@ -14,16 +14,15 @@ namespace Customer_Mangment.CQRS.Customers.Mappers
         [MapperIgnoreSource(nameof(Customer.IsDeleted))]
         public partial CustomerDto ToCustomerDto(Customer customer);
         public partial List<CustomerDto> ToCustomerDtoList(List<Customer> customers);
-        public partial CustomerHistoryDto ToCustomerHistoryDto(CustomerHistory history);
-        public partial List<CustomerHistoryDto> ToCustomerHistoryDtoList(List<CustomerHistory> history);
+
+        public partial Customer ToCustomerSanpDto(CustomerSnapshot snapshot);
+        public partial List<Customer> ToCustomerSanpDtolist(List<CustomerSnapshot> Snapshots);
 
         [MapperIgnoreSource(nameof(Address.Customer))]
         public partial AddressDto ToAddressDto(Address address);
         public partial List<AddressDto> ToAddressDtoList(List<Address> addresses);
-
-        public partial AddressHistoryDto ToAddressHistoryDto(Address address);
-        public partial List<AddressHistoryDto> ToAddressHistoryDtoList(List<Address> history);
-
+        public partial Address ToAddressSnapDto(AddressSnapshot snapshot);
+        public partial List<Address> ToAddressSnapDtoList(List<AddressSnapshot> Snapshots);
 
     }
 

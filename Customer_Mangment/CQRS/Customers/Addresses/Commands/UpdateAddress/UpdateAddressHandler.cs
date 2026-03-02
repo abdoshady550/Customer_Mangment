@@ -2,18 +2,21 @@
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.Repository.Interfaces.Audit;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
 {
     public sealed class UpdateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
+                                             ISnapshotService snapshotService,
                                              ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
+        private readonly ISnapshotService _snapshotService = snapshotService;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
         public async Task<Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
@@ -22,7 +25,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             if (user == null)
             {
                 _logger.LogWarning("User with id {UserId} not found", request.UserId);
-                return Error.NotFound("UserNotFound", $"User with id {request.UserId} not found");
+                return Error.Unauthorized("UserNotFound", $"User with id {request.UserId} not found");
             }
             var address = await _adressRepo.FirstOrDefaultAsync(a => a.Id == request.AddressId, ct);
             if (address == null)
@@ -52,6 +55,9 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             _adressRepo.Update(address);
             await _adressRepo.SaveChangesAsync(ct);
 
+            await _snapshotService.SaveAddressSnapshotAsync(address, "Updated", ct);
+
+            _logger.LogInformation("Address with id {AddressId} updated successfully", request.AddressId);
             return Result.Updated;
         }
     };

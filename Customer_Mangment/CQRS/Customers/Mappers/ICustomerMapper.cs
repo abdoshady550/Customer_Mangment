@@ -8,14 +8,14 @@ namespace Customer_Mangment.CQRS.Customers.Mappers
     public interface ICustomerMapper
     {
         CustomerDto ToCustomerDto(Customer customer);
-        CustomerHistoryDto ToCustomerHistoryDto(CustomerHistory history);
-        AddressDto ToAddressDto(Address address);
-        List<CustomerHistoryDto> ToCustomerHistoryDtoList(List<CustomerHistory> history);
-
-        List<AddressDto> ToAddressDtoList(List<Address> addresses);
         List<CustomerDto> ToCustomerDtoList(List<Customer> customers);
-        List<AddressHistoryDto> ToAddressHistoryDtoList(List<Address> history);
-        AddressHistoryDto ToAddressHistoryDto(Address address);
+
+        AddressDto ToAddressDto(Address address);
+        List<AddressDto> ToAddressDtoList(List<Address> addresses);
+        Customer ToCustomerSanpDto(CustomerSnapshot snapshot);
+        List<Customer> ToCustomerSanpDtolist(List<CustomerSnapshot> Snapshots);
+        Address ToAddressSnapDto(AddressSnapshot snapshot);
+        List<Address> ToAddressSnapDtoList(List<AddressSnapshot> Snapshots);
     }
 
 

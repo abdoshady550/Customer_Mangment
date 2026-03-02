@@ -4,16 +4,19 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.Repository.Interfaces.Audit;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
     public sealed class CreateCustomerHandler(IGenericRepo<Customer> repo,
                                               IGenericRepo<User> userRepo,
+                                              ISnapshotService snapshotService,
                                               ICustomerMapper mapper,
                                               ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
+        private readonly ISnapshotService _snapshotService = snapshotService;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
 
@@ -44,6 +47,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             var customer = customerResult.Value;
             await _repo.AddAsync(customer, ct);
             await _repo.SaveChangesAsync(ct);
+
+            await _snapshotService.SaveCustomerSnapshotAsync(customer, "Created", ct);
 
             _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
 
