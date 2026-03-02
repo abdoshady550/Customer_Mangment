@@ -9,6 +9,7 @@ namespace Customer_Mangment.Model.Entities
         [BsonId]
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid Id { get; private set; }
+        [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid CustomerId { get; private set; }
         public AdressType Type { get; private set; }
         public string Value { get; private set; } = string.Empty;

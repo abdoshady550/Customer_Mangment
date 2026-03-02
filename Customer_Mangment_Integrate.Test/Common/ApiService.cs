@@ -18,7 +18,7 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         public Client(System.Net.Http.HttpClient httpClient)
         {
-            BaseUrl = "https://localhost:7063/";
+            BaseUrl = "https://localhost:7279/";
             _httpClient = httpClient;
             Initialize();
         }
@@ -632,9 +632,9 @@ namespace Customer_Mangment_Integrate.Test.Common
         /// </remarks>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Updated> UpdateAsync(UpdateAddressReq body)
+        public virtual System.Threading.Tasks.Task<Updated> UpdateAsync(System.Guid? addressId, UpdateAddressReq body)
         {
-            return UpdateAsync(body, System.Threading.CancellationToken.None);
+            return UpdateAsync(addressId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -646,7 +646,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         /// </remarks>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Updated> UpdateAsync(UpdateAddressReq body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<Updated> UpdateAsync(System.Guid? addressId, UpdateAddressReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null)
                 throw new System.ArgumentNullException("body");
@@ -668,6 +668,12 @@ namespace Customer_Mangment_Integrate.Test.Common
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
                     // Operation Path: "api/CustomerAddress/update"
                     urlBuilder_.Append("api/CustomerAddress/update");
+                    urlBuilder_.Append('?');
+                    if (addressId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("AddressId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(addressId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -1364,9 +1370,9 @@ namespace Customer_Mangment_Integrate.Test.Common
         /// </remarks>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Updated> Update2Async(UpdateCustomerReq body)
+        public virtual System.Threading.Tasks.Task<Updated> Update2Async(System.Guid? customerId, UpdateCustomerReq body)
         {
-            return Update2Async(body, System.Threading.CancellationToken.None);
+            return Update2Async(customerId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1378,7 +1384,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         /// </remarks>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Updated> Update2Async(UpdateCustomerReq body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<Updated> Update2Async(System.Guid? customerId, UpdateCustomerReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null)
                 throw new System.ArgumentNullException("body");
@@ -1400,6 +1406,12 @@ namespace Customer_Mangment_Integrate.Test.Common
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
                     // Operation Path: "api/Customer/update"
                     urlBuilder_.Append("api/Customer/update");
+                    urlBuilder_.Append('?');
+                    if (customerId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("CustomerId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(customerId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -2035,9 +2047,6 @@ namespace Customer_Mangment_Integrate.Test.Common
     public partial class UpdateAddressReq
     {
 
-        [Newtonsoft.Json.JsonProperty("addressId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Guid AddressId { get; set; }
-
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Type { get; set; }
 
@@ -2058,9 +2067,6 @@ namespace Customer_Mangment_Integrate.Test.Common
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class UpdateCustomerReq
     {
-
-        [Newtonsoft.Json.JsonProperty("customerId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Guid CustomerId { get; set; }
 
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; }

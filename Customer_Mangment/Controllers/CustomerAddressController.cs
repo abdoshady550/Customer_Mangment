@@ -13,6 +13,7 @@ using System.Security.Claims;
 namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class CustomerAddressController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

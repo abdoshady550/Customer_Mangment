@@ -8,7 +8,7 @@ namespace Customer_Mangment_Integrate.Test
     {
         public CustomerAddressTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
 
-        // ── Add ──────────────────────────────────────────────────────────
+        //Add
 
         [Fact]
         public async Task AddAddress_Admin_ReturnsAddressDto()
@@ -173,9 +173,8 @@ namespace Customer_Mangment_Integrate.Test
             {
                 var address = await AddAddressAsync(client, customer.Id);
 
-                await client.UpdateAsync(new UpdateAddressReq
+                await client.UpdateAsync(address.Id, new UpdateAddressReq
                 {
-                    AddressId = address.Id,
                     Type = 1,
                     Value = "Updated Address Value"
                 });
@@ -196,9 +195,8 @@ namespace Customer_Mangment_Integrate.Test
             {
                 var address = await AddAddressAsync(client, customer.Id);
 
-                await client.UpdateAsync(new UpdateAddressReq
+                await client.UpdateAsync(address.Id, new UpdateAddressReq
                 {
-                    AddressId = address.Id,
                     Type = 2,
                     Value = address.Value
                 });
@@ -214,11 +212,10 @@ namespace Customer_Mangment_Integrate.Test
         public async Task UpdateAddress_NonExistentId_ThrowsNotFound()
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
-
+            var AddressId = Guid.NewGuid();
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.UpdateAsync(new UpdateAddressReq
+                () => client.UpdateAsync(AddressId, new UpdateAddressReq
                 {
-                    AddressId = Guid.NewGuid(),
                     Type = 1,
                     Value = "Does not matter"
                 }));
@@ -229,10 +226,11 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task UpdateAddress_WithoutToken_ThrowsUnauthorized()
         {
+            var AddressId = Guid.NewGuid();
+
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().UpdateAsync(new UpdateAddressReq
+                () => CreateApiClient().UpdateAsync(AddressId, new UpdateAddressReq
                 {
-                    AddressId = Guid.NewGuid(),
                     Type = 1,
                     Value = "Test"
                 }));
@@ -251,9 +249,8 @@ namespace Customer_Mangment_Integrate.Test
                 var user = CreateApiClient(await GetUserTokenAsync());
 
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.UpdateAsync(new UpdateAddressReq
+                    () => user.UpdateAsync(address.Id, new UpdateAddressReq
                     {
-                        AddressId = address.Id,
                         Type = 1,
                         Value = "Unauthorized"
                     }));

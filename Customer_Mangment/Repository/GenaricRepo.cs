@@ -56,28 +56,38 @@ namespace Customer_Mangment.Repository
         public IGenericRepo<T> TemporalAll()
         {
             _query = _context.Set<T>()
-                .TemporalAll();
+                .TemporalAll()
+                .IgnoreQueryFilters()
+                .AsNoTracking();
 
             return this;
         }
         public IGenericRepo<T> TemporalBetween(DateTime from, DateTime to)
         {
             _query = _context.Set<T>()
-                .TemporalBetween(from, to);
+                .TemporalBetween(from, to)
+                .IgnoreQueryFilters()
+                .AsNoTracking();
 
             return this;
         }
+
         public IGenericRepo<T> TemporalFromTo(DateTime from, DateTime to)
         {
             _query = _context.Set<T>()
-                .TemporalFromTo(from, to);
+                .TemporalFromTo(from, to)
+                .IgnoreQueryFilters()
+                .AsNoTracking();
 
             return this;
         }
+
         public IGenericRepo<T> TemporalAsOf(DateTime dateTime)
         {
             _query = _context.Set<T>()
-                .TemporalAsOf(dateTime);
+                .TemporalAsOf(dateTime)
+                .IgnoreQueryFilters()
+                .AsNoTracking();
 
             return this;
         }
@@ -102,30 +112,51 @@ namespace Customer_Mangment.Repository
             return await _query
                 .Select(selector)
                 .ToListAsync(ct);
+
         }
 
         public IQueryable<TResult> Select<TResult>(Expression<Func<T, TResult>> selector)
         {
-            return _query.Select(selector);
+            var result = _query.Select(selector);
+            Reset();
+            return result;
         }
         public async Task<List<T>> ToListAsync(CancellationToken ct = default)
-            => await _query.ToListAsync(ct);
+        {
+            var result = await _query.ToListAsync(ct);
+            Reset();
+            return result;
+        }
 
         public async Task<T?> FirstOrDefaultAsync(CancellationToken ct = default)
-            => await _query.FirstOrDefaultAsync(ct);
+        {
+            var result = await _query.FirstOrDefaultAsync(ct);
+            Reset();
+            return result;
+        }
 
         public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
-            => await _query.FirstOrDefaultAsync(predicate, ct);
+        {
+            var result = await _query.FirstOrDefaultAsync(predicate, ct);
+            Reset();
+            return result;
+        }
 
         public async Task<T?> FindAsync(int id, CancellationToken ct = default)
             => await _context.Set<T>().FindAsync(id, ct);
 
         public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
-            => await _query.AnyAsync(predicate, ct);
-
+        {
+            var result = await _query.AnyAsync(predicate, ct);
+            Reset();
+            return result;
+        }
         public async Task<int> CountAsync(CancellationToken ct = default)
-            => await _query.CountAsync(ct);
-
+        {
+            var result = await _query.CountAsync(ct);
+            Reset();
+            return result;
+        }
 
         public async Task AddAsync(T entity, CancellationToken ct = default)
             => await _context.Set<T>().AddAsync(entity, ct);
@@ -150,5 +181,11 @@ namespace Customer_Mangment.Repository
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
             => await _context.Database.BeginTransactionAsync(ct);
+
+
+        private void Reset()
+        {
+            _query = _context.Set<T>();
+        }
     }
 }

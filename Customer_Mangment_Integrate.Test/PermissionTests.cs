@@ -55,9 +55,8 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "Admin Update");
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "Admin Updated",
                     Mobile = UniqueMobile()
                 });
@@ -109,9 +108,8 @@ namespace Customer_Mangment_Integrate.Test
             {
                 var address = await AddAddressAsync(client, customer.Id);
 
-                await client.UpdateAsync(new UpdateAddressReq
+                await client.UpdateAsync(address.Id, new UpdateAddressReq
                 {
-                    AddressId = address.Id,
                     Type = 1,
                     Value = "Admin Updated Address"
                 });
@@ -322,9 +320,8 @@ namespace Customer_Mangment_Integrate.Test
                 var user = CreateApiClient(await GetUserTokenAsync());
 
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.Update2Async(new UpdateCustomerReq
+                    () => user.Update2Async(created.Id, new UpdateCustomerReq
                     {
-                        CustomerId = created.Id,
                         Name = "Should Not Update",
                         Mobile = UniqueMobile()
                     }));
@@ -386,9 +383,8 @@ namespace Customer_Mangment_Integrate.Test
                 var user = CreateApiClient(await GetUserTokenAsync());
 
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.UpdateAsync(new UpdateAddressReq
+                    () => user.UpdateAsync(address.Id, new UpdateAddressReq
                     {
-                        AddressId = address.Id,
                         Type = 1,
                         Value = "Unauthorized"
                     }));
@@ -427,9 +423,8 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => userClient.Update2Async(new UpdateCustomerReq
+                    () => userClient.Update2Async(created.Id, new UpdateCustomerReq
                     {
-                        CustomerId = created.Id,
                         Name = "Should Still Fail",
                         Mobile = UniqueMobile()
                     }));
@@ -491,9 +486,8 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CannotUpdate_Customer()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Update2Async(new UpdateCustomerReq
+                () => CreateApiClient().Update2Async(Guid.NewGuid(), new UpdateCustomerReq
                 {
-                    CustomerId = Guid.NewGuid(),
                     Name = "Test",
                     Mobile = "01000000000"
                 }));
@@ -524,9 +518,8 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CannotUpdateAddress()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().UpdateAsync(new UpdateAddressReq
+                () => CreateApiClient().UpdateAsync(Guid.NewGuid(), new UpdateAddressReq
                 {
-                    AddressId = Guid.NewGuid(),
                     Type = 1,
                     Value = "Test"
                 }));

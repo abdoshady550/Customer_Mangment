@@ -270,9 +270,8 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "Old Name");
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "New Name",
                     Mobile = UniqueMobile()
                 });
@@ -290,9 +289,8 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "UpdatedBy Check");
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "Updated",
                     Mobile = UniqueMobile()
                 });
@@ -311,9 +309,8 @@ namespace Customer_Mangment_Integrate.Test
             var newMobile = UniqueMobile();
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = created.Name,
                     Mobile = newMobile
                 });
@@ -330,9 +327,8 @@ namespace Customer_Mangment_Integrate.Test
             var client = CreateApiClient(await GetAdminTokenAsync());
 
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.Update2Async(new UpdateCustomerReq
+                () => client.Update2Async(Guid.NewGuid(), new UpdateCustomerReq
                 {
-                    CustomerId = Guid.NewGuid(),
                     Name = "Ghost",
                     Mobile = "01000000000"
                 }));
@@ -344,9 +340,8 @@ namespace Customer_Mangment_Integrate.Test
         public async Task UpdateCustomer_WithoutToken_ThrowsUnauthorized()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Update2Async(new UpdateCustomerReq
+                () => CreateApiClient().Update2Async(Guid.NewGuid(), new UpdateCustomerReq
                 {
-                    CustomerId = Guid.NewGuid(),
                     Name = "Test",
                     Mobile = "01000000000"
                 }));
@@ -364,9 +359,8 @@ namespace Customer_Mangment_Integrate.Test
                 var user = CreateApiClient(await GetUserTokenAsync());
 
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.Update2Async(new UpdateCustomerReq
+                    () => user.Update2Async(created.Id, new UpdateCustomerReq
                     {
-                        CustomerId = created.Id,
                         Name = "Should Fail",
                         Mobile = UniqueMobile()
                     }));
@@ -466,9 +460,8 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "History Update");
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "History Updated",
                     Mobile = UniqueMobile()
                 });

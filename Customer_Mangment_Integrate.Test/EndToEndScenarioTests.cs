@@ -34,9 +34,8 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Single(fetched.Addresses);
 
                 // 3. Update customer
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(customer.Id, new UpdateCustomerReq
                 {
-                    CustomerId = customer.Id,
                     Name = "Lifecycle Updated",
                     Mobile = UniqueMobile()
                 });
@@ -57,9 +56,8 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Equal(countBefore + 1, afterAddAddr.Addresses.Count);
 
                 // 5. Update address
-                await client.UpdateAsync(new UpdateAddressReq
+                await client.UpdateAsync(newAddr.Id, new UpdateAddressReq
                 {
-                    AddressId = newAddr.Id,
                     Type = 3,
                     Value = "Second Address Updated"
                 });
@@ -88,9 +86,8 @@ namespace Customer_Mangment_Integrate.Test
             var client = CreateApiClient(await GetAdminTokenAsync());
             var customer = await CreateTestCustomerAsync(client, "Delete Lifecycle");
 
-            await client.Update2Async(new UpdateCustomerReq
+            await client.Update2Async(customer.Id, new UpdateCustomerReq
             {
-                CustomerId = customer.Id,
                 Name = "Updated Before Delete",
                 Mobile = UniqueMobile()
             });
@@ -122,9 +119,8 @@ namespace Customer_Mangment_Integrate.Test
                 var fetched = (await adminClient.GetAsync(customer.Id)).First();
                 Assert.Equal(customer.Id, fetched.Id);
 
-                await adminClient.Update2Async(new UpdateCustomerReq
+                await adminClient.Update2Async(customer.Id, new UpdateCustomerReq
                 {
-                    CustomerId = customer.Id,
                     Name = "Cross Role Updated",
                     Mobile = UniqueMobile()
                 });
@@ -178,9 +174,8 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Equal(countBefore + 3, afterAdd.Addresses.Count);
 
                 // Update addr2
-                await client.UpdateAsync(new UpdateAddressReq
+                await client.UpdateAsync(addr2.Id, new UpdateAddressReq
                 {
-                    AddressId = addr2.Id,
                     Type = 2,
                     Value = "Modified Addr2"
                 });
@@ -208,7 +203,7 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var list = await client.GetAsync(null);
-                // ✅ Assert.Contains بـ Id — آمن بغض النظر عن customers تانية في الـ DB
+
                 Assert.Contains(list, c => c.Id == c1.Id);
                 Assert.Contains(list, c => c.Id == c2.Id);
                 Assert.Contains(list, c => c.Id == c3.Id);
@@ -254,16 +249,14 @@ namespace Customer_Mangment_Integrate.Test
 
             try
             {
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "History Order V2",
                     Mobile = UniqueMobile()
                 });
 
-                await client.Update2Async(new UpdateCustomerReq
+                await client.Update2Async(created.Id, new UpdateCustomerReq
                 {
-                    CustomerId = created.Id,
                     Name = "History Order V3",
                     Mobile = UniqueMobile()
                 });

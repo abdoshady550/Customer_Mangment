@@ -1,5 +1,6 @@
 ﻿using Customer_Mangment.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 
@@ -17,6 +18,12 @@ namespace Customer_Mangment.Repository.Services
         public MongoGenericRepo(IMongoCollection<T> collection)
         {
             _collection = collection;
+
+            if (HasSoftDelete())
+            {
+                var filter = Builders<T>.Filter.Eq("IsDeleted", false);
+                _filter &= filter;
+            }
         }
 
 
@@ -78,13 +85,19 @@ namespace Customer_Mangment.Repository.Services
             => await BuildFluent().FirstOrDefaultAsync(ct);
 
         public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
-            => await _collection.Find(predicate).FirstOrDefaultAsync(ct);
-
+        {
+            var combinedFilter = _filter & Builders<T>.Filter.Where(predicate);
+            return await _collection.Find(combinedFilter).FirstOrDefaultAsync(ct);
+        }
         public Task<T?> FindAsync(int id, CancellationToken ct = default)
             => throw new NotSupportedException("FindAsync(int) is not supported for MongoDB. Use FirstOrDefaultAsync with a predicate.");
 
+
         public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
-            => await _collection.CountDocumentsAsync(predicate, cancellationToken: ct) > 0;
+        {
+            var combinedFilter = _filter & Builders<T>.Filter.Where(predicate);
+            return await _collection.CountDocumentsAsync(combinedFilter, cancellationToken: ct) > 0;
+        }
 
         public async Task<int> CountAsync(CancellationToken ct = default)
             => (int)await _collection.CountDocumentsAsync(_filter, cancellationToken: ct);
@@ -144,13 +157,18 @@ namespace Customer_Mangment.Repository.Services
             if (_take.HasValue) fluent = fluent.Limit(_take);
             return fluent;
         }
-
-        private static object GetId(T entity)
+        private static bool HasSoftDelete()
+        {
+            return typeof(T).GetProperty("IsDeleted") != null;
+        }
+        private static BsonBinaryData GetId(T entity)
         {
             var prop = typeof(T).GetProperty("Id")
                 ?? throw new InvalidOperationException($"{typeof(T).Name} has no 'Id' property.");
-            return prop.GetValue(entity)
+            var value = prop.GetValue(entity)
                 ?? throw new InvalidOperationException($"{typeof(T).Name}.Id is null.");
+            var guid = (Guid)value;
+            return new BsonBinaryData(guid, GuidRepresentation.Standard);
         }
     }
 
