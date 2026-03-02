@@ -10,6 +10,7 @@ using Customer_Mangment.Repository.Services.AppMediator;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -52,8 +53,9 @@ namespace Customer_Mangment
 
             builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
 
-            builder.Services.AddDataBaseConfig(builder.Configuration);
-
+            builder.Services.AddDbContext<AppDbContext>(options =>
+               options.UseSqlServer(
+                   builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddIdentity<User, IdentityRole>(
                options =>
@@ -62,6 +64,9 @@ namespace Customer_Mangment
                }
             ).AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+            builder.Services.AddDataBaseConfig(builder.Configuration);
+
             builder.Services.AddTransient<LoggerMiddleware>();
 
 

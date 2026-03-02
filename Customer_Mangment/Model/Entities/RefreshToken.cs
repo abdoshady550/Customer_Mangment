@@ -1,11 +1,14 @@
 ﻿using Customer_Mangment.Model.Results;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
 {
     public sealed class RefreshToken
     {
+        [BsonId]
+        [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid Id { get; private set; }
-
         public string? Token { get; private set; }
         public string? UserId { get; private set; }
         public DateTimeOffset ExpiresOnUtc { get; private set; }

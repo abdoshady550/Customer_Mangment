@@ -4,7 +4,6 @@ using Customer_Mangment.Model.Entities.History;
 using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Services;
-using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -39,9 +38,7 @@ namespace Customer_Mangment
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection")));
+
 
             services.AddScoped<ApplicationDbContextInitialiser>();
 
@@ -64,10 +61,6 @@ namespace Customer_Mangment
                     $"Missing '{MongoDbSettings.SectionName}' section in appsettings.json.");
 
             RegisterMongoSerializers();
-
-
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped<MongoDbInitialiser>();
 
@@ -102,7 +95,26 @@ namespace Customer_Mangment
             {
                 if (_serializersRegistered) return;
 
-                BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+                var guidSerializer = new GuidSerializer(GuidRepresentation.Standard);
+
+                BsonClassMap.RegisterClassMap<Customer>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.MapIdProperty(c => c.Id).SetSerializer(guidSerializer);
+                });
+
+                BsonClassMap.RegisterClassMap<Address>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.MapIdProperty(a => a.Id).SetSerializer(guidSerializer);
+                    cm.MapProperty(a => a.CustomerId).SetSerializer(guidSerializer);
+                });
+
+                BsonClassMap.RegisterClassMap<RefreshToken>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.MapIdProperty(r => r.Id).SetSerializer(guidSerializer);
+                });
 
                 _serializersRegistered = true;
             }

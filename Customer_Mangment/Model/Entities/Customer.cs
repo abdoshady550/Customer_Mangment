@@ -1,9 +1,13 @@
 ﻿using Customer_Mangment.Model.Results;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
 {
     public sealed class Customer
     {
+        [BsonId]
+        [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
         public string Mobile { get; private set; }

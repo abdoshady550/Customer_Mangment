@@ -83,9 +83,9 @@ namespace Customer_Mangment.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [EndpointSummary("UpdateCustomer")]
         [EndpointDescription("Updates an existing customer's details based on the provided information.")]
-        public async Task<IActionResult> UpdateCustomer([FromBody] UpdateCustomerReq req, CancellationToken ct)
+        public async Task<IActionResult> UpdateCustomer([FromQuery] Guid CustomerId, [FromBody] UpdateCustomerReq req, CancellationToken ct)
         {
-            var result = await _sender.Send(new UpdateCustomerCommand(GetCurrentUserId(), req.CustomerId, req.Name, req.Mobile), ct);
+            var result = await _sender.Send(new UpdateCustomerCommand(GetCurrentUserId(), CustomerId, req.Name, req.Mobile), ct);
             return result.Match(
             response => Ok(response),
             Problem);

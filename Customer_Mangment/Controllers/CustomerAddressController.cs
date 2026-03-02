@@ -65,9 +65,9 @@ namespace Customer_Mangment.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [EndpointSummary("UpdateAddress")]
         [EndpointDescription("This endpoint allows the authenticated user with role admin to update an existing one. The request body should contain the address details, including the address ID (for updates), type, and value.")]
-        public async Task<IActionResult> UpdateAddress([FromBody] UpdateAddressReq req, CancellationToken ct)
+        public async Task<IActionResult> UpdateAddress([FromQuery] Guid AddressId, [FromBody] UpdateAddressReq req, CancellationToken ct)
         {
-            var result = await _sender.Send(new UpdateAddressCommand(GetCurrentUserId(), req.AddressId, req.Type, req.Value), ct);
+            var result = await _sender.Send(new UpdateAddressCommand(GetCurrentUserId(), AddressId, req.Type, req.Value), ct);
             return result.Match(
                response => Ok(response),
                Problem);

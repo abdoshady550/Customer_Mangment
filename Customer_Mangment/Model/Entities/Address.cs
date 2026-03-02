@@ -1,9 +1,13 @@
 ﻿using Customer_Mangment.Model.Results;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
 {
     public sealed class Address
     {
+        [BsonId]
+        [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid Id { get; private set; }
         public Guid CustomerId { get; private set; }
         public AdressType Type { get; private set; }
