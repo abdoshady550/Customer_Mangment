@@ -1,34 +1,34 @@
-﻿using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+﻿using Customer_Mangment.Model.Entities;
 
 namespace Customer_Mangment.CQRS.Customers.DTOS
 {
-    public class CustomerHistoryDto
+    public sealed record CustomerHistoryDto
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Mobile { get; set; }
-        public bool IsDeleted { get; set; }
-
-        public DateTime ValidFrom { get; set; }
-        public DateTime ValidTo { get; set; }
-
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Mobile { get; init; } = string.Empty;
+        public string CreatedBy { get; init; } = string.Empty;
+        public string UpdatedBy { get; init; } = string.Empty;
+        public bool IsDeleted { get; init; }
+        public string? Operation { get; init; }
+        public DateTime ValidFrom { get; init; }
+        public DateTime? ValidTo { get; init; }
     }
 
-    public class AddressHistoryDto
+    public sealed record AddressHistoryDto
     {
-        public Guid Id { get; set; }
-        public Guid CustomerId { get; set; }
-        public int Type { get; set; }
-        public string Value { get; set; }
-        public DateTime ValidFrom { get; set; }
-        public DateTime ValidTo { get; set; }
+        public Guid Id { get; init; }
+        public Guid CustomerId { get; init; }
+        public AdressType Type { get; init; }
+        public string Value { get; init; } = string.Empty;
+        public string? Operation { get; init; }
+        public DateTime ValidFrom { get; init; }
+        public DateTime? ValidTo { get; init; }
     }
     public class CustomerAddressHistoryDto
     {
-        //public List<CustomerHistoryDto> CustomerHistoryDtos { get; set; } = new();
-        //public List<AddressHistoryDto> AddressHistoryDtos { get; set; } = new();
-        public List<CustomerDto> CustomerHistoryDtos { get; set; } = new();
-        public List<AddressDto> AddressHistoryDtos { get; set; } = new();
+        public List<CustomerHistoryDto> CustomerHistoryDtos { get; set; } = new();
+        public List<AddressHistoryDto> AddressHistoryDtos { get; set; } = new();
 
     }
 

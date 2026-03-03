@@ -9,12 +9,12 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 {
     public sealed class GetCustomerHistoryQueryHandler(IGenericRepo<User> userRepo,
                                           IHistoryService historyService,
-                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetCustomerHistoryQuery, Result<List<CustomerDto>>>
+                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetCustomerHistoryQuery, Result<List<CustomerHistoryDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IHistoryService _historyService = historyService;
         private readonly ILogger<GetCustomerHistoryQueryHandler> _logger = logger;
-        public async Task<Result<List<CustomerDto>>> Handle(GetCustomerHistoryQuery request, CancellationToken ct)
+        public async Task<Result<List<CustomerHistoryDto>>> Handle(GetCustomerHistoryQuery request, CancellationToken ct)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

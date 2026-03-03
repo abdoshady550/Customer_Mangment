@@ -2,6 +2,7 @@
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
@@ -39,7 +40,7 @@ namespace Customer_Mangment.Controllers
         }
         [HttpGet]
         [Route("history")]
-        [ProducesResponseType(typeof(List<AddressDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<AddressHistoryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

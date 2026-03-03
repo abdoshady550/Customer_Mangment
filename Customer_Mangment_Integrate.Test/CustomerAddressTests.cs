@@ -61,7 +61,7 @@ namespace Customer_Mangment_Integrate.Test
                     Value = "Verify Address"
                 });
 
-                var updated = (await client.GetAsync(customer.Id)).First();
+                var updated = (await client.GetAsync(customer.Id)).FirstOrDefault();
                 Assert.Contains(updated.Addresses, a => a.Id == address.Id);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -74,7 +74,6 @@ namespace Customer_Mangment_Integrate.Test
             var customer = await CreateTestCustomerAsync(client);
             try
             {
-                // ✅ نحسب الـ count قبل — مش بنفترض قيمة ثابتة
                 var before = (await client.GetAsync(customer.Id)).First().Addresses.Count;
 
                 await AddAddressAsync(client, customer.Id);
