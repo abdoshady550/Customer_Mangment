@@ -1,22 +1,23 @@
 ﻿using Customer_Mangment.Model.Entities;
+using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
-using Customer_Mangment.Repository.Interfaces.Audit;
+using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
 {
     public sealed class UpdateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
-                                             ISnapshotService snapshotService,
+                                             IMessageBus bus,
                                              ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
-        private readonly ISnapshotService _snapshotService = snapshotService;
+        private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
         public async Task<Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
@@ -55,7 +56,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             _adressRepo.Update(address);
             await _adressRepo.SaveChangesAsync(ct);
 
-            await _snapshotService.SaveAddressSnapshotAsync(address, "Updated", ct);
+            await _bus.PublishAsync(new AddressUpdatedEvent(address));
 
             _logger.LogInformation("Address with id {AddressId} updated successfully", request.AddressId);
             return Result.Updated;

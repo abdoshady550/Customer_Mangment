@@ -1,19 +1,20 @@
 ﻿using Customer_Mangment.Model.Entities;
+using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
-using Customer_Mangment.Repository.Interfaces.Audit;
+using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 {
     public sealed class UpdateCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
-                                              ISnapshotService snapshotService,
+                                              IMessageBus bus,
                                               ILogger<UpdateCustomerHandler> logger) : IAppRequestHandler<UpdateCustomerCommand, Result<Updated>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
-        private readonly ISnapshotService _snapshotService = snapshotService;
+        private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateCustomerHandler> _logger = logger;
         public async Task<Result<Updated>> Handle(UpdateCustomerCommand request, CancellationToken ct = default)
         {
@@ -41,7 +42,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 
             await _customerRepo.SaveChangesAsync(ct);
 
-            await snapshotService.SaveCustomerSnapshotAsync(customer, "Updated", ct);
+            await _bus.PublishAsync(new CustomerUpdatedEvent(customer));
 
             _logger.LogInformation("Customer with ID {CustomerId} updated successfully.", request.CustomerId);
 

@@ -1,19 +1,20 @@
 ﻿using Customer_Mangment.Model.Entities;
+using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
-using Customer_Mangment.Repository.Interfaces.Audit;
+using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 {
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
-                                              ISnapshotService snapshotService,
+                                              IMessageBus bus,
                                               ILogger<DeleteCustomerHandler> logger) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
-        private readonly ISnapshotService _snapshotService = snapshotService;
+        private readonly IMessageBus _bus = bus;
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
         public async Task<Result<Deleted>> Handle(DeleteCustomerCommand request, CancellationToken ct = default)
@@ -34,7 +35,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
             _customerRepo.Update(customer);
             await _customerRepo.SaveChangesAsync(ct);
 
-            await snapshotService.SaveCustomerSnapshotAsync(customer, "Deleted", ct);
+            await _bus.PublishAsync(new CustomerDeletedEvent(customer));
 
             _logger.LogInformation("Customer with ID {CustomerId} deleted by User with ID {UserId}.", request.CustomerId, request.UserId);
             return Result.Deleted;

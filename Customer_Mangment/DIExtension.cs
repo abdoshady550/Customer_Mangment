@@ -41,11 +41,11 @@ namespace Customer_Mangment
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            Console.WriteLine("Using SQL Server as Database Provider");
 
             services.AddScoped<ApplicationDbContextInitialiser>();
 
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
-            services.AddScoped<ISnapshotService, SqlSnapshotService>();
             services.AddScoped<IHistoryService, SqlHistoryService>();
 
             return services;
@@ -57,6 +57,8 @@ namespace Customer_Mangment
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            Console.WriteLine("Using MongoDB as Database Provider");
+
             var settings = configuration
                 .GetSection(MongoDbSettings.SectionName)
                 .Get<MongoDbSettings>()
@@ -82,8 +84,9 @@ namespace Customer_Mangment
 
 
             services.AddScoped(typeof(IGenericRepo<>), typeof(MongoGenericRepo<>));
-            services.AddScoped<ISnapshotService, MongoSnapshotService>();
             services.AddScoped<IHistoryService, MongoHistoryService>();
+
+            services.AddScoped<MongoSnapshotService>();
 
             return services;
         }
