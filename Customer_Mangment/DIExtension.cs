@@ -86,7 +86,7 @@ namespace Customer_Mangment
             services.AddScoped(typeof(IGenericRepo<>), typeof(MongoGenericRepo<>));
             services.AddScoped<IHistoryService, MongoHistoryService>();
 
-            services.AddScoped<MongoSnapshotService>();
+            services.AddScoped<MongoSnapshotHandler>();
 
             return services;
         }

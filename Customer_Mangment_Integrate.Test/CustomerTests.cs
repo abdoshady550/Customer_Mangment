@@ -76,10 +76,12 @@ namespace Customer_Mangment_Integrate.Test
                     new() { Type = 1, Value = "Address One" }
                 };
             var result = await CreateTestCustomerAsync(client, null, null, adresses);
+            var resultAddr = await client.Get2Async(result.Id, null);
+
             try
             {
-                Assert.NotNull(result.Addresses);
-                Assert.Single(result.Addresses);
+                Assert.NotNull(resultAddr);
+                Assert.Single(resultAddr);
             }
             finally { await CleanupCustomerAsync(client, result.Id); }
         }
@@ -98,7 +100,9 @@ namespace Customer_Mangment_Integrate.Test
                     new CreateAddressReq { Type = 2, Value = "Address Two" }
                 }
             });
-            try { Assert.Equal(2, result.Addresses.Count); }
+            var resultAddr = await client.Get2Async(result.Id, null);
+
+            try { Assert.Equal(2, resultAddr.Count); }
             finally { await CleanupCustomerAsync(client, result.Id); }
         }
 
@@ -123,7 +127,6 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task CreateCustomer_WithoutToken_ThrowsUnauthorized()
         {
-            // لا يخزن data → مفيش cleanup
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
                 () => CreateTestCustomerAsync(CreateApiClient()));
 

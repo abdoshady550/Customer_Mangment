@@ -20,6 +20,24 @@ namespace Customer_Mangment.Controllers
         private readonly IDispatcher _sender = sender;
         private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+        [HttpGet]
+        [Route("get")]
+        [ProducesResponseType(typeof(List<AddressDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("GetCustomerAddresses")]
+        [EndpointDescription("Retrieves all addresses . If an AddressId is provided, retrieves the specific address with that ID , If an CustomerId is provided, retrieves the specific addresses for the given customer.")]
+        public async Task<IActionResult> GetCustomerAddresses([FromQuery] Guid? CustomerId, [FromQuery] Guid? AddressId, CancellationToken ct)
+        {
+            var result = await _sender.Send(new GetAddressQuery(GetCurrentUserId(), CustomerId, AddressId), ct);
+            return result.Match(
+               response => Ok(response),
+               Problem);
+        }
+
         [HttpPost]
         [Route("add")]
         [Authorize(Roles = "Admin")]

@@ -1,4 +1,6 @@
-﻿using Customer_Mangment.CQRS.Customers.DTOS;
+﻿using Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress;
+using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
+using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Events;
@@ -38,7 +40,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                 _logger.LogWarning("Customer with mobile {Mobile} already exists.", request.Mobile);
                 return Error.Conflict("CustomerAlreadyExists", $"Customer with mobile {request.Mobile} already exists.");
             }
-            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, user.UserName!, request.Adresses.Select(a => (a.Type, a.Value)));
+            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, user.UserName!, []);
             if (customerResult.IsError)
             {
                 _logger.LogWarning("Failed to create customer: {Errors}", string.Join(", ", customerResult.Errors.Select(e => e.Description)));
@@ -49,11 +51,27 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             await _repo.AddAsync(customer, ct);
             await _repo.SaveChangesAsync(ct);
 
+            foreach (var address in request.Adresses)
+            {
+                var addAddressResult = await _bus.InvokeAsync<Result<AddressDto>>(
+                    new AddAddressCommand(request.UserId, customer.Id, address.Type, address.Value), ct);
+
+                if (addAddressResult.IsError)
+                {
+                    _logger.LogWarning("Failed to add address to customer {CustomerId}: {Errors}", customer.Id, addAddressResult.Errors);
+                    return addAddressResult.Errors;
+                }
+            }
+
             await _bus.PublishAsync(new CustomerCreatedEvent(customer));
 
             _logger.LogInformation("Customer with ID {CustomerId} created successfully.", customer.Id);
 
-            var customerDto = _mapper.ToCustomerDto(customer);
+            var customerWithAddresses = await _repo.Include(c => c.Addresses)
+                                       .FirstOrDefaultAsync(c => c.Id == customer.Id, ct);
+
+
+            var customerDto = _mapper.ToCustomerDto(customerWithAddresses!);
 
             return customerDto;
         }

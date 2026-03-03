@@ -31,7 +31,8 @@ namespace Customer_Mangment_Integrate.Test
                 // 2. Read
                 var fetched = (await client.GetAsync(customer.Id)).First();
                 Assert.Equal(customer.Name, fetched.Name);
-                Assert.Single(fetched.Addresses);
+                var fetchedAddr = (await client.Get2Async(customer.Id, null));
+                Assert.Single(fetchedAddr);
 
                 // 3. Update customer
                 await client.Update2Async(customer.Id, new UpdateCustomerReq
@@ -44,7 +45,7 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Equal(AdminEmail, afterUpdate.UpdatedBy);
 
                 // 4. Add address 
-                var countBefore = afterUpdate.Addresses.Count;
+                var countBefore = (await client.Get2Async(customer.Id, null)).Count;
                 var newAddr = await client.AddAsync(customer.Id, new AddAddressReq
                 {
                     Type = 2,
@@ -52,8 +53,8 @@ namespace Customer_Mangment_Integrate.Test
                 });
                 Assert.NotEqual(Guid.Empty, newAddr.Id);
 
-                var afterAddAddr = (await client.GetAsync(customer.Id)).First();
-                Assert.Equal(countBefore + 1, afterAddAddr.Addresses.Count);
+                var afterAddAddr = (await client.Get2Async(customer.Id, null)).Count;
+                Assert.Equal(countBefore + 1, afterAddAddr);
 
                 // 5. Update address
                 await client.UpdateAsync(newAddr.Id, new UpdateAddressReq
@@ -61,14 +62,14 @@ namespace Customer_Mangment_Integrate.Test
                     Type = 3,
                     Value = "Second Address Updated"
                 });
-                var afterAddrUpdate = (await client.GetAsync(customer.Id)).First();
-                Assert.Contains(afterAddrUpdate.Addresses,
+                var afterAddrUpdate = (await client.Get2Async(null, null));
+                Assert.Contains(afterAddrUpdate,
                     a => a.Id == newAddr.Id && a.Value == "Second Address Updated");
 
                 // 6. Delete address
                 await client.DeleteAsync(newAddr.Id);
-                var afterAddrDelete = (await client.GetAsync(customer.Id)).First();
-                Assert.DoesNotContain(afterAddrDelete.Addresses, a => a.Id == newAddr.Id);
+                var afterAddrDelete = (await client.Get2Async(null, null));
+                Assert.DoesNotContain(afterAddrDelete, a => a.Id == newAddr.Id);
 
                 // 7. History وجوده
                 var history = await client.HistoryAsync(customer.Id);
@@ -161,17 +162,16 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
             var customer = await CreateTestCustomerAsync(client);
-
             try
             {
-                var countBefore = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                var countBefore = (await client.Get2Async(customer.Id, null)).Count;
 
                 var addr1 = await AddAddressAsync(client, customer.Id, 1);
                 var addr2 = await AddAddressAsync(client, customer.Id, 2);
                 var addr3 = await AddAddressAsync(client, customer.Id, 3);
 
-                var afterAdd = (await client.GetAsync(customer.Id)).First();
-                Assert.Equal(countBefore + 3, afterAdd.Addresses.Count);
+                var afterAdd = (await client.Get2Async(customer.Id, null)).Count;
+                Assert.Equal(countBefore + 3, afterAdd);
 
                 // Update addr2
                 await client.UpdateAsync(addr2.Id, new UpdateAddressReq
@@ -184,9 +184,9 @@ namespace Customer_Mangment_Integrate.Test
                 await client.DeleteAsync(addr1.Id);
                 await client.DeleteAsync(addr3.Id);
 
-                var afterDelete = (await client.GetAsync(customer.Id)).First();
-                Assert.Equal(countBefore + 1, afterDelete.Addresses.Count);
-                Assert.Contains(afterDelete.Addresses,
+                var afterDelete = (await client.Get2Async(customer.Id, null));
+                Assert.Equal(countBefore + 1, afterDelete.Count);
+                Assert.Contains(afterDelete,
                     a => a.Id == addr2.Id && a.Value == "Modified Addr2");
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }

@@ -114,8 +114,8 @@ namespace Customer_Mangment_Integrate.Test
                     Value = "Admin Updated Address"
                 });
 
-                var updated = (await client.GetAsync(customer.Id)).First();
-                Assert.Contains(updated.Addresses,
+                var updated = (await client.Get2Async(null, null));
+                Assert.Contains(updated,
                     a => a.Id == address.Id && a.Value == "Admin Updated Address");
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }

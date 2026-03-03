@@ -5,7 +5,7 @@ using MongoDB.Driver;
 
 namespace Customer_Mangment.Repository.Services.AuditServices.MongoDB
 {
-    public sealed class MongoSnapshotService(
+    public sealed class MongoSnapshotHandler(
         IMongoCollection<CustomerSnapshot> customerSnapshots,
         IMongoCollection<AddressSnapshot> addressSnapshots)
     {

@@ -19,7 +19,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
 
         public async Task<Result<List<CustomerDto>>> Handle(GetCustomersQuery request, CancellationToken ct)
         {
-            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
+            var user = await _userRepo.AsNoTracking().FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user is null)
             {
                 _logger.LogWarning("User with id {UserId} not found.", request.UserId);

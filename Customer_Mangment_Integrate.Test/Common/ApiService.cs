@@ -326,6 +326,156 @@ namespace Customer_Mangment_Integrate.Test.Common
         }
 
         /// <summary>
+        /// GetCustomerAddresses
+        /// </summary>
+        /// <remarks>
+        /// Retrieves all addresses . If an AddressId is provided, retrieves the specific address with that ID , If an CustomerId is provided, retrieves the specific addresses for the given customer.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressDto>> Get2Async(System.Guid? customerId, System.Guid? addressId)
+        {
+            return Get2Async(customerId, addressId, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// GetCustomerAddresses
+        /// </summary>
+        /// <remarks>
+        /// Retrieves all addresses . If an AddressId is provided, retrieves the specific address with that ID , If an CustomerId is provided, retrieves the specific addresses for the given customer.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressDto>> Get2Async(System.Guid? customerId, System.Guid? addressId, System.Threading.CancellationToken cancellationToken)
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/CustomerAddress/get"
+                    urlBuilder_.Append("api/CustomerAddress/get");
+                    urlBuilder_.Append('?');
+                    if (customerId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("CustomerId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(customerId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (addressId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("AddressId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(addressId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<AddressDto>>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                            if (status_ == 400)
+                            {
+                                var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                if (objectResponse_.Object == null)
+                                {
+                                    throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                }
+                                throw new ApiException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                            }
+                            else
+                                if (status_ == 401)
+                                {
+                                    var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                    if (objectResponse_.Object == null)
+                                    {
+                                        throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                    }
+                                    throw new ApiException<ProblemDetails>("Unauthorized", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                                }
+                                else
+                                    if (status_ == 404)
+                                    {
+                                        var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                        if (objectResponse_.Object == null)
+                                        {
+                                            throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                        }
+                                        throw new ApiException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                                    }
+                                    else
+                                        if (status_ == 409)
+                                        {
+                                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                            if (objectResponse_.Object == null)
+                                            {
+                                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                            }
+                                            throw new ApiException<ProblemDetails>("Conflict", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                                        }
+                                        else
+                                            if (status_ == 500)
+                                            {
+                                                var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                                                if (objectResponse_.Object == null)
+                                                {
+                                                    throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                                                }
+                                                throw new ApiException<ProblemDetails>("Internal Server Error", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                                            }
+                                            else
+                                            {
+                                                var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                                                throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                                            }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
         /// AddAddress
         /// </summary>
         /// <remarks>

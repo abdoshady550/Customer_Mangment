@@ -61,8 +61,8 @@ namespace Customer_Mangment_Integrate.Test
                     Value = "Verify Address"
                 });
 
-                var updated = (await client.GetAsync(customer.Id)).FirstOrDefault();
-                Assert.Contains(updated.Addresses, a => a.Id == address.Id);
+                var updated = (await client.Get2Async(null, null));
+                Assert.Contains(updated, a => a.Id == address.Id);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
         }
@@ -74,11 +74,11 @@ namespace Customer_Mangment_Integrate.Test
             var customer = await CreateTestCustomerAsync(client);
             try
             {
-                var before = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                var before = (await client.Get2Async(customer.Id, null)).Count;
 
                 await AddAddressAsync(client, customer.Id);
 
-                var after = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                var after = (await client.Get2Async(customer.Id, null)).Count;
                 Assert.Equal(before + 1, after);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -178,8 +178,7 @@ namespace Customer_Mangment_Integrate.Test
                     Value = "Updated Address Value"
                 });
 
-                var updatedCustomer = (await client.GetAsync(customer.Id)).First();
-                var updatedAddr = updatedCustomer.Addresses.First(a => a.Id == address.Id);
+                var updatedAddr = (await client.Get2Async(null, null)).First(a => a.Id == address.Id);
                 Assert.Equal("Updated Address Value", updatedAddr.Value);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -200,8 +199,8 @@ namespace Customer_Mangment_Integrate.Test
                     Value = address.Value
                 });
 
-                var updatedCustomer = (await client.GetAsync(customer.Id)).First();
-                var updatedAddr = updatedCustomer.Addresses.First(a => a.Id == address.Id);
+                var updatedAddr = (await client.Get2Async(null, null)).First(a => a.Id == address.Id);
+
                 Assert.Equal(2, updatedAddr.Type);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -286,12 +285,11 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var address = await AddAddressAsync(client, customer.Id);
-                // ✅ نحسب الـ count قبل — مش بنفترض قيمة ثابتة
-                var before = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                var before = (await client.Get2Async(customer.Id, null)).Count;
 
                 await client.DeleteAsync(address.Id);
 
-                var after = (await client.GetAsync(customer.Id)).First().Addresses.Count;
+                var after = (await client.Get2Async(customer.Id, null)).Count;
                 Assert.Equal(before - 1, after);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
