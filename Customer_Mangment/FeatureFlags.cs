@@ -5,6 +5,8 @@
         public const string SectionName = "FeatureFlags";
 
         public bool UseMongoDb { get; set; } = true;
+        public bool RunMigrationOnStartup { get; set; } = false;
+
     }
 
 }

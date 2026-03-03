@@ -20,9 +20,22 @@ namespace Customer_Mangment
             this IServiceCollection services,
             IConfiguration configuration)
         {
+
             var flags = configuration
                 .GetSection(FeatureFlags.SectionName)
                 .Get<FeatureFlags>() ?? new FeatureFlags();
+
+            var mongoSettings = configuration
+                .GetSection(MongoDbSettings.SectionName)
+                .Get<MongoDbSettings>()
+                ?? throw new InvalidOperationException(
+                    $"Missing '{MongoDbSettings.SectionName}' section in appsettings.json.");
+
+            RegisterMongoSerializers();
+
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoSettings.ConnectionString));
+            services.AddSingleton(sp =>
+                sp.GetRequiredService<IMongoClient>().GetDatabase(mongoSettings.DatabaseName));
 
             if (flags.UseMongoDb)
             {
@@ -58,21 +71,7 @@ namespace Customer_Mangment
             IConfiguration configuration)
         {
             Console.WriteLine("Using MongoDB as Database Provider");
-
-            var settings = configuration
-                .GetSection(MongoDbSettings.SectionName)
-                .Get<MongoDbSettings>()
-                ?? throw new InvalidOperationException(
-                    $"Missing '{MongoDbSettings.SectionName}' section in appsettings.json.");
-
-            RegisterMongoSerializers();
-
             services.AddScoped<MongoDbInitialiser>();
-
-            services.AddSingleton<IMongoClient>(_ => new MongoClient(settings.ConnectionString));
-
-            services.AddSingleton(sp =>
-                sp.GetRequiredService<IMongoClient>().GetDatabase(settings.DatabaseName));
 
             RegisterCollection<Customer>(services, "Customers");
             RegisterCollection<Address>(services, "Addresses");

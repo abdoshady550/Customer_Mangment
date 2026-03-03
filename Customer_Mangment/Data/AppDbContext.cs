@@ -6,9 +6,9 @@ namespace Customer_Mangment.Data
 {
     public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
     {
-        DbSet<Customer> Customers { get; set; }
-        DbSet<Address> Addresses { get; set; }
-        DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

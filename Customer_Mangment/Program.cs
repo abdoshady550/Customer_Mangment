@@ -7,6 +7,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AppMediator;
+using Customer_Mangment.Repository.Services.Background;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -66,6 +67,8 @@ namespace Customer_Mangment
             .AddDefaultTokenProviders();
 
             builder.Services.AddDataBaseConfig(builder.Configuration);
+            builder.Services.AddScoped<IMigrationService, DataMigrationService>();
+            builder.Services.AddHostedService<MigrationBackgroundService>();
 
             builder.Services.AddTransient<LoggerMiddleware>();
 
