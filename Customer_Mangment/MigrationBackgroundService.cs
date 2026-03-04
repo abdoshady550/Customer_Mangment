@@ -1,5 +1,6 @@
-﻿using Customer_Mangment.Model.Results;
-using Customer_Mangment.Repository.Interfaces;
+﻿using Customer_Mangment.Repository.Interfaces;
+using Customer_Mangment.Repository.Services.Background;
+using Polly.CircuitBreaker;
 using Quartz;
 
 namespace Customer_Mangment
@@ -22,35 +23,39 @@ namespace Customer_Mangment
                 return;
             }
 
-            var direction = flags.UseMongoDb ? "SQL To MongoDB" : "MongoDB To SQL";
-            logger.LogInformation("MigrationJob: starting ({Direction})", direction);
-
-            using var scope = scopeFactory.CreateScope();
-            var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
+            var policy = ResiliencePolicies.GetCombinedPolicy(logger);
 
             try
             {
-                MigrationResult result = flags.UseMongoDb
-                    ? await migrationService.MigrateSqlToMongoAsync(context.CancellationToken)
-                    : await migrationService.MigrateMongoToSqlAsync(context.CancellationToken);
+                await policy.ExecuteAsync(async () =>
+                {
 
-                if (result.Success)
-                {
+                    using var scope = scopeFactory.CreateScope();
+                    var migrationService = scope.ServiceProvider
+                        .GetRequiredService<IMigrationService>();
+
+                    var direction = flags.UseMongoDb ? "SQL → MongoDB" : "MongoDB → SQL";
+                    logger.LogInformation("MigrationJob: starting ({Direction})", direction);
+
+                    var result = flags.UseMongoDb
+                        ? await migrationService.MigrateSqlToMongoAsync(context.CancellationToken)
+                        : await migrationService.MigrateMongoToSqlAsync(context.CancellationToken);
+
+                    if (!result.Success)
+
+                        throw new InvalidOperationException(
+                            $"Migration failed: {string.Join(" | ", result.Errors)}");
+
                     logger.LogInformation(
-                        "Migration completed. Direction={Direction} Customers={C} Addresses={A} Tokens={T} Users={U}",
-                        result.Direction,
-                        result.CustomersProcessed,
-                        result.AddressesProcessed,
-                        result.RefreshTokensProcessed,
+                        "Migration done. Direction={D} Customers={C} Addresses={A} Tokens={T} Users={U}",
+                        result.Direction, result.CustomersProcessed,
+                        result.AddressesProcessed, result.RefreshTokensProcessed,
                         result.UsersProcessed);
-                }
-                else
-                {
-                    logger.LogWarning(
-                        "Migration finished with {ErrorCount} error(s): {Errors}",
-                        result.Errors.Count,
-                        string.Join(" | ", result.Errors));
-                }
+                });
+            }
+            catch (BrokenCircuitException ex)
+            {
+                logger.LogError("MigrationJob: Circuit is OPEN, skipping — {Error}", ex.Message);
             }
             catch (OperationCanceledException)
             {
@@ -58,7 +63,7 @@ namespace Customer_Mangment
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "MigrationJob: fatal error.");
+                logger.LogError(ex, "MigrationJob: all retries exhausted.");
                 throw new JobExecutionException(ex, refireImmediately: false);
             }
         }
