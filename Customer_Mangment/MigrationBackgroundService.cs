@@ -1,28 +1,29 @@
 ﻿using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
+using Quartz;
 
 namespace Customer_Mangment
 {
-    public sealed class MigrationBackgroundService(
+    [DisallowConcurrentExecution]
+    public sealed class MigrationJob(
         IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
-        ILogger<MigrationBackgroundService> logger) : BackgroundService
+        ILogger<MigrationJob> logger) : IJob
     {
-        protected override async Task ExecuteAsync(CancellationToken ct)
+        public async Task Execute(IJobExecutionContext context)
         {
             var flags = configuration
                 .GetSection(FeatureFlags.SectionName)
                 .Get<FeatureFlags>() ?? new FeatureFlags();
+
             if (!flags.RunMigrationOnStartup)
             {
-                logger.LogInformation("MigrationBackgroundService: skipped (RunMigrationOnStartup = false)");
+                logger.LogInformation("MigrationJob: skipped (RunMigrationOnStartup = false)");
                 return;
             }
 
-            var direction = flags.UseMongoDb ? "SQL To  MongoDB" : "MongoDB To  SQL";
-
-            logger.LogInformation(
-                "MigrationBackgroundService: starting ({Direction})", direction);
+            var direction = flags.UseMongoDb ? "SQL To MongoDB" : "MongoDB To SQL";
+            logger.LogInformation("MigrationJob: starting ({Direction})", direction);
 
             using var scope = scopeFactory.CreateScope();
             var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
@@ -30,14 +31,13 @@ namespace Customer_Mangment
             try
             {
                 MigrationResult result = flags.UseMongoDb
-                    ? await migrationService.MigrateSqlToMongoAsync(ct)
-                    : await migrationService.MigrateMongoToSqlAsync(ct);
+                    ? await migrationService.MigrateSqlToMongoAsync(context.CancellationToken)
+                    : await migrationService.MigrateMongoToSqlAsync(context.CancellationToken);
 
                 if (result.Success)
                 {
                     logger.LogInformation(
-                        "Migration completed successfully." +
-                        "Direction={Direction} Customers={C} Addresses={A} Tokens={T} Users={U}",
+                        "Migration completed. Direction={Direction} Customers={C} Addresses={A} Tokens={T} Users={U}",
                         result.Direction,
                         result.CustomersProcessed,
                         result.AddressesProcessed,
@@ -54,14 +54,13 @@ namespace Customer_Mangment
             }
             catch (OperationCanceledException)
             {
-                logger.LogWarning("Migration was cancelled.");
+                logger.LogWarning("MigrationJob: cancelled.");
             }
             catch (Exception ex)
             {
-                // Log but do NOT crash the app — migration is best-effort at startup
-                logger.LogError(ex, "Migration background service encountered a fatal error.");
+                logger.LogError(ex, "MigrationJob: fatal error.");
+                throw new JobExecutionException(ex, refireImmediately: false);
             }
         }
     }
-
 }

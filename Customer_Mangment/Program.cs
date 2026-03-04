@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Quartz;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -33,15 +34,16 @@ namespace Customer_Mangment
                         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                         options.JsonSerializerOptions.WriteIndented = true;
                     });
-
+            //OpenApi
             builder.Services.AddOpenApi(options =>
             {
                 options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
                 options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
             });
+            //Global Exception Handler
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
+            //Wolverine
             builder.Host.UseWolverine(opts =>
             {
                 opts.Discovery.IncludeAssembly(typeof(IAssmblyMarker).Assembly);
@@ -53,7 +55,7 @@ namespace Customer_Mangment
             builder.Services.AddScoped<IDispatcher, AppDispatcher>();
 
             builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
-
+            //DbContext and Identity
             builder.Services.AddDbContext<AppDbContext>(options =>
                options.UseSqlServer(
                    builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -65,14 +67,57 @@ namespace Customer_Mangment
                }
             ).AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
-
+            //DI database and migration
             builder.Services.AddDataBaseConfig(builder.Configuration);
             builder.Services.AddScoped<IMigrationService, DataMigrationService>();
-            builder.Services.AddHostedService<MigrationBackgroundService>();
 
+            //Hosted Service for Migration
+            builder.Services.AddQuartz(q =>
+            {
+                q.SchedulerId = "AUTO";
+                q.SchedulerName = "CustomerMgmtScheduler";
+
+                q.UseDefaultThreadPool(tp => tp.MaxConcurrency = 5);
+
+                q.UsePersistentStore(store =>
+                {
+                    store.UseProperties = true;
+                    store.RetryInterval = TimeSpan.FromMinutes(1);
+
+                    store.UseSqlServer(sql =>
+                    {
+                        sql.ConnectionString = builder.Configuration
+                            .GetConnectionString("DefaultConnection")!;
+
+                        sql.TablePrefix = "QRTZ_";
+                    });
+
+                    store.UseNewtonsoftJsonSerializer();
+                });
+
+                var jobKey = new JobKey("MigrationJob");
+
+                q.AddJob<MigrationJob>(opts => opts
+                    .WithIdentity(jobKey)
+                    .StoreDurably());
+
+                q.AddTrigger(opts => opts
+                    .ForJob(jobKey)
+                    .WithIdentity("MigrationJob-trigger", "MigrationGroup")
+                    .WithCronSchedule("0 * * ? * *")
+                    .StartNow());
+            });
+            builder.Services.AddQuartzHostedService(options =>
+            {
+                options.WaitForJobsToComplete = true;
+                options.AwaitApplicationStarted = true;
+
+            });
+
+            //LoggerMiddleware
             builder.Services.AddTransient<LoggerMiddleware>();
 
-
+            //Authentication and Authorization
             builder.Services.AddAuthentication(option =>
             {
                 option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -94,7 +139,7 @@ namespace Customer_Mangment
             });
             builder.Services.AddAuthorization();
 
-
+            // Services
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
