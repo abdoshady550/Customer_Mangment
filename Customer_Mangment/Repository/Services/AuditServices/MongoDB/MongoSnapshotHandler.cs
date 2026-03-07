@@ -1,72 +1,26 @@
-﻿using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Entities.History;
-using Customer_Mangment.Model.Events;
-using MongoDB.Driver;
+﻿using Customer_Mangment.Model.Events;
+using Customer_Mangment.Repository.Interfaces.Audit;
 
 namespace Customer_Mangment.Repository.Services.AuditServices.MongoDB
 {
-    public sealed class MongoSnapshotHandler(
-        IMongoCollection<CustomerSnapshot> customerSnapshots,
-        IMongoCollection<AddressSnapshot> addressSnapshots)
+    public sealed class MongoSnapshotHandler(ISnapshotPublisher publisher)
     {
-        // --- Customer events ---
+        public Task Handle(CustomerCreatedEvent e, CancellationToken ct)
+            => publisher.PublishCustomerSnapshotAsync(e.Customer, "Created", ct);
 
-        public async Task Handle(CustomerCreatedEvent e, CancellationToken ct)
-            => await SaveCustomerSnapshot(e.Customer, "Created", ct);
+        public Task Handle(CustomerUpdatedEvent e, CancellationToken ct)
+            => publisher.PublishCustomerSnapshotAsync(e.Customer, "Updated", ct);
 
-        public async Task Handle(CustomerUpdatedEvent e, CancellationToken ct)
-            => await SaveCustomerSnapshot(e.Customer, "Updated", ct);
+        public Task Handle(CustomerDeletedEvent e, CancellationToken ct)
+            => publisher.PublishCustomerSnapshotAsync(e.Customer, "Deleted", ct);
 
-        public async Task Handle(CustomerDeletedEvent e, CancellationToken ct)
-            => await SaveCustomerSnapshot(e.Customer, "Deleted", ct);
+        public Task Handle(AddressCreatedEvent e, CancellationToken ct)
+            => publisher.PublishAddressSnapshotAsync(e.Address, "Created", ct);
 
-        // --- Address events ---
+        public Task Handle(AddressUpdatedEvent e, CancellationToken ct)
+            => publisher.PublishAddressSnapshotAsync(e.Address, "Updated", ct);
 
-        public async Task Handle(AddressCreatedEvent e, CancellationToken ct)
-            => await SaveAddressSnapshot(e.Address, "Created", ct);
-
-        public async Task Handle(AddressUpdatedEvent e, CancellationToken ct)
-            => await SaveAddressSnapshot(e.Address, "Updated", ct);
-
-        public async Task Handle(AddressDeletedEvent e, CancellationToken ct)
-            => await SaveAddressSnapshot(e.Address, "Deleted", ct);
-
-        private async Task SaveCustomerSnapshot(
-            Customer customer,
-            string operation,
-            CancellationToken ct)
-        {
-            var snapshot = new CustomerSnapshot
-            {
-                CustomerId = customer.Id,
-                Name = customer.Name,
-                Mobile = customer.Mobile,
-                CreatedBy = customer.CreatedBy,
-                UpdatedBy = customer.UpdatedBy,
-                IsDeleted = customer.IsDeleted,
-                ValidFrom = DateTime.UtcNow,
-                Operation = operation
-            };
-
-            await customerSnapshots.InsertOneAsync(snapshot, cancellationToken: ct);
-        }
-
-        private async Task SaveAddressSnapshot(
-            Address address,
-            string operation,
-            CancellationToken ct)
-        {
-            var snapshot = new AddressSnapshot
-            {
-                AddressId = address.Id,
-                CustomerId = address.CustomerId,
-                Type = address.Type,
-                Value = address.Value,
-                ValidFrom = DateTime.UtcNow,
-                Operation = operation
-            };
-
-            await addressSnapshots.InsertOneAsync(snapshot, cancellationToken: ct);
-        }
+        public Task Handle(AddressDeletedEvent e, CancellationToken ct)
+            => publisher.PublishAddressSnapshotAsync(e.Address, "Deleted", ct);
     }
 }

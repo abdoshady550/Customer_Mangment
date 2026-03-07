@@ -70,6 +70,8 @@ namespace Customer_Mangment
             //DI database and migration
             builder.Services.AddDataBaseConfig(builder.Configuration);
             builder.Services.AddScoped<IMigrationService, DataMigrationService>();
+            //DI RabbitMQ
+            builder.Services.AddMassTransitWithRabbitMq(builder.Configuration);
 
             //Hosted Service for Migration
             builder.Services.AddQuartz(q =>

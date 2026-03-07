@@ -7,6 +7,7 @@ using Customer_Mangment.Repository.Interfaces.Audit;
 using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AuditServices;
 using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
+using MassTransit;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -86,6 +87,87 @@ namespace Customer_Mangment
             services.AddScoped<IHistoryService, MongoHistoryService>();
 
             services.AddScoped<MongoSnapshotHandler>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddMassTransitWithRabbitMq(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.AddScoped<ISnapshotPublisher, SnapshotPublisher>();
+
+            services.AddMassTransit(x =>
+            {
+                // Register consumers
+                x.AddConsumer<CustomerSnapshotConsumer>(cfg =>
+                {
+                    cfg.UseMessageRetry(r => r
+                        .Exponential(
+                            retryLimit: 5,
+                            minInterval: TimeSpan.FromSeconds(2),
+                            maxInterval: TimeSpan.FromMinutes(5),
+                            intervalDelta: TimeSpan.FromSeconds(3)));
+
+                    cfg.UseCircuitBreaker(cb =>
+                    {
+                        cb.TrackingPeriod = TimeSpan.FromMinutes(1);
+                        cb.TripThreshold = 15;
+                        cb.ActiveThreshold = 10;
+                        cb.ResetInterval = TimeSpan.FromMinutes(5);
+                    });
+                });
+
+                x.AddConsumer<AddressSnapshotConsumer>(cfg =>
+                {
+                    cfg.UseMessageRetry(r => r
+                        .Exponential(
+                            retryLimit: 5,
+                            minInterval: TimeSpan.FromSeconds(2),
+                            maxInterval: TimeSpan.FromMinutes(5),
+                            intervalDelta: TimeSpan.FromSeconds(3)));
+
+                    cfg.UseCircuitBreaker(cb =>
+                    {
+                        cb.TrackingPeriod = TimeSpan.FromMinutes(1);
+                        cb.TripThreshold = 15;
+                        cb.ActiveThreshold = 10;
+                        cb.ResetInterval = TimeSpan.FromMinutes(5);
+                    });
+                });
+
+                x.UsingRabbitMq((ctx, cfg) =>
+                {
+                    var rabbit = configuration.GetSection("RabbitMQ");
+
+                    cfg.Host(rabbit["Host"] ?? "localhost", rabbit["VHost"] ?? "/", h =>
+                    {
+                        h.Username(rabbit["Username"] ?? "guest");
+                        h.Password(rabbit["Password"] ?? "guest");
+                    });
+
+                    // Durable queues survive broker restarts
+                    cfg.ReceiveEndpoint("customer-snapshots", e =>
+                    {
+                        e.Durable = true;
+                        e.AutoDelete = false;
+                        e.ConfigureConsumer<CustomerSnapshotConsumer>(ctx);
+                        e.BindDeadLetterQueue("customer-snapshots_dead-letter", "customer-snapshots_error");
+
+                    });
+
+                    cfg.ReceiveEndpoint("address-snapshots", e =>
+                    {
+                        e.Durable = true;
+                        e.AutoDelete = false;
+                        e.ConfigureConsumer<AddressSnapshotConsumer>(ctx);
+
+                        e.BindDeadLetterQueue("address-snapshots_dead-letter", "address-snapshots_error");
+                    });
+
+                    cfg.ConfigureEndpoints(ctx);
+                });
+            });
 
             return services;
         }
