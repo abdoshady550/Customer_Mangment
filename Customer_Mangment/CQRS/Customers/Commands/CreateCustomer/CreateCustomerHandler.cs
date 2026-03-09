@@ -13,12 +13,14 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 {
     public sealed class CreateCustomerHandler(IGenericRepo<Customer> repo,
                                               IGenericRepo<User> userRepo,
+                                              ISyncGenericRepo<Customer> syncRepo,
                                               IMessageBus bus,
                                               ICustomerMapper mapper,
                                               ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
+        private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
@@ -50,6 +52,9 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             var customer = customerResult.Value;
             await _repo.AddAsync(customer, ct);
             await _repo.SaveChangesAsync(ct);
+
+            await _syncRepo.AddAsync(customer, ct);
+            await _syncRepo.SaveChangesAsync(ct);
 
             foreach (var address in request.Adresses)
             {

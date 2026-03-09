@@ -12,6 +12,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
     public class CreateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
+                                             ISyncGenericRepo<Address> SyncadressRepo,
+
                                              IMessageBus bus,
                                              ICustomerMapper mapper,
                                              ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Result<AddressDto>>
@@ -20,6 +22,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
+        private readonly ISyncGenericRepo<Address> _syncadressRepo = SyncadressRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateAddressHandler> _logger = logger;
@@ -55,9 +58,11 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 
 
             await _adressRepo.AddAsync(address.Value, ct);
-
             _customerRepo.Update(customer);
             await _customerRepo.SaveChangesAsync(ct);
+
+            await _syncadressRepo.AddAsync(address.Value, ct);
+            await _syncadressRepo.SaveChangesAsync(ct);
 
             await _bus.PublishAsync(new AddressCreatedEvent(address.Value));
 

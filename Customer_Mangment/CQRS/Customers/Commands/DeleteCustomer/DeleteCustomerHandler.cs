@@ -9,11 +9,13 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 {
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
+                                              ISyncGenericRepo<Customer> syncRepo,
                                               IMessageBus bus,
                                               ILogger<DeleteCustomerHandler> logger) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
+        private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
@@ -32,8 +34,13 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
                 return Error.NotFound("CustomerNotFound", $"Customer with ID {request.CustomerId} not found.");
             }
             customer.DeleteCustomer();
+
             _customerRepo.Update(customer);
             await _customerRepo.SaveChangesAsync(ct);
+
+            _syncRepo.Update(customer);
+            await _syncRepo.SaveChangesAsync(ct);
+
 
             await _bus.PublishAsync(new CustomerDeletedEvent(customer));
 

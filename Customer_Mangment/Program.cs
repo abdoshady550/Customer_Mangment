@@ -1,3 +1,4 @@
+using Customer_Mangment.Controllers;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Data;
 using Customer_Mangment.Middlewares;
@@ -145,6 +146,10 @@ namespace Customer_Mangment
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
+            builder.Services.AddHttpClient<RabbitMQ_ManagementController>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:15672");
+            });
 
             var app = builder.Build();
 

@@ -38,6 +38,14 @@ namespace Customer_Mangment
             services.AddSingleton(sp =>
                 sp.GetRequiredService<IMongoClient>().GetDatabase(mongoSettings.DatabaseName));
 
+            RegisterCollection<Customer>(services, "Customers");
+            RegisterCollection<Address>(services, "Addresses");
+            RegisterCollection<RefreshToken>(services, "RefreshTokens");
+            RegisterCollection<User>(services, "Users");
+
+            RegisterCollection<CustomerSnapshot>(services, "CustomerSnapshots");
+            RegisterCollection<AddressSnapshot>(services, "AddressSnapshots");
+
             if (flags.UseMongoDb)
             {
                 services.AddMongoDb(configuration);
@@ -61,6 +69,7 @@ namespace Customer_Mangment
 
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
             services.AddScoped<IHistoryService, SqlHistoryService>();
+            services.AddScoped(typeof(ISyncGenericRepo<>), typeof(SyncMongoGenericRepo<>));
 
             return services;
         }
@@ -88,6 +97,9 @@ namespace Customer_Mangment
 
             services.AddScoped<MongoSnapshotHandler>();
 
+            //services.AddScoped(typeof(ISyncGenericRepo<>), typeof(SyncGenericRepo<>));
+
+
             return services;
         }
 
@@ -99,7 +111,7 @@ namespace Customer_Mangment
 
             services.AddMassTransit(x =>
             {
-                // Register consumers
+                //  consumers
                 x.AddConsumer<CustomerSnapshotConsumer>(cfg =>
                 {
                     cfg.UseMessageRetry(r => r
@@ -142,11 +154,10 @@ namespace Customer_Mangment
 
                     cfg.Host(rabbit["Host"] ?? "localhost", rabbit["VHost"] ?? "/", h =>
                     {
-                        h.Username(rabbit["Username"] ?? "guest");
-                        h.Password(rabbit["Password"] ?? "guest");
+                        h.Username(rabbit["Username"] ?? "admin");
+                        h.Password(rabbit["Password"] ?? "admin123");
                     });
 
-                    // Durable queues survive broker restarts
                     cfg.ReceiveEndpoint("customer-snapshots", e =>
                     {
                         e.Durable = true;

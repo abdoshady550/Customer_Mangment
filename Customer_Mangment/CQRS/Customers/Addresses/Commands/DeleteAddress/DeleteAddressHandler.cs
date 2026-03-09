@@ -10,12 +10,14 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
     public sealed class DeleteAddressHandler(IGenericRepo<Address> addressRepo,
                                              IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
+                                             ISyncGenericRepo<Address> syncRepo,
                                              IMessageBus bus,
                                              ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
+        private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<DeleteAddressHandler> _logger = logger;
 
@@ -43,6 +45,9 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
 
             _addressRepo.Remove(address);
             await _addressRepo.SaveChangesAsync(ct);
+            _syncRepo.Remove(address);
+            await _syncRepo.SaveChangesAsync(ct);
+
             return Result.Deleted;
         }
     }

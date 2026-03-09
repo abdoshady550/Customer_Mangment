@@ -10,6 +10,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
     public sealed class UpdateAddressHandler(IGenericRepo<User> userRepo,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
+                                             ISyncGenericRepo<Address> syncRepo,
                                              IMessageBus bus,
                                              ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
@@ -17,6 +18,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
+        private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
@@ -55,6 +57,9 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
 
             _adressRepo.Update(address);
             await _adressRepo.SaveChangesAsync(ct);
+
+            _syncRepo.Update(address);
+            await _syncRepo.SaveChangesAsync(ct);
 
             await _bus.PublishAsync(new AddressUpdatedEvent(address));
 
