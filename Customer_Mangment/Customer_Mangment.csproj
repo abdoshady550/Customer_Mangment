@@ -8,8 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-	  <PackageReference Include="MassTransit" Version="8.2.5" />
-	  <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.5" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
@@ -39,10 +37,12 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
     <PackageReference Include="WolverineFx.Http" Version="5.17.0" />
     <PackageReference Include="WolverineFx.Http.FluentValidation" Version="5.17.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.17.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddressById\" />
+    <Folder Include="Docker\" />
   </ItemGroup>
 
 </Project>

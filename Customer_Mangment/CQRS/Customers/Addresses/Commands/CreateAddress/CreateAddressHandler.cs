@@ -61,8 +61,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
             _customerRepo.Update(customer);
             await _customerRepo.SaveChangesAsync(ct);
 
-            await _syncadressRepo.AddAsync(address.Value, ct);
-            await _syncadressRepo.SaveChangesAsync(ct);
+            //await _syncadressRepo.AddAsync(address.Value, ct);
+            //await _syncadressRepo.SaveChangesAsync(ct);
 
             await _bus.PublishAsync(new AddressCreatedEvent(address.Value));
 

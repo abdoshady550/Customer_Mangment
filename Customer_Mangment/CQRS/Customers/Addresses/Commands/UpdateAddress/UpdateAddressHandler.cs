@@ -58,8 +58,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             _adressRepo.Update(address);
             await _adressRepo.SaveChangesAsync(ct);
 
-            _syncRepo.Update(address);
-            await _syncRepo.SaveChangesAsync(ct);
+            //_syncRepo.Update(address);
+            //await _syncRepo.SaveChangesAsync(ct);
 
             await _bus.PublishAsync(new AddressUpdatedEvent(address));
 

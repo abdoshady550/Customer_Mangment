@@ -53,8 +53,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             await _repo.AddAsync(customer, ct);
             await _repo.SaveChangesAsync(ct);
 
-            await _syncRepo.AddAsync(customer, ct);
-            await _syncRepo.SaveChangesAsync(ct);
+            //await _syncRepo.AddAsync(customer, ct);
+            //await _syncRepo.SaveChangesAsync(ct);
 
             foreach (var address in request.Adresses)
             {

@@ -1,15 +1,15 @@
 using Customer_Mangment.Controllers;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Data;
+using Customer_Mangment.Extensions;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository.Interfaces;
-using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.Repository.Interfaces.Audit;
 using Customer_Mangment.Repository.Services;
-using Customer_Mangment.Repository.Services.AppMediator;
+using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
-using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +18,6 @@ using Quartz;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
-using Wolverine;
-using Wolverine.FluentValidation;
 
 namespace Customer_Mangment
 {
@@ -45,17 +43,14 @@ namespace Customer_Mangment
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
             //Wolverine
-            builder.Host.UseWolverine(opts =>
-            {
-                opts.Discovery.IncludeAssembly(typeof(IAssmblyMarker).Assembly);
+            builder.Host.AddWolverineMessaging(builder.Configuration);
 
-                opts.UseFluentValidation();
+            builder.Services.AddWolverineServices();
 
-                opts.UseFluentValidation(RegistrationBehavior.ExplicitRegistration);
-            });
-            builder.Services.AddScoped<IDispatcher, AppDispatcher>();
+            //massaging
+            builder.Services.AddMessaging(typeof(Program).Assembly);
 
-            builder.Services.AddValidatorsFromAssembly(typeof(IAssmblyMarker).Assembly);
+            builder.Services.AddScoped<ISnapshotPublisher, SnapshotPublisher>();
             //DbContext and Identity
             builder.Services.AddDbContext<AppDbContext>(options =>
                options.UseSqlServer(
@@ -71,52 +66,9 @@ namespace Customer_Mangment
             //DI database and migration
             builder.Services.AddDataBaseConfig(builder.Configuration);
             builder.Services.AddScoped<IMigrationService, DataMigrationService>();
-            //DI RabbitMQ
-            builder.Services.AddMassTransitWithRabbitMq(builder.Configuration);
 
             //Hosted Service for Migration
-            builder.Services.AddQuartz(q =>
-            {
-                q.SchedulerId = "AUTO";
-                q.SchedulerName = "CustomerMgmtScheduler";
-
-                q.UseDefaultThreadPool(tp => tp.MaxConcurrency = 5);
-
-                q.UsePersistentStore(store =>
-                {
-                    store.UseProperties = true;
-                    store.RetryInterval = TimeSpan.FromMinutes(1);
-
-                    store.UseSqlServer(sql =>
-                    {
-                        sql.ConnectionString = builder.Configuration
-                            .GetConnectionString("DefaultConnection")!;
-
-                        sql.TablePrefix = "QRTZ_";
-                    });
-
-                    store.UseNewtonsoftJsonSerializer();
-                });
-
-                var jobKey = new JobKey("MigrationJob");
-
-                q.AddJob<MigrationJob>(opts => opts
-                    .WithIdentity(jobKey)
-                    .StoreDurably());
-
-                q.AddTrigger(opts => opts
-                    .ForJob(jobKey)
-                    .WithIdentity("MigrationJob-trigger", "MigrationGroup")
-                    .WithCronSchedule("0 * * ? * *")
-                    .StartNow());
-            });
-            builder.Services.AddQuartzHostedService(options =>
-            {
-                options.WaitForJobsToComplete = true;
-                options.AwaitApplicationStarted = true;
-
-            });
-
+            builder.Services.AddQuartzJobs(builder.Configuration);
             //LoggerMiddleware
             builder.Services.AddTransient<LoggerMiddleware>();
 

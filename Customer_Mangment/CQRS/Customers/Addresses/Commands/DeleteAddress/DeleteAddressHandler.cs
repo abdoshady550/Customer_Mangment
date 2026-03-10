@@ -45,8 +45,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
 
             _addressRepo.Remove(address);
             await _addressRepo.SaveChangesAsync(ct);
-            _syncRepo.Remove(address);
-            await _syncRepo.SaveChangesAsync(ct);
+            //_syncRepo.Remove(address);
+            //await _syncRepo.SaveChangesAsync(ct);
 
             return Result.Deleted;
         }

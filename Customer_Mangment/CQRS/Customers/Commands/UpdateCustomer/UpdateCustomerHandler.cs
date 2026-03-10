@@ -42,8 +42,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
             _customerRepo.Update(customer);
             await _customerRepo.SaveChangesAsync(ct);
 
-            _syncRepo.Update(customer);
-            await _syncRepo.SaveChangesAsync(ct);
+            //_syncRepo.Update(customer);
+            //await _syncRepo.SaveChangesAsync(ct);
 
 
             await _bus.PublishAsync(new CustomerUpdatedEvent(customer));
