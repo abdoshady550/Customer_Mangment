@@ -2,4 +2,5 @@
   <Project Path="Customer_Mangment.Test/Customer_Mangment.Test.csproj" Id="2c087e37-60c8-4b00-8bf1-42f8ec6fb709" />
   <Project Path="Customer_Mangment/Customer_Mangment.csproj" />
   <Project Path="Customer_Mangment_Integrate.Test/Customer_Mangment_Integrate.Test.csproj" Id="9b88b0e9-f14a-4152-8955-ff4406b34d9d" />
+  <Project Path="RabbitMQ_Client_Console/RabbitMQ_Client_Console.csproj" Id="73bebc15-5e96-43d4-9f47-059c243fdf93" />
 </Solution>

@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Customer_Mangment.Hubs;
+
+[Authorize]
 
 public sealed class QueueMonitorHub(ILogger<QueueMonitorHub> logger) : Hub
 {

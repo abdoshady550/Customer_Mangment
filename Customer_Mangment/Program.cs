@@ -104,7 +104,7 @@ namespace Customer_Mangment
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
             builder.Services.AddHttpClient<RabbitMQ_ManagementController>(client =>
             {
-                client.BaseAddress = new Uri("http://localhost:15672");
+                client.BaseAddress = new Uri("http://localhost:15673");
             });
 
             var app = builder.Build();
