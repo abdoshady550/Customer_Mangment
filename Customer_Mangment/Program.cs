@@ -2,6 +2,7 @@ using Customer_Mangment.Controllers;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Data;
 using Customer_Mangment.Extensions;
+using Customer_Mangment.Hubs;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
@@ -69,6 +70,9 @@ namespace Customer_Mangment
 
             //Hosted Service for Migration
             builder.Services.AddQuartzJobs(builder.Configuration);
+
+            // SignalR
+            builder.Services.AddSignalR();
             //LoggerMiddleware
             builder.Services.AddTransient<LoggerMiddleware>();
 
@@ -136,7 +140,7 @@ namespace Customer_Mangment
 
             app.MapControllers();
 
-
+            app.MapHub<QueueMonitorHub>("/hubs/queue-monitor");
 
             app.Run();
         }
