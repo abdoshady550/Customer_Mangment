@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 
 namespace RabbitMQ_Client_Console
@@ -10,10 +12,29 @@ namespace RabbitMQ_Client_Console
             PropertyNameCaseInsensitive = true
         };
         private const string ApiBaseUrl = "https://localhost:7279";
-        private const string AdminEmail = "admin@test.com";
-        private const string AdminPassword = "Admin@123";
+
+        private const string BaseSecretsPath = @"D:\CS\TECH\c#\Meccano";
+
+        private static readonly string CredentialsFile =
+            Path.Combine(BaseSecretsPath, "secrets.json");
+
+        private static readonly string KeysFolder =
+            Path.Combine(BaseSecretsPath, "keys");
+
         static async Task Main(string[] args)
         {
+            // Data Protection setup
+            var services = new ServiceCollection();
+
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(KeysFolder));
+
+            var provider = services.BuildServiceProvider();
+
+            var protector = provider
+                .GetRequiredService<IDataProtectionProvider>()
+                .CreateProtector("QueueMonitor.Secrets");
+
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             Console.WriteLine("========================================");
@@ -26,7 +47,10 @@ namespace RabbitMQ_Client_Console
             Console.WriteLine($"Hub URL: {hubUrl}");
             Console.WriteLine();
 
-            var token = await GetTokenAsync();
+            var (email, password) = await LoadOrCreateCredentials(protector);
+
+
+            var token = await GetTokenAsync(email, password);
 
             var connection = BuildConnection(hubUrl, token);
 
@@ -64,15 +88,14 @@ namespace RabbitMQ_Client_Console
         }
 
         // Get Token 
-
-        private static async Task<string> GetTokenAsync()
+        private static async Task<string> GetTokenAsync(string email, string password)
         {
             using var http = new HttpClient();
 
             var payload = new
             {
-                email = AdminEmail,
-                password = AdminPassword
+                email,
+                password
             };
 
             var json = JsonSerializer.Serialize(payload);
@@ -163,9 +186,44 @@ namespace RabbitMQ_Client_Console
                 return Task.CompletedTask;
             };
         }
+        // Load or create credentials
+        private static async Task<(string email, string password)> LoadOrCreateCredentials(IDataProtector protector)
+        {
+            if (File.Exists(CredentialsFile))
+            {
+                var json = await File.ReadAllTextAsync(CredentialsFile);
+                var credentials = JsonSerializer.Deserialize<Credentials>(json)!;
 
+                var email = protector.Unprotect(credentials.Email);
+                var password = protector.Unprotect(credentials.Password);
+
+                return (email, password);
+            }
+
+            Console.Write("Admin Email: ");
+            var emailInput = Console.ReadLine()!;
+
+            Console.Write("Admin Password: ");
+            var passwordInput = Console.ReadLine()!;
+
+            var secrets = new Credentials
+            {
+                Email = protector.Protect(emailInput),
+                Password = protector.Protect(passwordInput)
+            };
+
+            var jsonOut = JsonSerializer.Serialize(secrets, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            await File.WriteAllTextAsync(CredentialsFile, jsonOut);
+
+            Console.WriteLine("\nCredentials saved securely.\n");
+
+            return (emailInput, passwordInput);
+        }
         // Render notification
-
         private static void RenderNotification(QueueNotification n)
         {
             Console.WriteLine("--------------------------------------------------");
