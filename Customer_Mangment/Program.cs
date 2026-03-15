@@ -8,9 +8,11 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.Audit;
+using Customer_Mangment.Repository.Interfaces.Report;
 using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
+using Customer_Mangment.Repository.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -102,6 +104,7 @@ namespace Customer_Mangment
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
+            builder.Services.AddScoped<ICustomerReportBuilder, FastReportCustomerReportBuilder>();
             builder.Services.AddHttpClient<RabbitMQ_ManagementController>(client =>
             {
                 client.BaseAddress = new Uri("http://localhost:15673");
