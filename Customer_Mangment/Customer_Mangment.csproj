@@ -42,7 +42,6 @@
 
   <ItemGroup>
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddressById\" />
-    <Folder Include="Docker\" />
   </ItemGroup>
 
 </Project>

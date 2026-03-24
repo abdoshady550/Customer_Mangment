@@ -32,6 +32,8 @@ public static class QuartzExtensions
                 });
 
                 store.UseNewtonsoftJsonSerializer();
+                store.PerformSchemaValidation = false;
+
             });
 
             var jobKey = new JobKey("MigrationJob");
@@ -52,6 +54,7 @@ public static class QuartzExtensions
             options.WaitForJobsToComplete = true;
             options.AwaitApplicationStarted = true;
         });
+        Console.WriteLine(configuration.GetConnectionString("DefaultConnection"));
 
         return services;
     }
