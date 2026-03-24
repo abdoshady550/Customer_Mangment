@@ -27,7 +27,7 @@ public static class WolverineExtensions
             opts.UseRabbitMq(rmq =>
             {
                 rmq.HostName = rabbit["Host"]!;
-                rmq.Port = 5673;
+                rmq.Port = int.Parse(rabbit["Port"] ?? "5672");
                 rmq.UserName = rabbit["Username"]!;
                 rmq.Password = rabbit["Password"]!;
             })

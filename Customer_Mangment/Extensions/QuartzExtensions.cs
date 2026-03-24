@@ -43,7 +43,7 @@ public static class QuartzExtensions
             q.AddTrigger(opts => opts
                 .ForJob(jobKey)
                 .WithIdentity("MigrationJob-trigger", "MigrationGroup")
-                .WithCronSchedule("0 0 0 * * ?") // 12:00 AM
+                .WithCronSchedule("0 * * * * ?")
                 .StartNow());
         });
 

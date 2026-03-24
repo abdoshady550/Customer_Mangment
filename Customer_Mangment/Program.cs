@@ -114,25 +114,22 @@ namespace Customer_Mangment
 
             await app.InitialiseDatabaseAsync();
 
-            if (app.Environment.IsDevelopment())
+            app.MapOpenApi();
+            app.UseSwaggerUI(options =>
             {
-                app.MapOpenApi();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/openapi/v1.json", "Customer Management API V1");
+                options.SwaggerEndpoint("/openapi/v1.json", "Customer Management API V1");
 
-                    options.EnableDeepLinking();
-                    options.DisplayRequestDuration();
-                    options.EnableFilter();
-                });
+                options.EnableDeepLinking();
+                options.DisplayRequestDuration();
+                options.EnableFilter();
+            });
 
-                app.MapScalarApiReference(options =>
-                {
-                    options.Title = "Customer Management API Reference";
+            app.MapScalarApiReference(options =>
+            {
+                options.Title = "Customer Management API Reference";
 
-                    options.WithTheme(Scalar.AspNetCore.ScalarTheme.DeepSpace);
-                });
-            }
+                options.WithTheme(Scalar.AspNetCore.ScalarTheme.DeepSpace);
+            });
             app.UseMiddleware<LoggerMiddleware>();
             app.UseExceptionHandler();
 
