@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
+using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -78,6 +79,10 @@ namespace Customer_Mangment
             //LoggerMiddleware
             builder.Services.AddTransient<LoggerMiddleware>();
 
+            //report 
+            QuestPDF.Settings.License = LicenseType.Community;
+
+
             //Authentication and Authorization
             builder.Services.AddAuthentication(option =>
             {
@@ -104,7 +109,7 @@ namespace Customer_Mangment
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
-            builder.Services.AddScoped<ICustomerReportBuilder, FastReportCustomerReportBuilder>();
+            builder.Services.AddScoped<ICustomerReportBuilder, CustomerReportBuilder>();
             builder.Services.AddHttpClient<RabbitMQ_ManagementController>(client =>
             {
                 client.BaseAddress = new Uri("http://localhost:15673");

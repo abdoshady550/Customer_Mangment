@@ -1,6 +1,6 @@
 # stage 1
-From mcr.microsoft.com/dotnet/sdk:9.0 AS build
-workdir /src
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
 
 # dependency
 COPY *.csproj .
@@ -13,8 +13,8 @@ RUN dotnet publish -c Release -o /app
 
 # stage 2
 
-From mcr.microsoft.com/dotnet/aspnet:9.0
-workdir /app
-copy --from=build /app .
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app .
 
-entrypoint ["dotnet", "Customer_Mangment.dll"]
+ENTRYPOINT ["dotnet", "Customer_Mangment.dll"]
