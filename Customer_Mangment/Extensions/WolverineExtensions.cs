@@ -22,17 +22,33 @@ public static class WolverineExtensions
             opts.UseFluentValidation();
             opts.UseFluentValidation(RegistrationBehavior.ExplicitRegistration);
 
-            var rabbit = configuration.GetSection("RabbitMQ");
 
-            opts.UseRabbitMq(rmq =>
+            var rabbitConnectionString = configuration.GetConnectionString("rabbitmq");
+            if (rabbitConnectionString != null)
             {
-                rmq.HostName = rabbit["Host"]!;
-                rmq.Port = int.Parse(rabbit["Port"] ?? "5672");
-                rmq.UserName = rabbit["Username"]!;
-                rmq.Password = rabbit["Password"]!;
-            })
-            .AutoProvision()
-            .AutoPurgeOnStartup();
+                var uri = new Uri(rabbitConnectionString);
+                opts.UseRabbitMq(rmq =>
+                {
+                    rmq.HostName = uri.Host;
+                    rmq.Port = uri.Port > 0 ? uri.Port : 5672;
+                    rmq.UserName = uri.UserInfo.Split(':')[0];
+                    rmq.Password = Uri.UnescapeDataString(uri.UserInfo.Split(':')[1]);
+                })
+                .AutoProvision()
+                .AutoPurgeOnStartup();
+            }
+            else
+            {
+                var rabbit = configuration.GetSection("RabbitMQ");
+                opts.UseRabbitMq(rmq =>
+                {
+                    rmq.HostName = rabbit["Host"]!;
+                    rmq.Port = 5672;
+                    rmq.UserName = rabbit["Username"]!;
+                    rmq.Password = rabbit["Password"]!;
+                }).AutoProvision()
+                  .AutoPurgeOnStartup();
+            }
 
             opts.Policies.OnException<Exception>()
                 .RetryWithCooldown(

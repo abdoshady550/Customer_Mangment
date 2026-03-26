@@ -8,7 +8,8 @@
 
   <ItemGroup>
 <PackageReference Include="QuestPDF" Version="2026.2.4" />
-
+	  <PackageReference Include="Aspire.Hosting" Version="13.1.0" />
+	  <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="9.5.2" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.13" />
@@ -45,6 +46,10 @@
   <ItemGroup>
     <Folder Include="CQRS\Customers\Addresses\Queries\GetAddressById\" />
     <Folder Include="Docker\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Customer_Mangment.ServiceDefaults\Customer_Mangment.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

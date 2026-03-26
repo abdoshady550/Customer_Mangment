@@ -25,11 +25,18 @@ namespace Customer_Mangment.Extensions
                 .GetSection(FeatureFlags.SectionName)
                 .Get<FeatureFlags>() ?? new FeatureFlags();
 
-            var mongoSettings = configuration
-                .GetSection(MongoDbSettings.SectionName)
-                .Get<MongoDbSettings>()
-                ?? throw new InvalidOperationException(
-                    $"Missing '{MongoDbSettings.SectionName}' section in appsettings.json.");
+            var mongoConnectionString = configuration.GetConnectionString("mongodb");
+            var mongoSettings = mongoConnectionString != null
+                ? new MongoDbSettings
+                {
+                    ConnectionString = mongoConnectionString,
+                    DatabaseName = configuration["MongoDB:DatabaseName"] ?? "CustomerManagement"
+                }
+                : configuration
+                    .GetSection(MongoDbSettings.SectionName)
+                    .Get<MongoDbSettings>()
+                  ?? throw new InvalidOperationException(
+                      $"Missing '{MongoDbSettings.SectionName}' section in appsettings.json.");
 
             RegisterMongoSerializers();
 

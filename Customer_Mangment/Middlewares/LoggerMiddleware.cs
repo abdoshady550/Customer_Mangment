@@ -6,6 +6,7 @@
 
         private const string MaskedEndpoint = "/api/Auth/token/generate";
         private const string SkipResponseEndpoint = "/api/CustomerReport/download";
+        private const string SkipResponseDocEndpoint = "/openapi/v1.json";
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
@@ -13,6 +14,7 @@
 
             var isMasked = path.Equals(MaskedEndpoint, StringComparison.OrdinalIgnoreCase);
             var skipResponse = path.Equals(SkipResponseEndpoint, StringComparison.OrdinalIgnoreCase);
+            var skipDocResponse = path.Equals(SkipResponseDocEndpoint, StringComparison.OrdinalIgnoreCase);
 
             // Request Body
             context.Request.EnableBuffering();
@@ -32,8 +34,8 @@
             await memStream.CopyToAsync(originalStream);
             context.Response.Body = originalStream;
 
-            var finalResponseBody = skipResponse
-                ? "Download PDF"
+            var finalResponseBody = skipResponse || skipDocResponse
+                ? "Skipped"
                 : (isMasked ? "***MASKED***" : responseBody);
 
             _logger.LogInformation("""

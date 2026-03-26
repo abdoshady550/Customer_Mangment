@@ -114,6 +114,8 @@ namespace Customer_Mangment
             {
                 client.BaseAddress = new Uri("http://localhost:15673");
             });
+            //Aspire
+            builder.AddServiceDefaults();
 
             var app = builder.Build();
 
@@ -144,6 +146,8 @@ namespace Customer_Mangment
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapDefaultEndpoints();
 
             app.MapHub<QueueMonitorHub>("/hubs/queue-monitor");
 
