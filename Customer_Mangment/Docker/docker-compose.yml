@@ -1,8 +1,6 @@
 version: '3.9'
 
 volumes:
-  sqlserver_data:
-  mongo_data:
   rabbitmq_data:
 
 networks:
@@ -10,49 +8,6 @@ networks:
     driver: bridge
 
 services:
-
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
-    environment:
-      SA_PASSWORD: "StrongPass@123"
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: "Developer"
-    ports:
-      - "1433:1433"
-    volumes:
-      - sqlserver_data:/var/opt/mssql
-    networks:
-      - customer_net
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'StrongPass@123' -Q 'SELECT 1' -No -b -o /dev/null"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
-
-  mongodb:
-    image: mongo:7.0
-    container_name: mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: "admin"
-      MONGO_INITDB_ROOT_PASSWORD: "admin123"
-      MONGO_INITDB_DATABASE: CustomerManagement
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - customer_net
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 20s
-    restart: unless-stopped
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -79,10 +34,10 @@ services:
     image: customer-mangment:latest  
     container_name: customer_api
     environment:
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=CustomerManagement;User Id=sa;Password=StrongPass@123;MultipleActiveResultSets=true;TrustServerCertificate=True"
-      MongoDB__ConnectionString: "mongodb://admin:admin123@mongodb:27017"
+      ConnectionStrings__DefaultConnection: "Server=host.docker.internal,1433;Database=CustomerManagement;User Id=sa;Password=StrongPass@123;MultipleActiveResultSets=True;TrustServerCertificate=True;Encrypt=False"
+      MongoDB__ConnectionString: "mongodb://host.docker.internal:27017"
       MongoDB__DatabaseName: "CustomerManagement"
-      FeatureFlags__UseMongoDb: "false"
+      FeatureFlags__UseMongoDb: "true"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__Username: "admin"
@@ -92,10 +47,6 @@ services:
     ports:
       - "5046:8080"
     depends_on:
-      sqlserver:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     networks:
