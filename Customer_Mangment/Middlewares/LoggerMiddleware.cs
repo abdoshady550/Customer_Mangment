@@ -5,11 +5,17 @@
         private readonly ILogger<LoggerMiddleware> _logger = logger;
 
         private const string MaskedEndpoint = "/api/Auth/token/generate";
+        private const string SkipResponseEndpoint = "/api/CustomerReport/download";
+        private const string SkipResponseDocEndpoint = "/openapi/v1.json";
+
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var path = context.Request.Path.Value ?? "";
+
             var isMasked = path.Equals(MaskedEndpoint, StringComparison.OrdinalIgnoreCase);
+            var skipResponse = path.Equals(SkipResponseEndpoint, StringComparison.OrdinalIgnoreCase);
+            var skipDocResponse = path.Equals(SkipResponseDocEndpoint, StringComparison.OrdinalIgnoreCase);
 
             // Request Body
             context.Request.EnableBuffering();
@@ -29,13 +35,16 @@
             await memStream.CopyToAsync(originalStream);
             context.Response.Body = originalStream;
 
-            // Log
-            logger.LogInformation("""
+            var finalResponseBody = skipResponse || skipDocResponse
+                ? "Skiped"
+                : (isMasked ? "***MASKED***" : responseBody);
+
+            _logger.LogInformation("""
             ─ Request
             Method : {Method}
             Path   : {Path}
             Body   : {RequestBody}
-            ─ Response 
+            ─ Response
             Status : {Status}
             Body   : {ResponseBody}
             ──
@@ -44,9 +53,7 @@
                 path,
                 isMasked ? "***MASKED***" : requestBody,
                 context.Response.StatusCode,
-                isMasked ? "***MASKED***" : responseBody);
+                finalResponseBody);
         }
-
-
     }
 }
