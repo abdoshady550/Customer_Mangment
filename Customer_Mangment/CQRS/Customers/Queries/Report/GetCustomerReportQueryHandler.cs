@@ -49,6 +49,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
                     c.Id,
                     c.Name,
                     c.Mobile,
+                    c.ValidFrom,
                     c.CreatedBy,
                     c.UpdatedBy,
                     c.IsDeleted))

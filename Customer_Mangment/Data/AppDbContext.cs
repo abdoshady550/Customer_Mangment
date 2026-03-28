@@ -18,6 +18,8 @@ namespace Customer_Mangment.Data
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
             modelBuilder.Entity<Address>()
                         .HasQueryFilter(a => !a.Customer.IsDeleted);
+            modelBuilder.Entity<User>()
+                    .Ignore(u => u.ConcurrencyStamp);
         }
 
     }

@@ -4,6 +4,7 @@
         Guid Id,
         string Name,
         string Mobile,
+        DateTime CreatedAt,
         string CreatedBy,
         string UpdatedBy,
         bool IsDeleted);

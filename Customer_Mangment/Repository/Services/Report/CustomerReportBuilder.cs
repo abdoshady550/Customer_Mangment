@@ -15,10 +15,9 @@ namespace Customer_Mangment.Repository.Services.Reports
         private static readonly string BorderColor = "#CCCCCC";
         private static readonly string TextDark = "#1A1A1A";
 
-        public byte[] Build(
-            IReadOnlyList<CustomerReportRow> rows,
-            DateTime? from,
-            DateTime? to)
+        public byte[] Build(IReadOnlyList<CustomerReportRow> rows,
+                            DateTime? from,
+                            DateTime? to)
         {
             return Document.Create(container =>
             {
@@ -54,6 +53,7 @@ namespace Customer_Mangment.Repository.Services.Reports
                             cols.RelativeColumn(3);   // Customer ID
                             cols.RelativeColumn(2);   // Name
                             cols.RelativeColumn(2);   // Mobile
+                            cols.RelativeColumn(2);   // Created At
                             cols.RelativeColumn(2);   // Created By
                             cols.RelativeColumn(2);   // Updated By
                             cols.RelativeColumn(1);   // Is Deleted
@@ -68,7 +68,7 @@ namespace Customer_Mangment.Repository.Services.Reports
                         table.Header(header =>
                         {
                             foreach (var label in new[]
-                                { "Customer ID", "Name", "Mobile",
+                                { "Customer ID", "Name", "Mobile","Created At",
                               "Created By", "Updated By", "Is Deleted" })
                             {
                                 header.Cell().Element(HeaderCell)
@@ -77,7 +77,7 @@ namespace Customer_Mangment.Repository.Services.Reports
                             }
                         });
 
-                        //    data rows                                         ─
+                        //    data rows                                         
                         for (int i = 0; i < rows.Count; i++)
                         {
                             var row = rows[i];
@@ -93,6 +93,8 @@ namespace Customer_Mangment.Repository.Services.Reports
                             table.Cell().Element(DataCell).Text(row.Name ?? "")
                                  .FontSize(8).FontColor(TextDark);
                             table.Cell().Element(DataCell).Text(row.Mobile ?? "")
+                                 .FontSize(8).FontColor(TextDark);
+                            table.Cell().Element(DataCell).Text(row.CreatedAt)
                                  .FontSize(8).FontColor(TextDark);
                             table.Cell().Element(DataCell).Text(row.CreatedBy ?? "")
                                  .FontSize(8).FontColor(TextDark);
@@ -123,7 +125,7 @@ namespace Customer_Mangment.Repository.Services.Reports
                               });
                     });
                 });
-            }).GeneratePdf();   // returns byte[] — no MemoryStream needed
+            }).GeneratePdf();
         }
 
         private static string BuildTitle(DateTime? from, DateTime? to) =>
