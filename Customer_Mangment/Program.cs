@@ -117,6 +117,27 @@ namespace Customer_Mangment
             //Aspire
             builder.AddServiceDefaults();
 
+            //Health Checks
+            builder.Services.AddHealthChecks()
+                .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .AddMongoDb(sp =>
+                {
+                    var conn = builder.Configuration.GetConnectionString("mongodb");
+                    return new MongoDB.Driver.MongoClient(conn);
+                })
+                .AddRabbitMQ(async sp =>
+                {
+                    var connStr = builder.Configuration.GetConnectionString("rabbitmq");
+
+                    var factory = new RabbitMQ.Client.ConnectionFactory()
+                    {
+                        Uri = new Uri(connStr)
+                    };
+
+                    return await factory.CreateConnectionAsync();
+                });
+
+
             var app = builder.Build();
 
             await app.InitialiseDatabaseAsync();
@@ -137,10 +158,13 @@ namespace Customer_Mangment
 
                 options.WithTheme(Scalar.AspNetCore.ScalarTheme.DeepSpace);
             });
-            app.UseMiddleware<LoggerMiddleware>();
-            app.UseExceptionHandler();
-
             app.UseHttpsRedirection();
+
+            app.UseHealthChecks("/health");
+
+            app.UseMiddleware<LoggerMiddleware>();
+
+            app.UseExceptionHandler();
 
             app.UseAuthentication();
             app.UseAuthorization();

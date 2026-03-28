@@ -31,6 +31,7 @@ builder.AddContainer("customer-mangment", "customer-mangment")
     {
         c.Urls.Add(new() { Url = "http://localhost:5000/swagger", DisplayText = "Swagger UI" });
         c.Urls.Add(new() { Url = "http://localhost:5000/scalar/v1", DisplayText = "Scalar UI" });
-    });
+    })
+    .WithHttpHealthCheck("/health");
 
 builder.Build().Run();
