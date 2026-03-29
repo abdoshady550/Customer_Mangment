@@ -1,4 +1,5 @@
-﻿using Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress;
+﻿using Asp.Versioning;
+using Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress;
 using Customer_Mangment.CQRS.Customers.Commands.CreateCustomer;
 using Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer;
 using Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer;
@@ -17,6 +18,8 @@ namespace Customer_Mangment.Controllers
     [Route("api/[controller]")]
     [Authorize]
     [EnableRateLimiting(policyName: "DefaultPolicy")]
+    [ApiVersion("1.0")]
+
     public class CustomerController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

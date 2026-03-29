@@ -39,11 +39,17 @@ namespace Customer_Mangment
                         options.JsonSerializerOptions.WriteIndented = true;
                     });
             //OpenApi
-            builder.Services.AddOpenApi(options =>
+            string[] versions = ["v1", "v2"];
+            foreach (var version in versions)
             {
-                options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-                options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
-            });
+                builder.Services.AddOpenApi(options =>
+                {
+                    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+                    options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
+                    options.AddDocumentTransformer<VersionInfoTransformer>();
+                });
+            }
+
             //Global Exception Handler
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -119,6 +125,8 @@ namespace Customer_Mangment
             builder.AddServiceDefaults();
             //Rate Limiting
             builder.Services.AddRateLimiting();
+            //Api Versioning
+            builder.Services.AddApiVersion();
             //Health Checks
             builder.Services.AddHealthChecks()
                 .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))

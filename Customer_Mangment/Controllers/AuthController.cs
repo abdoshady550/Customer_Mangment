@@ -1,4 +1,5 @@
-﻿using Customer_Mangment.CQRS.Identity.Dto;
+﻿using Asp.Versioning;
+using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 using Customer_Mangment.CQRS.Identity.Queries.RefreshTokens;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
@@ -8,6 +9,7 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public sealed class AuthController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

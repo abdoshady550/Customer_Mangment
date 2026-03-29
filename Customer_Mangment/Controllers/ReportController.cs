@@ -1,4 +1,5 @@
-﻿using Customer_Mangment.CQRS.Customers.Queries.Report;
+﻿using Asp.Versioning;
+using Customer_Mangment.CQRS.Customers.Queries.Report;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,8 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [ApiVersion("1.0")]
+
     public sealed class CustomerReportController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

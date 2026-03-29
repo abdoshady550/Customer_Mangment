@@ -1,4 +1,5 @@
-﻿using Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress;
+﻿using Asp.Versioning;
+using Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress;
 using Customer_Mangment.CQRS.Customers.Addresses.DTOS;
@@ -15,6 +16,8 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize]
+    [ApiVersion("1.0")]
+
     public class CustomerAddressController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

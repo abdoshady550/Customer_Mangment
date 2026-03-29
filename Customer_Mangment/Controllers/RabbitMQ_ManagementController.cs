@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
 using System.Text;
@@ -7,6 +8,8 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [ApiVersion("2.0")]
+
     public class RabbitMQ_ManagementController(HttpClient client) : ApiController
     {
         private readonly HttpClient _client = client;
