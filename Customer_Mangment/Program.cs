@@ -14,6 +14,7 @@ using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
 using Customer_Mangment.Repository.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -116,7 +117,8 @@ namespace Customer_Mangment
             });
             //Aspire
             builder.AddServiceDefaults();
-
+            //Rate Limiting
+            builder.Services.AddRateLimiting();
             //Health Checks
             builder.Services.AddHealthChecks()
                 .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -161,6 +163,10 @@ namespace Customer_Mangment
             app.UseHttpsRedirection();
 
             app.UseHealthChecks("/health");
+            app.MapHealthChecks("/alive", new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("live")
+            });
 
             app.UseMiddleware<LoggerMiddleware>();
 
@@ -168,6 +174,8 @@ namespace Customer_Mangment
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseRateLimiter();
 
             app.MapControllers();
 

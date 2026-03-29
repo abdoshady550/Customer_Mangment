@@ -9,12 +9,14 @@ using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Req;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize]
+    [EnableRateLimiting(policyName: "DefaultPolicy")]
     public class CustomerController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;
