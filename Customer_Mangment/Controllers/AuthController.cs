@@ -10,6 +10,8 @@ namespace Customer_Mangment.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
+
     public sealed class AuthController(IDispatcher sender) : ApiController
     {
         private readonly IDispatcher _sender = sender;

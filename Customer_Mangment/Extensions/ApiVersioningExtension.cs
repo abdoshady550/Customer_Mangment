@@ -6,13 +6,18 @@ namespace Customer_Mangment.Extensions
     {
         public static IServiceCollection AddApiVersion(this IServiceCollection services)
         {
-            services.AddApiVersioning(option =>
+            services.AddApiVersioning(options =>
             {
-                option.DefaultApiVersion = new ApiVersion(1, 0);
-                option.AssumeDefaultVersionWhenUnspecified = true;
-                option.ReportApiVersions = true;
-                option.ApiVersionReader = new HeaderApiVersionReader("api-version");
-            });
+                options.DefaultApiVersion = new ApiVersion(1);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            }).AddMvc()
+              .AddApiExplorer(options =>
+              {
+                  options.GroupNameFormat = "'v'VVV";
+                  options.SubstituteApiVersionInUrl = true;
+              });
             return services;
         }
     }

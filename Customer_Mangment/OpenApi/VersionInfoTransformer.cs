@@ -12,8 +12,18 @@ namespace Customer_Mangment.OpenApi
             document.Info.Version = version;
             document.Info.Title = $"CustomerMangement API {version}";
 
+            foreach (var path in document.Paths.Values)
+            {
+                foreach (var operation in path.Operations.Values)
+                {
+                    if (!string.IsNullOrEmpty(operation.OperationId))
+                    {
+                        operation.OperationId = $"{version}_{operation.OperationId}";
+                    }
+                }
+            }
+
             return Task.CompletedTask;
         }
-
     }
 }

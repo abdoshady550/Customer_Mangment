@@ -14,7 +14,6 @@ using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
 using Customer_Mangment.Repository.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -40,13 +39,17 @@ namespace Customer_Mangment
                     });
             //OpenApi
             string[] versions = ["v1", "v2"];
+
             foreach (var version in versions)
             {
-                builder.Services.AddOpenApi(options =>
+                builder.Services.AddOpenApi(version, options =>
                 {
+                    // Versioning config
+                    options.AddDocumentTransformer<VersionInfoTransformer>();
+
+                    // Security Scheme config
                     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
                     options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
-                    options.AddDocumentTransformer<VersionInfoTransformer>();
                 });
             }
 
@@ -123,30 +126,12 @@ namespace Customer_Mangment
             });
             //Aspire
             builder.AddServiceDefaults();
+
             //Rate Limiting
             builder.Services.AddRateLimiting();
+
             //Api Versioning
             builder.Services.AddApiVersion();
-            //Health Checks
-            builder.Services.AddHealthChecks()
-                .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-                .AddMongoDb(sp =>
-                {
-                    var conn = builder.Configuration.GetConnectionString("mongodb");
-                    return new MongoDB.Driver.MongoClient(conn);
-                })
-                .AddRabbitMQ(async sp =>
-                {
-                    var connStr = builder.Configuration.GetConnectionString("rabbitmq");
-
-                    var factory = new RabbitMQ.Client.ConnectionFactory()
-                    {
-                        Uri = new Uri(connStr)
-                    };
-
-                    return await factory.CreateConnectionAsync();
-                });
-
 
             var app = builder.Build();
 
@@ -155,7 +140,12 @@ namespace Customer_Mangment
             app.MapOpenApi();
             app.UseSwaggerUI(options =>
             {
+                options.RoutePrefix = "swagger";
+
                 options.SwaggerEndpoint("/openapi/v1.json", "Customer Management API V1");
+                options.SwaggerEndpoint("/openapi/v2.json", "Customer Management API V2");
+
+                options.DefaultModelsExpandDepth(-1);
 
                 options.EnableDeepLinking();
                 options.DisplayRequestDuration();
@@ -165,16 +155,15 @@ namespace Customer_Mangment
             app.MapScalarApiReference(options =>
             {
                 options.Title = "Customer Management API Reference";
+                options.AddDocuments([
+                    new ScalarDocument("v1", "API v1", "/openapi/v1.json"),
+                    new ScalarDocument("v2", "API v2", "/openapi/v2.json")
+                ]);
 
                 options.WithTheme(Scalar.AspNetCore.ScalarTheme.DeepSpace);
             });
             app.UseHttpsRedirection();
 
-            app.UseHealthChecks("/health");
-            app.MapHealthChecks("/alive", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
 
             app.UseMiddleware<LoggerMiddleware>();
 

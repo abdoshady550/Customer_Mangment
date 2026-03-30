@@ -8,7 +8,9 @@ namespace Customer_Mangment.Controllers
 {
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [ApiVersion("1.0")]
     [ApiVersion("2.0")]
+
 
     public class RabbitMQ_ManagementController(HttpClient client) : ApiController
     {
