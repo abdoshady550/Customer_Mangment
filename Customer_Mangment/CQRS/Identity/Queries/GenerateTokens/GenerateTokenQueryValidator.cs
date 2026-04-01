@@ -1,19 +1,22 @@
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
 using FluentValidation;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 
 public sealed class GenerateTokenQueryValidator : AbstractValidator<GenerateTokenQuery>
 {
-    public GenerateTokenQueryValidator()
+    public GenerateTokenQueryValidator(IStringLocalizer<SharedResource> l)
     {
-        RuleFor(request => request.Email)
+        RuleFor(r => r.Email)
             .NotNull().NotEmpty()
             .WithErrorCode("Email_Null_Or_Empty")
-            .WithMessage("Email cannot be null or empty");
+            .WithMessage(_ => l[ResourceKeys.Validation.EmailRequired]);
 
-        RuleFor(request => request.Password)
+        RuleFor(r => r.Password)
             .NotNull().NotEmpty()
             .WithErrorCode("Password_Null_Or_Empty")
-            .WithMessage("Password cannot be null or empty.");
+            .WithMessage(_ => l[ResourceKeys.Validation.PasswordRequired]); ;
     }
 }

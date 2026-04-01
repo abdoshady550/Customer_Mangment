@@ -1,4 +1,7 @@
 ﻿using Customer_Mangment.Model.Results;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -31,19 +34,20 @@ namespace Customer_Mangment.Model.Entities
             UpdatedBy = createdBy;
 
         }
-        public static Result<Customer> CreateCustomer(string name, string mobile, string createdBy, IEnumerable<(AdressType type, string value)> addresses)
+        public static Result<Customer> CreateCustomer(string name, string mobile, string createdBy, IEnumerable<(AdressType type, string value)> addresses, IStringLocalizer<SharedResource> localizer)
         {
             if (string.IsNullOrWhiteSpace(name))
-                return Error.Failure("Invalide_Name", "Name cannot be null or empty");
+                return LocalizedError.Validation(localizer, "Invalide_Name", ResourceKeys.Validation.NameEmpty);
+
 
             if (string.IsNullOrWhiteSpace(mobile))
-                return Error.Failure("Invalide_Mobile", "Mobile number cannot be null or empty");
+                return LocalizedError.Validation(localizer, "Invalide_Mobile", ResourceKeys.Validation.MobileRequired);
 
             var customer = new Customer(name, mobile, createdBy);
 
             foreach (var a in addresses)
             {
-                var result = customer.AddAddress(a.type, a.value);
+                var result = customer.AddAddress(a.type, a.value, localizer);
                 if (result.IsError)
                     return result.Errors;
             }
@@ -59,12 +63,12 @@ namespace Customer_Mangment.Model.Entities
             UpdatedBy = updatedBy;
             return Result.Updated;
         }
-        public Result<Address> AddAddress(AdressType type, string value)
+        public Result<Address> AddAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
         {
             if (_addresses.Any(a => a.Type == type))
-                return Error.Validation("DuplicateAddressType", $"Duplicate address type: {type}");
+                return LocalizedError.Conflict(localizer, "DuplicateAddressType", ResourceKeys.Address.Duplicate, type);
 
-            var addressResult = Address.CreateAddress(type, value);
+            var addressResult = Address.CreateAddress(type, value, localizer);
             if (addressResult.IsError)
                 return addressResult.Errors;
 

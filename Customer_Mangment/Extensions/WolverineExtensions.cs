@@ -3,7 +3,6 @@ using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Services.AppMediator;
 using FluentValidation;
 using Wolverine;
-using Wolverine.ErrorHandling;
 using Wolverine.FluentValidation;
 using Wolverine.RabbitMQ;
 
@@ -50,13 +49,13 @@ public static class WolverineExtensions
                   .AutoPurgeOnStartup();
             }
 
-            opts.Policies.OnException<Exception>()
-                .RetryWithCooldown(
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(4),
-                    TimeSpan.FromSeconds(8),
-                    TimeSpan.FromMinutes(1),
-                    TimeSpan.FromMinutes(5));
+            //opts.Policies.OnException<Exception>()
+            //    .RetryWithCooldown(
+            //        TimeSpan.FromSeconds(2),
+            //        TimeSpan.FromSeconds(4),
+            //        TimeSpan.FromSeconds(8),
+            //        TimeSpan.FromMinutes(1),
+            //        TimeSpan.FromMinutes(5));
 
             opts.PublishMessage<CustomerSnapshotMessage>()
                 .ToRabbitQueue("customer-snapshots");

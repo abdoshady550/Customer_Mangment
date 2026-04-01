@@ -1,27 +1,31 @@
-﻿using FluentValidation;
+﻿using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using FluentValidation;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
 {
     public sealed class UpdateAddressValidator : AbstractValidator<UpdateAddressCommand>
     {
-        public UpdateAddressValidator()
+        public UpdateAddressValidator(IStringLocalizer<SharedResource> l)
         {
             RuleFor(c => c.UserId)
                 .NotEmpty()
-                .WithMessage("You have to be login first");
+                .WithMessage(_ => l[ResourceKeys.Auth.LoginRequired]);
 
             RuleFor(x => x.AddressId)
                 .NotEmpty()
-                .WithMessage("AddressId is required.");
+                .WithMessage(_ => l[ResourceKeys.Address.IdRequired]);
+
             RuleFor(x => x.Type)
                 .IsInEnum()
                 .When(x => x.Type.HasValue)
-                .WithMessage("Invalid address type.");
+                .WithMessage(_ => l[ResourceKeys.Validation.AddressTypeInvalid]);
 
             RuleFor(x => x.Value)
-                .Must(value => !string.IsNullOrEmpty(value))
-                .When(x => x.Value != null)
-                .WithMessage("Address value is required.");
+                .Must(v => !string.IsNullOrEmpty(v))
+                .When(x => x.Value is not null)
+                .WithMessage(_ => l[ResourceKeys.Validation.AddressValueEmpty]);
         }
     };
 }

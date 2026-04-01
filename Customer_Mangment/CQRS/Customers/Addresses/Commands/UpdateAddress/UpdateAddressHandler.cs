@@ -3,6 +3,9 @@ using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
@@ -11,6 +14,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
                                              ISyncGenericRepo<Address> syncRepo,
+                                             IStringLocalizer<SharedResource> localizer,
                                              IMessageBus bus,
                                              ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
@@ -19,6 +23,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
         private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
@@ -28,25 +33,28 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             if (user == null)
             {
                 _logger.LogWarning("User with id {UserId} not found", request.UserId);
-                return Error.Unauthorized("UserNotFound", $"User with id {request.UserId} not found");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
+
             }
             var address = await _adressRepo.FirstOrDefaultAsync(a => a.Id == request.AddressId, ct);
             if (address == null)
             {
                 _logger.LogWarning("Address with id {AddressId} not found", request.AddressId);
-                return Error.NotFound("AddressNotFound", $"Address with id {request.AddressId} not found");
+                return LocalizedError.NotFound(_localizer, "AddressNotFound", ResourceKeys.Address.NotFound, request.AddressId);
+
             }
             var repeatedAddress = await _adressRepo.AnyAsync(a => a.CustomerId == address.CustomerId && a.Type == request.Type && a.Id != address.Id, ct);
             if (repeatedAddress)
             {
                 _logger.LogWarning("Address of type {AddressType} already exists for customer with id {CustomerId}", request.Type, address.CustomerId);
-                return Error.Conflict("DuplicateAddress", $"Address of type {request.Type} already exists for customer with id {address.CustomerId}");
+                return LocalizedError.Conflict(_localizer, "DuplicateAddress", ResourceKeys.Address.Duplicate, request.AddressId);
+
             }
             var customer = await _customerRepo.Include(c => c.Addresses).FirstOrDefaultAsync(c => c.Id == address.CustomerId, ct);
             if (customer == null)
             {
                 _logger.LogWarning("Customer with id {CustomerId} not found", address.CustomerId);
-                return Error.NotFound("CustomerNotFound", $"Customer with id {address.CustomerId} not found");
+                return LocalizedError.NotFound(_localizer, "CustomerNotFound", ResourceKeys.Customer.NotFound, address.CustomerId);
             }
             var updateResult = address.UpdateAddress(request.Type, request.Value, user.UserName!);
             if (updateResult.IsError)

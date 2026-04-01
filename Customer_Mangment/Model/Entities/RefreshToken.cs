@@ -24,26 +24,27 @@ namespace Customer_Mangment.Model.Entities
             ExpiresOnUtc = expiresOnUtc;
         }
 
-        public static Result<RefreshToken> Create(Guid id, string? token, string? userId, DateTimeOffset expiresOnUtc)
+        public static Result<RefreshToken> Create(Guid id, string? token, string? userId, DateTimeOffset expiresOnUtc, RefreshTokenErrors tokenErrors)
         {
             if (id == Guid.Empty)
             {
-                return RefreshTokenErrors.IdRequired;
+                return tokenErrors.IdRequired;
+
             }
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                return RefreshTokenErrors.TokenRequired;
+                return tokenErrors.TokenRequired;
             }
 
             if (string.IsNullOrWhiteSpace(userId))
             {
-                return RefreshTokenErrors.UserIdRequired;
+                return tokenErrors.UserIdRequired;
             }
 
             if (expiresOnUtc <= DateTimeOffset.UtcNow)
             {
-                return RefreshTokenErrors.ExpiryInvalid;
+                return tokenErrors.ExpiryInvalid;
             }
 
             return new RefreshToken(id, token, userId, expiresOnUtc);

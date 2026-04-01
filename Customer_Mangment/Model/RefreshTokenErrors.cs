@@ -1,41 +1,39 @@
-
 using Customer_Mangment.Model.Results;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.Model;
 
-public static class RefreshTokenErrors
+public sealed class RefreshTokenErrors(IStringLocalizer<SharedResource> l)
 {
-    public static readonly Error IdRequired =
-        Error.Validation("RefreshToken_Id_Required", "Refresh token ID is required.");
+    public Error IdRequired =>
+        LocalizedError.Validation(l, "RefreshToken_Id_Required", ResourceKeys.Token.IdRequired);
 
-    public static readonly Error TokenRequired =
-        Error.Validation("RefreshToken_Token_Required", "Token value is required.");
+    public Error TokenRequired =>
+        LocalizedError.Validation(l, "RefreshToken_Token_Required", ResourceKeys.Token.TokenRequired);
 
-    public static readonly Error UserIdRequired =
-        Error.Validation("RefreshToken_UserId_Required", "User ID is required.");
+    public Error UserIdRequired =>
+        LocalizedError.Validation(l, "RefreshToken_UserId_Required", ResourceKeys.Token.UserIdRequired);
 
-    public static readonly Error ExpiryInvalid =
-        Error.Validation("RefreshToken_Expiry_Invalid", "Expiry must be in the future.");
-    public static Error InvalidRefreshToken =>
-        Error.Validation("RefreshToken.Expiry.Invalid", "Expiry must be in the future.");
+    public Error ExpiryInvalid =>
+        LocalizedError.Validation(l, "RefreshToken_Expiry_Invalid", ResourceKeys.Token.ExpiryInvalid);
 
-    public static readonly Error ExpiredAccessTokenInvalid = Error.Conflict(
-         code: "Auth.ExpiredAccessToken.Invalid",
-         description: "Expired access token is not valid.");
+    public Error InvalidRefreshToken =>
+        LocalizedError.Validation(l, "RefreshToken.Expiry.Invalid", ResourceKeys.Token.ExpiryInvalid);
 
-    public static readonly Error UserIdClaimInvalid = Error.Conflict(
-        code: "Auth.UserIdClaim.Invalid",
-        description: "Invalid userId claim.");
+    public Error ExpiredAccessTokenInvalid =>
+        LocalizedError.Conflict(l, "Auth.ExpiredAccessToken.Invalid", ResourceKeys.Auth.TokenExpired);
 
-    public static readonly Error RefreshTokenExpired = Error.Conflict(
-        code: "Auth.RefreshToken.Expired",
-        description: "Refresh token is invalid or has expired.");
+    public Error UserIdClaimInvalid =>
+        LocalizedError.Conflict(l, "Auth.UserIdClaim.Invalid", ResourceKeys.Auth.UserIdClaimInvalid);
 
-    public static readonly Error UserNotFound = Error.NotFound(
-        code: "Auth.User.NotFound",
-        description: "User not found.");
+    public Error RefreshTokenExpired =>
+        LocalizedError.Conflict(l, "Auth.RefreshToken.Expired", ResourceKeys.Auth.RefreshTokenExpired);
 
-    public static readonly Error TokenGenerationFailed = Error.Failure(
-        code: "Auth.TokenGeneration.Failed",
-        description: "Failed to generate new JWT token.");
+    public Error UserNotFound =>
+        LocalizedError.NotFound(l, "Auth.User.NotFound", ResourceKeys.User.NotFound);
+
+    public Error TokenGenerationFailed =>
+        LocalizedError.Failure(l, "Auth.TokenGeneration.Failed", ResourceKeys.Token.GenerationFailed);
 }

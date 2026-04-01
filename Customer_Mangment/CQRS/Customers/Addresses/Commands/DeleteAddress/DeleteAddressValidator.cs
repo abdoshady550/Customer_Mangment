@@ -1,14 +1,20 @@
-﻿using FluentValidation;
+﻿using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using FluentValidation;
+using Microsoft.Extensions.Localization;
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
 {
     public sealed class DeleteAddressValidator : AbstractValidator<DeleteAddressCommand>
     {
-        public DeleteAddressValidator()
+        public DeleteAddressValidator(IStringLocalizer<SharedResource> l)
         {
             RuleFor(c => c.UserId)
-                .NotEmpty().WithMessage("You have to be login first");
+                            .NotEmpty()
+                            .WithMessage(_ => l[ResourceKeys.Auth.LoginRequired]);
+
             RuleFor(c => c.AddressId)
-                .NotEmpty().WithMessage("AddressId is required.");
+                .NotEmpty()
+                .WithMessage(_ => l[ResourceKeys.Address.IdRequired]);
         }
     };
 }

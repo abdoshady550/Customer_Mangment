@@ -1,6 +1,8 @@
 ﻿using Asp.Versioning;
+using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -12,7 +14,7 @@ namespace Customer_Mangment.Controllers
     [ApiVersion("2.0")]
 
 
-    public class RabbitMQ_ManagementController(HttpClient client) : ApiController
+    public class RabbitMQ_ManagementController(HttpClient client, IStringLocalizer<SharedResource> localizer) : ApiController(localizer)
     {
         private readonly HttpClient _client = client;
 

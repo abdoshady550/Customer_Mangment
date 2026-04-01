@@ -3,6 +3,9 @@ using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
@@ -10,12 +13,14 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
                                               ISyncGenericRepo<Customer> syncRepo,
+                                               IStringLocalizer<SharedResource> localizer,
                                               IMessageBus bus,
                                               ILogger<DeleteCustomerHandler> logger) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
@@ -25,13 +30,13 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
             if (user == null)
             {
                 _logger.LogWarning("User with ID {UserId} not found.", request.UserId);
-                return Error.NotFound("UserNotFound", $"User with ID {request.UserId} not found.");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
             }
             var customer = await _customerRepo.Include(a => a.Addresses).FirstOrDefaultAsync(c => c.Id == request.CustomerId, ct);
             if (customer == null)
             {
                 _logger.LogWarning("Customer with ID {CustomerId} not found.", request.CustomerId);
-                return Error.NotFound("CustomerNotFound", $"Customer with ID {request.CustomerId} not found.");
+                return LocalizedError.NotFound(_localizer, "CustomerNotFound", ResourceKeys.Customer.NotFound, request.CustomerId);
             }
             customer.DeleteCustomer();
 

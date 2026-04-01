@@ -4,6 +4,7 @@ using Customer_Mangment.Data;
 using Customer_Mangment.Extensions;
 using Customer_Mangment.Hubs;
 using Customer_Mangment.Middlewares;
+using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository.Interfaces;
@@ -36,7 +37,38 @@ namespace Customer_Mangment
                     {
                         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                         options.JsonSerializerOptions.WriteIndented = true;
-                    });
+                    })
+                    //.ConfigureApiBehaviorOptions(options =>
+                    //{
+                    //    options.InvalidModelStateResponseFactory = context =>
+                    //    {
+                    //        var l = context.HttpContext.RequestServices
+                    //            .GetRequiredService<IStringLocalizer<SharedResource>>();
+
+                    //        var modelState = new ModelStateDictionary();
+
+                    //        foreach (var key in context.ModelState.Keys)
+                    //        {
+                    //            var errors = context.ModelState[key].Errors;
+
+                    //            foreach (var error in errors)
+                    //            {
+                    //                var message = l[ResourceKeys.General.ValidationErrors];
+
+                    //                modelState.AddModelError(key, message);
+                    //            }
+                    //        }
+
+                    //        var problemDetails = new ValidationProblemDetails(modelState)
+                    //        {
+                    //            Status = 400,
+                    //            Title = l[ResourceKeys.General.ValidationErrors]
+                    //        };
+
+                    //        return new BadRequestObjectResult(problemDetails);
+                    //    };
+                    //})
+                    ;
             //OpenApi
             string[] versions = ["v1", "v2"];
 
@@ -56,6 +88,8 @@ namespace Customer_Mangment
             //Global Exception Handler
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddScoped<RefreshTokenErrors>();
+
             //Wolverine
             builder.Host.AddWolverineMessaging(builder.Configuration);
 
@@ -133,6 +167,10 @@ namespace Customer_Mangment
             //Api Versioning
             builder.Services.AddApiVersion();
 
+            //Localization
+            builder.Services.AddAppLocalization();
+
+
             var app = builder.Build();
 
             await app.InitialiseDatabaseAsync();
@@ -164,10 +202,12 @@ namespace Customer_Mangment
             });
             app.UseHttpsRedirection();
 
+            app.UseMiddleware<RequestCultureMiddleware>();
 
             app.UseMiddleware<LoggerMiddleware>();
 
             app.UseExceptionHandler();
+
 
             app.UseAuthentication();
             app.UseAuthorization();

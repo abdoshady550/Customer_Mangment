@@ -1,8 +1,10 @@
 ﻿using Asp.Versioning;
 using Customer_Mangment.CQRS.Customers.Queries.Report;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 
 namespace Customer_Mangment.Controllers
@@ -11,7 +13,7 @@ namespace Customer_Mangment.Controllers
     [Authorize(Roles = "Admin")]
     [ApiVersion("1.0")]
 
-    public sealed class CustomerReportController(IDispatcher sender) : ApiController
+    public sealed class CustomerReportController(IDispatcher sender, IStringLocalizer<SharedResource> localizer) : ApiController(localizer)
     {
         private readonly IDispatcher _sender = sender;
         private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;

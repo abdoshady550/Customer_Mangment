@@ -7,6 +7,9 @@ using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
@@ -16,6 +19,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                                               ISyncGenericRepo<Customer> syncRepo,
                                               IMessageBus bus,
                                               ICustomerMapper mapper,
+                                               IStringLocalizer<SharedResource> localizer,
                                               ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
@@ -23,6 +27,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
         private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ICustomerMapper _mapper = mapper;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
 
         public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken ct = default)
@@ -31,7 +36,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             if (user == null)
             {
                 _logger.LogWarning("User with ID {UserId} not found.", request.UserId);
-                return Error.NotFound("UserNotFound", $"User with ID {request.UserId} not found.");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
             }
 
             var mobileNumber = request.Mobile.Trim().ToLower();
@@ -40,9 +45,11 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
             if (existedCustomer)
             {
                 _logger.LogWarning("Customer with mobile {Mobile} already exists.", request.Mobile);
-                return Error.Conflict("CustomerAlreadyExists", $"Customer with mobile {request.Mobile} already exists.");
+                return LocalizedError.Conflict(_localizer, "CustomerAlreadyExists", ResourceKeys.Customer.AlreadyExists, request.Mobile);
+
+
             }
-            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, user.UserName!, []);
+            var customerResult = Customer.CreateCustomer(request.Name, request.Mobile, user.UserName!, [], _localizer);
             if (customerResult.IsError)
             {
                 _logger.LogWarning("Failed to create customer: {Errors}", string.Join(", ", customerResult.Errors.Select(e => e.Description)));

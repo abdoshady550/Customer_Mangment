@@ -7,10 +7,22 @@
         private const string MaskedEndpoint = "/api/Auth/token/generate";
         private const string SkipResponseEndpoint = "/api/CustomerReport/download";
         private const string SkipResponseDocEndpoint = "/openapi/v1.json";
+        private const string HealthEndpoint = "/health";
+        private const string scalarEndpoint = "/scalar";
+
+
+
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             var path = context.Request.Path.Value ?? "";
+
+            if (path.StartsWith(HealthEndpoint, StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(scalarEndpoint, StringComparison.OrdinalIgnoreCase))
+            {
+                await next(context);
+                return;
+            }
 
             var isMasked = path.Equals(MaskedEndpoint, StringComparison.OrdinalIgnoreCase);
             var skipResponse = path.Equals(SkipResponseEndpoint, StringComparison.OrdinalIgnoreCase);

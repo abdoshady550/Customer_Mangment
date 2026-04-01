@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+
+  <!-- Auth -->
+  <data name="Auth.Login.Required" xml:space="preserve"><value>يجب تسجيل الدخول أولاً</value></data>
+  <data name="Auth.Token.Expired" xml:space="preserve"><value>رمز الوصول منتهي الصلاحية أو غير صالح</value></data>
+  <data name="Auth.RefreshToken.Expired" xml:space="preserve"><value>رمز التحديث منتهي الصلاحية</value></data>
+  <data name="Auth.UserIdClaim.Invalid" xml:space="preserve"><value>مطالبة معرف المستخدم غير صالحة</value></data>
+  <data name="Auth.Unauthorized" xml:space="preserve"><value>غير مصرح بالوصول</value></data>
+
+  <!-- User -->
+  <data name="User.NotFound" xml:space="preserve"><value>المستخدم بالمعرف {0} غير موجود</value></data>
+  <data name="User.Id.Required" xml:space="preserve"><value>معرف المستخدم مطلوب</value></data>
+
+  <!-- Customer -->
+  <data name="Customer.NotFound" xml:space="preserve"><value>العميل بالمعرف {0} غير موجود</value></data>
+  <data name="Customer.AlreadyExists" xml:space="preserve"><value>العميل بالرقم المحمول {0} موجود بالفعل</value></data>
+  <data name="Customer.Id.Required" xml:space="preserve"><value>معرف العميل مطلوب</value></data>
+  <data name="Customer.History.NotFound" xml:space="preserve"><value>لا يوجد سجل تاريخي للعميل {0}</value></data>
+  <data name="Customer.Deleted" xml:space="preserve"><value>تم حذف العميل بنجاح</value></data>
+  <data name="Customer.Updated" xml:space="preserve"><value>تم تحديث العميل بنجاح</value></data>
+  <data name="Customer.Created" xml:space="preserve"><value>تم إنشاء العميل بنجاح</value></data>
+
+  <!-- Address -->
+  <data name="Address.NotFound" xml:space="preserve"><value>العنوان بالمعرف {0} غير موجود</value></data>
+  <data name="Address.Duplicate" xml:space="preserve"><value>عنوان من النوع {0} موجود بالفعل للعميل {1}</value></data>
+  <data name="Address.History.NotFound" xml:space="preserve"><value>لا يوجد سجل تاريخي للعناوين</value></data>
+  <data name="Address.Id.Required" xml:space="preserve"><value>معرف العنوان مطلوب</value></data>
+  <data name="Address.Deleted" xml:space="preserve"><value>تم حذف العنوان بنجاح</value></data>
+  <data name="Address.Updated" xml:space="preserve"><value>تم تحديث العنوان بنجاح</value></data>
+  <data name="Address.Created" xml:space="preserve"><value>تم إنشاء العنوان بنجاح</value></data>
+
+  <!-- Validation -->
+  <data name="Validation.Name.Required" xml:space="preserve"><value>الاسم مطلوب</value></data>
+  <data name="Validation.Name.Empty" xml:space="preserve"><value>الاسم لا يمكن أن يكون فارغاً</value></data>
+  <data name="Validation.Mobile.Required" xml:space="preserve"><value>رقم الهاتف مطلوب</value></data>
+  <data name="Validation.Mobile.Invalid" xml:space="preserve"><value>رقم الهاتف غير صالح</value></data>
+  <data name="Validation.Email.Required" xml:space="preserve"><value>البريد الإلكتروني مطلوب</value></data>
+  <data name="Validation.Password.Required" xml:space="preserve"><value>كلمة المرور مطلوبة</value></data>
+  <data name="Validation.AddressType.Invalid" xml:space="preserve"><value>نوع العنوان غير صالح</value></data>
+  <data name="Validation.AddressValue.Required" xml:space="preserve"><value>قيمة العنوان مطلوبة</value></data>
+  <data name="Validation.AddressValue.Empty" xml:space="preserve"><value>قيمة العنوان لا يمكن أن تكون فارغة</value></data>
+
+  <!-- General -->
+  <data name="General.InternalServerError" xml:space="preserve"><value>حدث خطأ داخلي في الخادم</value></data>
+  <data name="General.NotFound" xml:space="preserve"><value>المورد المطلوب غير موجود</value></data>
+  <data name="General.Conflict" xml:space="preserve"><value>حدث تعارض في البيانات</value></data>
+  <data name="General.ValidationErrors" xml:space="preserve"><value>حدثت أخطاء في التحقق من صحة البيانات</value></data>
+  <data name="General.Success" xml:space="preserve"><value>تمت العملية بنجاح</value></data>
+
+  <!-- Token -->
+  <data name="Token.Generation.Failed" xml:space="preserve"><value>فشل إنشاء رمز الوصول</value></data>
+  <data name="Token.Id.Required" xml:space="preserve"><value>معرف الرمز مطلوب</value></data>
+  <data name="Token.Token.Required" xml:space="preserve"><value>قيمة الرمز مطلوبة</value></data>
+  <data name="Token.UserId.Required" xml:space="preserve"><value>معرف المستخدم للرمز مطلوب</value></data>
+  <data name="Token.Expiry.Invalid" xml:space="preserve"><value>تاريخ انتهاء الرمز يجب أن يكون في المستقبل</value></data>
+
+  <!-- Migration -->
+  <data name="Migration.Skipped" xml:space="preserve"><value>تم تخطي الترحيل: {0}</value></data>
+  <data name="Migration.Failed" xml:space="preserve"><value>فشل الترحيل: {0}</value></data>
+</root>

@@ -4,6 +4,9 @@ using Customer_Mangment.Model.Entities.History;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Interfaces.Report;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using MongoDB.Driver;
 
 namespace Customer_Mangment.CQRS.Customers.Queries.Report
@@ -11,19 +14,20 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
     public sealed class GetCustomerReportQueryHandler(
         IMongoCollection<User> userRepo,
         IMongoCollection<CustomerSnapshot> customerRepo,
+         IStringLocalizer<SharedResource> localizer,
         ICustomerReportBuilder reportBuilder,
         ILogger<GetCustomerReportQueryHandler> logger)
         : IAppRequestHandler<GetCustomerReportQuery, Result<byte[]>>
     {
         private readonly IMongoCollection<User> _userRepo = userRepo;
         private readonly IMongoCollection<CustomerSnapshot> _customerRepo = customerRepo;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ICustomerReportBuilder _reportBuilder = reportBuilder;
         private readonly ILogger<GetCustomerReportQueryHandler> _logger = logger;
 
         public async Task<Result<byte[]>> Handle(GetCustomerReportQuery request,
                                                  CancellationToken ct = default)
         {
-            // 1️⃣ Check User
             var user = await _userRepo
                 .Find(u => u.Id == request.UserId)
                 .FirstOrDefaultAsync(ct);
@@ -33,17 +37,15 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
                 _logger.LogWarning(
                     "Report requested by unknown user {UserId}", request.UserId);
 
-                return Error.Unauthorized(
-                    "UserNotFound",
-                    $"User with ID {request.UserId} not found.");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
+
             }
 
-            // 2️⃣ Fetch Customers
             var customers = await _customerRepo
                 .Find(c => c.ValidFrom >= request.From && c.ValidFrom < request.To)
                 .ToListAsync(ct);
 
-            // 3️⃣ Map To DTO
+            // DTO
             var rows = customers
                 .Select(c => new CustomerReportRow(
                     c.Id,
@@ -61,12 +63,11 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
                     "Report query by user {UserId}: no customers found.",
                     request.UserId);
 
-                return Error.NotFound(
-                    "NoCustomersFound",
-                    "No customers found.");
+                return LocalizedError.NotFound(_localizer, "NoCustomersFound", ResourceKeys.Customer.NotFound);
+
             }
 
-            // 4️⃣ Build PDF
+            // Build PDF
             _logger.LogInformation(
                 "Building customer report PDF. Rows={Count}",
                 rows.Count);

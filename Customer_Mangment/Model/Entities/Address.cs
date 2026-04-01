@@ -1,4 +1,7 @@
 ﻿using Customer_Mangment.Model.Results;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -22,11 +25,12 @@ namespace Customer_Mangment.Model.Entities
             Type = type;
             Value = value;
         }
-        public static Result<Address> CreateAddress(AdressType type, string value)
+        public static Result<Address> CreateAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
         {
 
             if (string.IsNullOrWhiteSpace(value))
-                return Error.Failure("Invalide_Address", "Address cannot be null or empty");
+                return LocalizedError.Validation(localizer, "Invalide_Address", ResourceKeys.Validation.AddressValueEmpty);
+
             return new Address(type, value);
         }
         public Result<Updated> UpdateAddress(AdressType? type, string? value, string updatedBy)

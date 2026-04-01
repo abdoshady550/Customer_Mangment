@@ -3,6 +3,9 @@ using Customer_Mangment.Model.Events;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
@@ -12,6 +15,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
                                              IGenericRepo<Customer> customerRepo,
                                              ISyncGenericRepo<Address> syncRepo,
                                              IMessageBus bus,
+                                             IStringLocalizer<SharedResource> localizer,
                                              ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
@@ -19,6 +23,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<DeleteAddressHandler> _logger = logger;
 
         public async Task<Result<Deleted>> Handle(DeleteAddressCommand request, CancellationToken ct)
@@ -27,19 +32,20 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
             if (user == null)
             {
                 _logger.LogWarning("User with id {UserId} not found", request.UserId);
-                return Error.NotFound("UserNotFound", $"User with id {request.UserId} not found");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
             }
             var address = await _addressRepo.FirstOrDefaultAsync(a => a.Id == request.AddressId, ct);
             if (address == null)
             {
                 _logger.LogWarning("Address with id {AddressId} not found", request.AddressId);
-                return Error.NotFound("AddressNotFound", $"Address with id {request.AddressId} not found");
+                return LocalizedError.NotFound(_localizer, "AddressNotFound", ResourceKeys.Address.NotFound, request.AddressId);
+
             }
             var customer = await _customerRepo.Include(x => x.Addresses).FirstOrDefaultAsync(c => c.Id == address.CustomerId, ct);
             if (customer == null)
             {
                 _logger.LogWarning("Customer with id {CustomerId} not found", address.CustomerId);
-                return Error.NotFound("CustomerNotFound", $"Customer with id {address.CustomerId} not found");
+                return LocalizedError.NotFound(_localizer, "CustomerNotFound", ResourceKeys.Customer.NotFound, address.CustomerId);
             }
             await _bus.PublishAsync(new AddressDeletedEvent(address));
 

@@ -5,18 +5,23 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
 {
     public sealed class GetAddressQueryHandler(IGenericRepo<User> userRepo,
                                       IGenericRepo<Address> addressRepo,
                                       IGenericRepo<Customer> customerRepo,
+                                       IStringLocalizer<SharedResource> localizer,
                                       ICustomerMapper mapper,
                                       ILogger<GetAddressQueryHandler> logger) : IAppRequestHandler<GetAddressQuery, Result<List<AddressDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
+        private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<GetAddressQueryHandler> _logger = logger;
         public async Task<Result<List<AddressDto>>> Handle(GetAddressQuery request, CancellationToken ct = default)
@@ -25,7 +30,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
             if (user == null)
             {
                 _logger.LogWarning("Unauthorized access attempt by user with ID {UserId} to get address history for customer {CustomerId}. User not found.", request.UserId, request.CustomerId);
-                return Error.Unauthorized("UserNotFound", $"User with ID {request.UserId} not found.");
+                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
             }
             if (request.CustomerId.HasValue && !request.AddressId.HasValue)
             {
@@ -33,7 +38,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
                 if (customer == null)
                 {
                     _logger.LogInformation("Customer with ID {CustomerId} not found when requested by user {UserId}.", request.CustomerId, request.UserId);
-                    return Error.NotFound("CustomerNotFound", $"Customer with ID {request.CustomerId} not found.");
+                    return LocalizedError.NotFound(_localizer, "CustomerNotFound", ResourceKeys.Customer.NotFound, request.CustomerId);
                 }
                 var addresses = await _addressRepo.AsNoTracking().Where(a => a.CustomerId == request.CustomerId).ToListAsync(ct);
                 _logger.LogInformation("Retrieved {AddressCount} addresses for customer {CustomerId} requested by user {UserId}.", addresses.Count, request.CustomerId, request.UserId);

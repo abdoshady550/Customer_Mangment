@@ -1,12 +1,17 @@
 ﻿using Customer_Mangment.Model.Results;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.Controllers;
 
 [ApiController]
-public class ApiController : ControllerBase
+public class ApiController(IStringLocalizer<SharedResource> localizer) : ControllerBase
 {
+    private readonly IStringLocalizer<SharedResource> _l = localizer;
+
     [NonAction]
     protected ActionResult Problem(List<Error> errors)
     {
@@ -48,7 +53,7 @@ public class ApiController : ControllerBase
         var problemDetails = new ValidationProblemDetails(modelStateDictionary)
         {
             Type = GetRfcUri(statusCode),
-            Title = GetDefaultTitle(statusCode),
+            Title = GetLocalizedTitle(statusCode),
             Status = statusCode,
         };
 
@@ -70,7 +75,16 @@ public class ApiController : ControllerBase
             _ => "https://tools.ietf.org/html/rfc9110#section-15.5.1"
         };
     }
-
+    // localized titles 
+    private string GetLocalizedTitle(int statusCode) => statusCode switch
+    {
+        400 => _l[ResourceKeys.General.ValidationErrors],
+        401 => _l[ResourceKeys.Auth.Unauthorized],
+        404 => _l[ResourceKeys.General.NotFound],
+        409 => _l[ResourceKeys.General.Conflict],
+        500 => _l[ResourceKeys.General.InternalServerError],
+        _ => _l[ResourceKeys.General.ValidationErrors],
+    };
     private static string GetDefaultTitle(int statusCode)
     {
         return statusCode switch

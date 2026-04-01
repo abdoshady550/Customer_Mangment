@@ -3,7 +3,9 @@ using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 using Customer_Mangment.CQRS.Identity.Queries.RefreshTokens;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.Controllers
 {
@@ -12,7 +14,7 @@ namespace Customer_Mangment.Controllers
     [ApiVersion("1.0")]
     [ApiVersion("2.0")]
 
-    public sealed class AuthController(IDispatcher sender) : ApiController
+    public sealed class AuthController(IDispatcher sender, IStringLocalizer<SharedResource> localizer) : ApiController(localizer)
     {
         private readonly IDispatcher _sender = sender;
 

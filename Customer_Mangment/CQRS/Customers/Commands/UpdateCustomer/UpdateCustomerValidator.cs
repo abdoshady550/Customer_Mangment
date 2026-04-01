@@ -1,26 +1,36 @@
-﻿using FluentValidation;
+﻿using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
+using FluentValidation;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 {
     public sealed class UpdateCustomerValidator : AbstractValidator<UpdateCustomerCommand>
     {
-        public UpdateCustomerValidator()
+        public UpdateCustomerValidator(IStringLocalizer<SharedResource> l)
         {
             RuleFor(c => c.UserId)
-                .NotEmpty().WithMessage("You have to be login first");
+                .NotEmpty()
+                .WithErrorCode(ResourceKeys.User.IdRequired)
+                .WithMessage(_ => l[ResourceKeys.Auth.LoginRequired]);
 
             RuleFor(c => c.CustomerId)
-                .NotEmpty().WithMessage("CustomerId is required.");
+                .NotEmpty()
+                .WithErrorCode(ResourceKeys.General.ValidationErrors)
+                .WithMessage(_ => l[ResourceKeys.Customer.IdRequired]);
 
             RuleFor(x => x.Name)
-                    .Must(name => !string.IsNullOrWhiteSpace(name))
-                    .When(x => x.Name != null).WithMessage("Name cannot be empty");
+                .Must(n => !string.IsNullOrWhiteSpace(n))
+                .When(x => x.Name is not null)
+                .WithErrorCode(ResourceKeys.General.ValidationErrors)
+
+                .WithMessage(_ => l[ResourceKeys.Validation.NameEmpty]);
 
             RuleFor(x => x.Mobile)
                 .Matches(@"^01[0-9]{9}$")
                 .When(x => !string.IsNullOrEmpty(x.Mobile))
-                .WithMessage("Mobile number is not valid");
+                .WithErrorCode(ResourceKeys.General.ValidationErrors)
+                .WithMessage(_ => l[ResourceKeys.Validation.MobileInvalid]);
         }
-
-    };
+    }
 }

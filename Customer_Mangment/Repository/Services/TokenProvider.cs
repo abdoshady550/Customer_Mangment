@@ -1,4 +1,5 @@
 using Customer_Mangment.CQRS.Identity.Dto;
+using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
@@ -10,14 +11,15 @@ using System.Text;
 
 namespace Customer_Mangment.Repository.Services;
 
-public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshToken> context) : ITokenProvider
+public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshToken> context, RefreshTokenErrors tokenErrors) : ITokenProvider
 {
     private readonly IConfiguration _configuration = configuration;
     private readonly IGenericRepo<RefreshToken> _context = context;
+    private readonly RefreshTokenErrors _tokenErrors = tokenErrors;
 
     public async Task<Result<TokenResponse>> GenerateJwtTokenAsync(AppUserDto user, CancellationToken ct = default)
     {
-        var tokenResult = await CreateAsync(user, ct);
+        var tokenResult = await CreateAsync(user, _tokenErrors, ct);
 
         if (tokenResult.IsError)
         {
@@ -74,7 +76,7 @@ public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshTok
             return null;
         }
     }
-    private async Task<Result<TokenResponse>> CreateAsync(AppUserDto user, CancellationToken ct = default)
+    private async Task<Result<TokenResponse>> CreateAsync(AppUserDto user, RefreshTokenErrors tokenErrors, CancellationToken ct = default)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
 
@@ -118,7 +120,7 @@ public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshTok
             Guid.NewGuid(),
             GenerateRefreshToken(),
             user.UserId,
-            DateTime.UtcNow.AddDays(7));
+            DateTime.UtcNow.AddDays(7), tokenErrors);
 
         if (refreshTokenResult.IsError)
         {

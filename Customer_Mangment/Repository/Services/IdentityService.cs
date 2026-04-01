@@ -2,18 +2,22 @@ using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
+using Customer_Mangment.SharedResources;
+using Customer_Mangment.SharedResources.Keys;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.Repository.Services;
 
-public class IdentityService(
-    UserManager<User> userManager,
-    IUserClaimsPrincipalFactory<User> userClaimsPrincipalFactory,
-    IAuthorizationService authorizationService) : IIdentityService
+public class IdentityService(UserManager<User> userManager,
+                             IUserClaimsPrincipalFactory<User> userClaimsPrincipalFactory,
+                             IStringLocalizer<SharedResource> localizer,
+                             IAuthorizationService authorizationService) : IIdentityService
 {
     private readonly UserManager<User> _userManager = userManager;
     private readonly IUserClaimsPrincipalFactory<User> _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
+    private readonly IStringLocalizer<SharedResource> _localizer = localizer;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<bool> IsInRoleAsync(string userId, string role)
@@ -45,17 +49,19 @@ public class IdentityService(
 
         if (user is null)
         {
-            return Error.NotFound("User_Not_Found", $"User with email {UtilityService.MaskEmail(email)} not found");
+            return LocalizedError.NotFound(_localizer, "User_Not_Found", ResourceKeys.User.NotFound, UtilityService.MaskEmail(email));
+
         }
 
         if (!user.EmailConfirmed)
         {
-            return Error.Conflict("Email_Not_Confirmed", $"email '{UtilityService.MaskEmail(email)}' not confirmed");
+            return LocalizedError.Conflict(_localizer, "Email_Not_Confirmed", ResourceKeys.Validation.EmailRequired);
         }
 
         if (!await _userManager.CheckPasswordAsync(user, password))
         {
-            return Error.Conflict("Invalid_Login_Attempt", "Email / Password are incorrect");
+            return LocalizedError.Conflict(_localizer, "Password_Incorrect", ResourceKeys.Validation.PasswordRequired);
+
         }
 
         return new AppUserDto(user.Id, user.Email!, await _userManager.GetRolesAsync(user), await _userManager.GetClaimsAsync(user));

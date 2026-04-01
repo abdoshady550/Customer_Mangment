@@ -11,12 +11,14 @@ namespace Customer_Mangment.CQRS.Identity.Queries.RefreshTokens;
 public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
                                       IIdentityService identityService,
                                       IGenericRepo<RefreshToken> repo,
+                                      RefreshTokenErrors tokenErrors,
                                       ITokenProvider tokenProvider)
     : IAppRequestHandler<RefreshTokenQuery, Result<TokenResponse>>
 {
     private readonly ILogger<RefreshTokenQueryHandler> _logger = logger;
     private readonly IIdentityService _identityService = identityService;
     private readonly IGenericRepo<RefreshToken> _repo = repo;
+    private readonly RefreshTokenErrors _tokenErrors = tokenErrors;
     private readonly ITokenProvider _tokenProvider = tokenProvider;
 
     public async Task<Result<TokenResponse>> Handle(RefreshTokenQuery request, CancellationToken ct)
@@ -27,7 +29,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
         {
             _logger.LogError("Expired access token is not valid");
 
-            return RefreshTokenErrors.ExpiredAccessTokenInvalid;
+            return _tokenErrors.ExpiredAccessTokenInvalid;
         }
 
         var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -36,7 +38,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
         {
             _logger.LogError("Invalid userId claim");
 
-            return RefreshTokenErrors.UserIdClaimInvalid;
+            return _tokenErrors.UserIdClaimInvalid;
         }
 
         var getUserResult = await _identityService.GetUserByIdAsync(userId);
@@ -53,7 +55,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
         {
             _logger.LogError("Refresh token has expired");
 
-            return RefreshTokenErrors.RefreshTokenExpired;
+            return _tokenErrors.RefreshTokenExpired;
         }
 
         var generateTokenResult = await _tokenProvider.GenerateJwtTokenAsync(getUserResult.Value, ct);
