@@ -15,8 +15,11 @@ var rabbit = builder.AddRabbitMQ("rabbitmq",
     .WithManagementPlugin(port: 15672);
 
 //API
-
 //builder.AddProject<Projects.Customer_Mangment>("customer-mangment")
+//    .WithReference(sqlDb)
+//    .WithReference(mongoDb)
+//    .WithReference(rabbit)
+//    .WaitFor(rabbit);
 builder.AddContainer("customer-mangment", "customer-mangment")
     .WithDockerfile(
         contextPath: "../",
