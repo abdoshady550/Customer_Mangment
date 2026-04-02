@@ -57,6 +57,7 @@
 
   <ItemGroup>
     <Folder Include="Docker\" />
+    <Folder Include="MultiTenancy\" />
   </ItemGroup>
 
   <ItemGroup>

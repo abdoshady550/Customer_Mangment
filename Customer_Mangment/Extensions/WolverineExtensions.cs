@@ -18,7 +18,6 @@ public static class WolverineExtensions
         {
             opts.Discovery.IncludeAssembly(typeof(IAssmblyMarker).Assembly);
 
-            opts.UseFluentValidation();
             opts.UseFluentValidation(RegistrationBehavior.ExplicitRegistration);
 
 

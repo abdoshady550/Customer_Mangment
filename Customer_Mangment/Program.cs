@@ -37,38 +37,7 @@ namespace Customer_Mangment
                     {
                         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                         options.JsonSerializerOptions.WriteIndented = true;
-                    })
-                    //.ConfigureApiBehaviorOptions(options =>
-                    //{
-                    //    options.InvalidModelStateResponseFactory = context =>
-                    //    {
-                    //        var l = context.HttpContext.RequestServices
-                    //            .GetRequiredService<IStringLocalizer<SharedResource>>();
-
-                    //        var modelState = new ModelStateDictionary();
-
-                    //        foreach (var key in context.ModelState.Keys)
-                    //        {
-                    //            var errors = context.ModelState[key].Errors;
-
-                    //            foreach (var error in errors)
-                    //            {
-                    //                var message = l[ResourceKeys.General.ValidationErrors];
-
-                    //                modelState.AddModelError(key, message);
-                    //            }
-                    //        }
-
-                    //        var problemDetails = new ValidationProblemDetails(modelState)
-                    //        {
-                    //            Status = 400,
-                    //            Title = l[ResourceKeys.General.ValidationErrors]
-                    //        };
-
-                    //        return new BadRequestObjectResult(problemDetails);
-                    //    };
-                    //})
-                    ;
+                    });
             //OpenApi
             string[] versions = ["v1", "v2"];
 
@@ -169,7 +138,8 @@ namespace Customer_Mangment
 
             //Localization
             builder.Services.AddAppLocalization();
-
+            //  Multi-tenancy 
+            builder.Services.AddMultiTenancy(builder.Configuration);
 
             var app = builder.Build();
 
@@ -207,10 +177,10 @@ namespace Customer_Mangment
             app.UseMiddleware<LoggerMiddleware>();
 
             app.UseExceptionHandler();
-
-
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseTenantResolution();
 
             app.UseRateLimiter();
 
