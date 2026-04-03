@@ -1,6 +1,7 @@
 ﻿using Customer_Mangment.Data;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
+using Customer_Mangment.MultiTenancy;
 using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.Audit;
@@ -74,8 +75,13 @@ namespace Customer_Mangment.Extensions
             services.AddScoped<ApplicationDbContextInitialiser>();
 
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
+
+            services.AddScoped<IGenericRepo<Customer>, TenantGenericRepo<Customer>>();
+            services.AddScoped<IGenericRepo<Address>, TenantGenericRepo<Address>>();
+
             services.AddScoped<IHistoryService, SqlHistoryService>();
             services.AddScoped(typeof(ISyncGenericRepo<>), typeof(SyncMongoGenericRepo<>));
+
 
             return services;
         }

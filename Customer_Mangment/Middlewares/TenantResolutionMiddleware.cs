@@ -49,6 +49,11 @@ public sealed class TenantResolutionMiddleware(
             return;
         }
 
+        // Store tenant information in HttpContext.Items for cross-scope access
+        context.Items["TenantId"] = tenantId;
+        context.Items["TenantConnectionString"] = connectionString;
+
+        // Also update the scoped TenantContext for any existing dependencies that still rely on ITenantContext
         var tenantContext = context.RequestServices.GetRequiredService<TenantContext>();
         tenantContext.Resolve(tenantId, connectionString);
 

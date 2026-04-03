@@ -1,31 +1,38 @@
 using Customer_Mangment.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Customer_Mangment.MultiTenancy;
-
 public sealed class TenantDbContextFactory(
-    ITenantContext tenantContext,
+    IHttpContextAccessor httpContextAccessor,
     ILoggerFactory loggerFactory)
 {
     private AppDbContext? _context;
+
     public AppDbContext Create()
     {
         if (_context is not null)
             return _context;
 
-        if (!tenantContext.IsResolved)
+        var httpContext = httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("No HTTP context available for tenant resolution.");
+
+        var tenantId = httpContext.Items["TenantId"] as string;
+        var connectionString = httpContext.Items["TenantConnectionString"] as string;
+
+        if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(connectionString))
+        {
             throw new InvalidOperationException(
-                "TenantDbContextFactory.Create() was called before the tenant was resolved. " +
-                "Ensure TenantResolutionMiddleware runs before any tenant-scoped repository.");
+                "Tenant not resolved in current context. Ensure TenantResolutionMiddleware runs before any tenant-scoped repository.");
+        }
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(tenantContext.ConnectionString)
+            .UseSqlServer(connectionString)
             .UseLoggerFactory(loggerFactory)
             .Options;
 
         _context = new AppDbContext(options);
         return _context;
     }
+
     public async ValueTask DisposeAsync()
     {
         if (_context is not null)

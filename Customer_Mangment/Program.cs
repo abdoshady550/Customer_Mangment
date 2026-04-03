@@ -6,6 +6,7 @@ using Customer_Mangment.Hubs;
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
+using Customer_Mangment.MultiTenancy;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.Audit;
@@ -144,6 +145,11 @@ namespace Customer_Mangment
             var app = builder.Build();
 
             await app.InitialiseDatabaseAsync();
+            using (var scope = app.Services.CreateScope())
+            {
+                var provisioner = scope.ServiceProvider.GetRequiredService<TenantDatabaseProvisioner>();
+                await provisioner.EnsureAllTenantsProvisionedAsync();
+            }
 
             app.MapOpenApi();
             app.UseSwaggerUI(options =>
@@ -177,10 +183,12 @@ namespace Customer_Mangment
             app.UseMiddleware<LoggerMiddleware>();
 
             app.UseExceptionHandler();
-            app.UseAuthentication();
-            app.UseAuthorization();
 
             app.UseTenantResolution();
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.UseRateLimiter();
 

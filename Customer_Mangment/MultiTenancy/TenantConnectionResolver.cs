@@ -27,7 +27,8 @@ public sealed class TenantConnectionResolver
         if (!string.IsNullOrWhiteSpace(explicitConnection))
             return explicitConnection;
 
-        if (_configuration.GetSection($"Tenants:{tenantId}").Exists())
+        if (RegisteredTenants.Contains(tenantId))
+
             return _defaultConnectionString;
 
         return null;

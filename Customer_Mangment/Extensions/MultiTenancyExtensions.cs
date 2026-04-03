@@ -1,7 +1,5 @@
 using Customer_Mangment.Middlewares;
-using Customer_Mangment.Model.Entities;
 using Customer_Mangment.MultiTenancy;
-using Customer_Mangment.Repository.Interfaces;
 
 namespace Customer_Mangment.Extensions;
 
@@ -13,16 +11,15 @@ public static class MultiTenancyExtensions
         IConfiguration configuration)
     {
 
+        services.AddHttpContextAccessor();
+
         services.AddSingleton<TenantConnectionResolver>();
 
         services.AddScoped<TenantContext>();
-        services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        //services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<TenantDatabaseProvisioner>();
 
         services.AddScoped<TenantDbContextFactory>();
-
-
-        services.AddScoped<IGenericRepo<Customer>, TenantGenericRepo<Customer>>();
-        services.AddScoped<IGenericRepo<Address>, TenantGenericRepo<Address>>();
 
         return services;
     }
