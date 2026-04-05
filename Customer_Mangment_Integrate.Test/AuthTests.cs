@@ -1,4 +1,4 @@
-﻿using Customer_Mangment;
+using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -222,9 +222,8 @@ namespace Customer_Mangment_Integrate.Test
             });
 
             var authed = CreateApiClient(refreshed.AccessToken);
-            var customers = await authed.GetAsync(null);
+            var customers = await authed.Get2Async(null);
             Assert.NotNull(customers);
         }
     }
-
 }

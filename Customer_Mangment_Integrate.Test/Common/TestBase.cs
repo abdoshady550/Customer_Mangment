@@ -43,6 +43,7 @@ namespace Customer_Mangment_Integrate.Test.Common
             });
             return response.AccessToken;
         }
+
         protected async Task<string> GetAdminTokenAsync()
         {
             var client = CreateApiClient();
@@ -65,7 +66,6 @@ namespace Customer_Mangment_Integrate.Test.Common
             return response.AccessToken;
         }
 
-
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();
 
@@ -80,7 +80,6 @@ namespace Customer_Mangment_Integrate.Test.Common
                 Name = name ?? "Test Customer",
                 Mobile = mobile ?? UniqueMobile(),
                 Adresses = addresses ?? null
-
             });
         }
 
@@ -90,11 +89,17 @@ namespace Customer_Mangment_Integrate.Test.Common
                 Type = type ?? 1,
                 Value = "Secondary Address"
             });
+
+        protected Task<ICollection<CustomerDto>> GetCustomersAsync(Client client, Guid? customerId = null)
+            => client.Get2Async(customerId);
+
+        protected Task<ICollection<AddressDto>> GetAddressesAsync(Client client, Guid? customerId = null, Guid? addressId = null)
+            => client.GetAsync(customerId, addressId);
+
         protected async Task CleanupCustomerAsync(Client adminClient, Guid customerId)
         {
             try { await adminClient.Delete2Async(customerId); }
             catch { /* already deleted or never existed */ }
         }
     }
-
 }

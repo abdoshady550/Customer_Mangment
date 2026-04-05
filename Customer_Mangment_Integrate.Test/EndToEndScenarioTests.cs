@@ -1,4 +1,4 @@
-﻿using Customer_Mangment;
+using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -28,10 +28,11 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.NotEqual(Guid.Empty, customer.Id);
                 Assert.Equal(AdminEmail, customer.CreatedBy);
 
-                // 2. Read
-                var fetched = (await client.GetAsync(customer.Id)).First();
+                // 2. Read customer
+                var fetched = (await client.Get2Async(customer.Id)).First();
                 Assert.Equal(customer.Name, fetched.Name);
-                var fetchedAddr = (await client.Get2Async(customer.Id, null));
+                // Read addresses via CustomerAddress endpoint
+                var fetchedAddr = await client.GetAsync(customer.Id, null);
                 Assert.Single(fetchedAddr);
 
                 // 3. Update customer
@@ -40,12 +41,12 @@ namespace Customer_Mangment_Integrate.Test
                     Name = "Lifecycle Updated",
                     Mobile = UniqueMobile()
                 });
-                var afterUpdate = (await client.GetAsync(customer.Id)).First();
+                var afterUpdate = (await client.Get2Async(customer.Id)).First();
                 Assert.Equal("Lifecycle Updated", afterUpdate.Name);
                 Assert.Equal(AdminEmail, afterUpdate.UpdatedBy);
 
-                // 4. Add address 
-                var countBefore = (await client.Get2Async(customer.Id, null)).Count;
+                // 4. Add address
+                var countBefore = (await client.GetAsync(customer.Id, null)).Count;
                 var newAddr = await client.AddAsync(customer.Id, new AddAddressReq
                 {
                     Type = 2,
@@ -53,7 +54,7 @@ namespace Customer_Mangment_Integrate.Test
                 });
                 Assert.NotEqual(Guid.Empty, newAddr.Id);
 
-                var afterAddAddr = (await client.Get2Async(customer.Id, null)).Count;
+                var afterAddAddr = (await client.GetAsync(customer.Id, null)).Count;
                 Assert.Equal(countBefore + 1, afterAddAddr);
 
                 // 5. Update address
@@ -62,20 +63,20 @@ namespace Customer_Mangment_Integrate.Test
                     Type = 3,
                     Value = "Second Address Updated"
                 });
-                var afterAddrUpdate = (await client.Get2Async(null, null));
+                var afterAddrUpdate = await client.GetAsync(null, null);
                 Assert.Contains(afterAddrUpdate,
                     a => a.Id == newAddr.Id && a.Value == "Second Address Updated");
 
                 // 6. Delete address
                 await client.DeleteAsync(newAddr.Id);
-                var afterAddrDelete = (await client.Get2Async(null, null));
+                var afterAddrDelete = await client.GetAsync(null, null);
                 Assert.DoesNotContain(afterAddrDelete, a => a.Id == newAddr.Id);
 
-                // 7. History وجوده
+                // 7. History
                 var history = await client.HistoryAsync(customer.Id);
-                var customerhistory = await client.History2Async(customer.Id);
+                var customerHistory = await client.History2Async(customer.Id);
 
-                Assert.True(customerhistory.Count >= 2);
+                Assert.True(customerHistory.Count >= 2);
                 Assert.NotNull(history);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -97,11 +98,10 @@ namespace Customer_Mangment_Integrate.Test
 
             // Get → 404
             var notFound = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.GetAsync(customer.Id));
+                () => client.Get2Async(customer.Id));
             Assert.Equal(404, notFound.StatusCode);
 
-            // History → IsDeleted = true
-            var historyAfter = await client.History2Async(customer.Id);
+            // History → still accessible with IsDeleted = true
             var customerHistoryAfter = await client.History2Async(customer.Id);
             Assert.True(customerHistoryAfter.Count >= 2);
         }
@@ -117,7 +117,7 @@ namespace Customer_Mangment_Integrate.Test
             {
                 Assert.Equal(UserEmail, customer.CreatedBy);
 
-                var fetched = (await adminClient.GetAsync(customer.Id)).First();
+                var fetched = (await adminClient.Get2Async(customer.Id)).First();
                 Assert.Equal(customer.Id, fetched.Id);
 
                 await adminClient.Update2Async(customer.Id, new UpdateCustomerReq
@@ -125,7 +125,7 @@ namespace Customer_Mangment_Integrate.Test
                     Name = "Cross Role Updated",
                     Mobile = UniqueMobile()
                 });
-                var updated = (await adminClient.GetAsync(customer.Id)).First();
+                var updated = (await adminClient.Get2Async(customer.Id)).First();
                 Assert.Equal(AdminEmail, updated.UpdatedBy);
 
                 // User cannot delete
@@ -153,7 +153,7 @@ namespace Customer_Mangment_Integrate.Test
             });
 
             var authed = CreateApiClient(refreshed.AccessToken);
-            var customers = await authed.GetAsync(null);
+            var customers = await authed.Get2Async(null);
             Assert.NotNull(customers);
         }
 
@@ -164,13 +164,13 @@ namespace Customer_Mangment_Integrate.Test
             var customer = await CreateTestCustomerAsync(client);
             try
             {
-                var countBefore = (await client.Get2Async(customer.Id, null)).Count;
+                var countBefore = (await client.GetAsync(customer.Id, null)).Count;
 
                 var addr1 = await AddAddressAsync(client, customer.Id, 1);
                 var addr2 = await AddAddressAsync(client, customer.Id, 2);
                 var addr3 = await AddAddressAsync(client, customer.Id, 3);
 
-                var afterAdd = (await client.Get2Async(customer.Id, null)).Count;
+                var afterAdd = (await client.GetAsync(customer.Id, null)).Count;
                 Assert.Equal(countBefore + 3, afterAdd);
 
                 // Update addr2
@@ -184,7 +184,7 @@ namespace Customer_Mangment_Integrate.Test
                 await client.DeleteAsync(addr1.Id);
                 await client.DeleteAsync(addr3.Id);
 
-                var afterDelete = (await client.Get2Async(customer.Id, null));
+                var afterDelete = await client.GetAsync(customer.Id, null);
                 Assert.Equal(countBefore + 1, afterDelete.Count);
                 Assert.Contains(afterDelete,
                     a => a.Id == addr2.Id && a.Value == "Modified Addr2");
@@ -202,7 +202,7 @@ namespace Customer_Mangment_Integrate.Test
 
             try
             {
-                var list = await client.GetAsync(null);
+                var list = await client.Get2Async(null);
 
                 Assert.Contains(list, c => c.Id == c1.Id);
                 Assert.Contains(list, c => c.Id == c2.Id);
@@ -226,8 +226,8 @@ namespace Customer_Mangment_Integrate.Test
 
             try
             {
-                var adminList = await adminClient.GetAsync(null);
-                var userList = await userClient.GetAsync(null);
+                var adminList = await adminClient.Get2Async(null);
+                var userList = await userClient.Get2Async(null);
 
                 Assert.Contains(adminList, c => c.Id == adminCustomer.Id);
                 Assert.Contains(adminList, c => c.Id == userCustomer.Id);
@@ -267,5 +267,4 @@ namespace Customer_Mangment_Integrate.Test
             finally { await CleanupCustomerAsync(client, created.Id); }
         }
     }
-
 }

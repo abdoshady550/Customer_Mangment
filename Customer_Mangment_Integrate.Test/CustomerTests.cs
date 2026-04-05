@@ -1,4 +1,4 @@
-﻿using Customer_Mangment;
+using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -71,13 +71,12 @@ namespace Customer_Mangment_Integrate.Test
         public async Task CreateCustomer_WithOneAddress_ReturnsAddressInList()
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
-            var adresses = new List<CreateAddressReq>
-                {
-                    new() { Type = 1, Value = "Address One" }
-                };
-            var result = await CreateTestCustomerAsync(client, null, null, adresses);
-            var resultAddr = await client.Get2Async(result.Id, null);
-
+            var addresses = new List<CreateAddressReq>
+            {
+                new() { Type = 1, Value = "Address One" }
+            };
+            var result = await CreateTestCustomerAsync(client, null, null, addresses);
+            var resultAddr = await client.GetAsync(result.Id, null);
             try
             {
                 Assert.NotNull(resultAddr);
@@ -100,8 +99,8 @@ namespace Customer_Mangment_Integrate.Test
                     new CreateAddressReq { Type = 2, Value = "Address Two" }
                 }
             });
-            var resultAddr = await client.Get2Async(result.Id, null);
-
+            // Get addresses for this customer
+            var resultAddr = await client.GetAsync(result.Id, null);
             try { Assert.Equal(2, resultAddr.Count); }
             finally { await CleanupCustomerAsync(client, result.Id); }
         }
@@ -180,7 +179,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client);
             try
             {
-                var list = await client.GetAsync(null);
+                var list = await client.Get2Async(null);
                 Assert.NotNull(list);
                 Assert.NotEmpty(list);
             }
@@ -194,7 +193,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "Specific");
             try
             {
-                var list = await client.GetAsync(created.Id);
+                var list = await client.Get2Async(created.Id);
                 Assert.Single(list);
                 Assert.Equal(created.Id, list.First().Id);
                 Assert.Equal("Specific", list.First().Name);
@@ -209,7 +208,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client);
             try
             {
-                var list = await client.GetAsync(created.Id);
+                var list = await client.Get2Async(created.Id);
                 Assert.NotNull(list.First().Addresses);
             }
             finally { await CleanupCustomerAsync(client, created.Id); }
@@ -221,7 +220,7 @@ namespace Customer_Mangment_Integrate.Test
             var client = CreateApiClient(await GetAdminTokenAsync());
 
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.GetAsync(Guid.NewGuid()));
+                () => client.Get2Async(Guid.NewGuid()));
 
             Assert.Equal(404, ex.StatusCode);
         }
@@ -230,7 +229,7 @@ namespace Customer_Mangment_Integrate.Test
         public async Task GetCustomers_WithoutToken_ThrowsUnauthorized()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().GetAsync(null));
+                () => CreateApiClient().Get2Async(null));
 
             Assert.Equal(401, ex.StatusCode);
         }
@@ -243,7 +242,7 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var user = CreateApiClient(await GetUserTokenAsync());
-                var list = await user.GetAsync(null);
+                var list = await user.Get2Async(null);
                 Assert.NotNull(list);
                 Assert.NotEmpty(list);
             }
@@ -257,8 +256,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "Find Me");
             try
             {
-                // Assert.Contains بـ Id — آمن حتى لو فيه customers تانية في الـ DB
-                var list = await client.GetAsync(null);
+                var list = await client.Get2Async(null);
                 Assert.Contains(list, c => c.Id == created.Id);
             }
             finally { await CleanupCustomerAsync(client, created.Id); }
@@ -279,7 +277,7 @@ namespace Customer_Mangment_Integrate.Test
                     Mobile = UniqueMobile()
                 });
 
-                var updated = (await client.GetAsync(created.Id)).First();
+                var updated = (await client.Get2Async(created.Id)).First();
                 Assert.Equal("New Name", updated.Name);
             }
             finally { await CleanupCustomerAsync(client, created.Id); }
@@ -298,7 +296,7 @@ namespace Customer_Mangment_Integrate.Test
                     Mobile = UniqueMobile()
                 });
 
-                var updated = (await client.GetAsync(created.Id)).First();
+                var updated = (await client.Get2Async(created.Id)).First();
                 Assert.Equal(AdminEmail, updated.UpdatedBy);
             }
             finally { await CleanupCustomerAsync(client, created.Id); }
@@ -318,7 +316,7 @@ namespace Customer_Mangment_Integrate.Test
                     Mobile = newMobile
                 });
 
-                var updated = (await client.GetAsync(created.Id)).First();
+                var updated = (await client.Get2Async(created.Id)).First();
                 Assert.Equal(newMobile, updated.Mobile);
             }
             finally { await CleanupCustomerAsync(client, created.Id); }
@@ -381,11 +379,10 @@ namespace Customer_Mangment_Integrate.Test
             var client = CreateApiClient(await GetAdminTokenAsync());
             var created = await CreateTestCustomerAsync(client, "To Delete");
 
-            // الـ delete هو نفسه الاختبار — الـ customer هيتمسح في الـ test نفسه
             await client.Delete2Async(created.Id);
 
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.GetAsync(created.Id));
+                () => client.Get2Async(created.Id));
             Assert.Equal(404, ex.StatusCode);
         }
 
@@ -397,8 +394,7 @@ namespace Customer_Mangment_Integrate.Test
 
             await client.Delete2Async(created.Id);
 
-            var list = await client.GetAsync(null);
-            // DoesNotContain بـ Id — آمن حتى لو فيه customers تانية
+            var list = await client.Get2Async(null);
             Assert.DoesNotContain(list, c => c.Id == created.Id);
         }
 
@@ -455,7 +451,6 @@ namespace Customer_Mangment_Integrate.Test
 
         // ── History ──────────────────────────────────────────────────────
 
-
         [Fact]
         public async Task GetHistory_AfterUpdate_ContainsMultipleEntries()
         {
@@ -490,7 +485,7 @@ namespace Customer_Mangment_Integrate.Test
         }
 
         [Fact]
-        public async Task GetHistory_ReturnsAddressHistoryDtos()
+        public async Task GetHistory_ReturnsCustomerHistoryDtos()
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
             var created = await CreateTestCustomerAsync(client);
@@ -508,7 +503,7 @@ namespace Customer_Mangment_Integrate.Test
             var client = CreateApiClient(await GetAdminTokenAsync());
 
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.HistoryAsync(Guid.NewGuid()));
+                () => client.History2Async(Guid.NewGuid()));
 
             Assert.Equal(404, ex.StatusCode);
         }
@@ -536,5 +531,4 @@ namespace Customer_Mangment_Integrate.Test
             finally { await CleanupCustomerAsync(admin, created.Id); }
         }
     }
-
 }
