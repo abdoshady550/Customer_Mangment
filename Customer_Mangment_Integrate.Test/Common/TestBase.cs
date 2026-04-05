@@ -1,4 +1,4 @@
-﻿using Customer_Mangment;
+using Customer_Mangment;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Headers;
 
@@ -13,40 +13,38 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected const string UserEmail = "user@test.com";
         protected const string UserPassword = "User@123";
 
+        protected const string DefaultTenantId = "demo";
+
         public TestBase(WebApplicationFactory<IAssmblyMarker> factory) => _factory = factory;
 
         // Client
 
         protected Client CreateApiClient()
         {
-            var http = _factory.CreateClient();
+            var http = CreateHttpClientWithTenant();
             return new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
         }
 
         protected Client CreateApiClient(string accessToken)
         {
-            var http = _factory.CreateClient();
-            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var http = CreateHttpClientWithTenant(accessToken);
             return new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
         }
 
-        // Tokens
-        protected async Task<string> GetTokenAsync(
-            string email = "admin@test.com",
-            string password = "Test@123")
+        private HttpClient CreateHttpClientWithTenant(string? accessToken = null)
         {
-            var client = CreateApiClient();
-            var response = await client.GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = email,
-                Password = password
-            });
-            return response.AccessToken;
+            var http = _factory.CreateClient();
+            http.DefaultRequestHeaders.Add("X-Tenant-Id", DefaultTenantId);
+            if (!string.IsNullOrEmpty(accessToken))
+                http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            return http;
         }
 
         protected async Task<string> GetAdminTokenAsync()
         {
-            var client = CreateApiClient();
+            // Auth endpoints bypass tenant middleware, so use a plain client
+            var http = _factory.CreateClient();
+            var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
                 Email = AdminEmail,
@@ -57,7 +55,8 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         protected async Task<string> GetUserTokenAsync()
         {
-            var client = CreateApiClient();
+            var http = _factory.CreateClient();
+            var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
                 Email = UserEmail,
@@ -69,6 +68,8 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();
 
+        // ── CRUD Helpers ──────────────────────────────────────────────────
+
         protected async Task<CustomerDto> CreateTestCustomerAsync(
             Client authClient,
             string? name = "Test Customer",
@@ -79,7 +80,7 @@ namespace Customer_Mangment_Integrate.Test.Common
             {
                 Name = name ?? "Test Customer",
                 Mobile = mobile ?? UniqueMobile(),
-                Adresses = addresses ?? null
+                Adresses = addresses ?? new List<CreateAddressReq>()
             });
         }
 
