@@ -7,7 +7,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
 {
-    public sealed class Address
+    public sealed class Address : IMustHaveTenant
     {
         [BsonId]
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
@@ -17,6 +17,8 @@ namespace Customer_Mangment.Model.Entities
         public AdressType Type { get; private set; }
         public string Value { get; private set; } = string.Empty;
         public Customer Customer { get; private set; }
+        public string TenantId { get; set; } = string.Empty;
+
         private Address() { }
 
         public Address(AdressType type, string value)

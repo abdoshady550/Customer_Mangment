@@ -2,7 +2,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // SQL Server 
 var sqlDb = builder.AddConnectionString("DefaultConnection");
-
+var alahly = builder.AddConnectionString("alahly");
+var meccano = builder.AddConnectionString("meccano");
 // MongoDB 
 var mongoDb = builder.AddConnectionString("mongodb");
 
@@ -15,17 +16,16 @@ var rabbit = builder.AddRabbitMQ("rabbitmq",
     .WithManagementPlugin(port: 15672);
 
 //API
+
 //builder.AddProject<Projects.Customer_Mangment>("customer-mangment")
-//    .WithReference(sqlDb)
-//    .WithReference(mongoDb)
-//    .WithReference(rabbit)
-//    .WaitFor(rabbit);
 builder.AddContainer("customer-mangment", "customer-mangment")
     .WithDockerfile(
         contextPath: "../",
         dockerfilePath: "Customer_Mangment/Docker/Dockerfile"
     )
     .WithReference(sqlDb)
+    .WithReference(alahly)
+    .WithReference(meccano)
     .WithReference(mongoDb)
     .WithReference(rabbit)
     .WaitFor(rabbit)

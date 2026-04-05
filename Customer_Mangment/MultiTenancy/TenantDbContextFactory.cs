@@ -1,4 +1,5 @@
 using Customer_Mangment.Data;
+using Customer_Mangment.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
 public sealed class TenantDbContextFactory(
@@ -29,7 +30,10 @@ public sealed class TenantDbContextFactory(
             .UseLoggerFactory(loggerFactory)
             .Options;
 
-        _context = new AppDbContext(options);
+        var tenantContext = new TenantContext();
+        tenantContext.Resolve(tenantId, connectionString);
+
+        _context = new AppDbContext(options, tenantContext);
         return _context;
     }
 

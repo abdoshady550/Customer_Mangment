@@ -7,7 +7,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
 {
-    public sealed class Customer
+    public sealed class Customer : IMustHaveTenant
     {
         [BsonId]
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
@@ -23,6 +23,7 @@ namespace Customer_Mangment.Model.Entities
         private readonly List<Address> _addresses = new();
         public IReadOnlyCollection<Address> Addresses => _addresses;
 
+        public string TenantId { get; set; } = string.Empty;
 
         public Customer() { }
         private Customer(string name, string mobile, string createdBy)

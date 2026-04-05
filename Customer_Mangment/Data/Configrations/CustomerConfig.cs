@@ -16,6 +16,8 @@ namespace Customer_Mangment.Data.Configrations
                    .IsUnique()
                    .HasFilter("[IsDeleted] = 0");
 
+            builder.HasIndex(c => c.TenantId);
+
             builder.HasMany(c => c.Addresses)
                    .WithOne(a => a.Customer)
                    .HasForeignKey(a => a.CustomerId)
