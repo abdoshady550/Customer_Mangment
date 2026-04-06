@@ -39,11 +39,10 @@ namespace Customer_Mangment_Integrate.Test.Common
                 http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             return http;
         }
-
         protected async Task<string> GetAdminTokenAsync()
         {
-            // Auth endpoints bypass tenant middleware, so use a plain client
             var http = _factory.CreateClient();
+            http.DefaultRequestHeaders.Add("X-Tenant-Id", DefaultTenantId); // ← add this
             var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {
@@ -56,6 +55,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected async Task<string> GetUserTokenAsync()
         {
             var http = _factory.CreateClient();
+            http.DefaultRequestHeaders.Add("X-Tenant-Id", DefaultTenantId); // ← add this
             var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "https://localhost:7063/" };
             var response = await client.GenerateTokenAsync(new GenerateTokenQuery
             {

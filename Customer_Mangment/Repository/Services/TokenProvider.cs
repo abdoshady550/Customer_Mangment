@@ -11,11 +11,15 @@ using System.Text;
 
 namespace Customer_Mangment.Repository.Services;
 
-public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshToken> context, RefreshTokenErrors tokenErrors) : ITokenProvider
+public class TokenProvider(IConfiguration configuration,
+                           IGenericRepo<RefreshToken> context,
+                           RefreshTokenErrors tokenErrors,
+                           IHttpContextAccessor httpContext) : ITokenProvider
 {
     private readonly IConfiguration _configuration = configuration;
     private readonly IGenericRepo<RefreshToken> _context = context;
     private readonly RefreshTokenErrors _tokenErrors = tokenErrors;
+    private readonly IHttpContextAccessor _httpContext = httpContext;
 
     public async Task<Result<TokenResponse>> GenerateJwtTokenAsync(AppUserDto user, CancellationToken ct = default)
     {
@@ -91,6 +95,11 @@ public class TokenProvider(IConfiguration configuration, IGenericRepo<RefreshTok
             new (JwtRegisteredClaimNames.Sub, user.UserId!),
             new (JwtRegisteredClaimNames.Email, user.Email!),
         };
+        var tenantId = _httpContext.HttpContext?.Request.Headers["X-Tenant-Id"]
+                           .FirstOrDefault()?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(tenantId))
+            claims.Add(new Claim("tenant_id", tenantId));
 
         foreach (var role in user.Roles)
         {

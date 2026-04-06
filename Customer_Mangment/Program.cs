@@ -190,6 +190,8 @@ namespace Customer_Mangment
 
             app.UseAuthorization();
 
+            app.UseMiddleware<TenantClaimValidationMiddleware>();
+
             app.UseRateLimiter();
 
             app.MapControllers();
