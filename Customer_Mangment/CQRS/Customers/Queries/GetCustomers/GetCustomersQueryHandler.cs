@@ -4,8 +4,10 @@ using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
+using Customer_Mangment.Repository.Interfaces.tenantCache;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
@@ -13,12 +15,14 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
     public sealed class GetCustomersQueryHandler(IGenericRepo<User> userRepo,
                                           IGenericRepo<Customer> customerRepo,
                                           ICustomerMapper mapper,
-                                           IStringLocalizer<SharedResource> localizer,
+                                          ITenantCachedQueryService cacheService,
+                                          IStringLocalizer<SharedResource> localizer,
                                           ILogger<GetCustomersQueryHandler> logger) : IAppRequestHandler<GetCustomersQuery, Result<List<CustomerDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ICustomerMapper _mapper = mapper;
+        private readonly ITenantCachedQueryService _cacheService = cacheService;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<GetCustomersQueryHandler> _logger = logger;
 
@@ -46,13 +50,20 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
                 customers.Add(customerDto);
                 return customers;
             }
-            var allCustomers = await _customerRepo.AsNoTracking().Include(a => a.Addresses).ToListAsync(ct);
 
-            var allCustomerDtos = _mapper.ToCustomerDtoList(allCustomers);
-
-            _logger.LogInformation("Retrieved {CustomerCount} customers for user with id {UserId}.", allCustomerDtos.Count, request.UserId);
-
-            return allCustomerDtos;
+            var customersCached = await _cacheService.GetOrCreateAsync("GetCustomers", async (dbContext, token) =>
+            {
+                logger.LogInformation("Loading customers from DB for tenant");
+                var allCustomers = await dbContext.Customers
+                    .Include(c => c.Addresses)
+                    .ToListAsync(token);
+                return _mapper.ToCustomerDtoList(allCustomers);
+            }, ct);
+            if (!_cacheService.LoadedFromDb)
+            {
+                _logger.LogInformation("GetCustomers From cache");
+            }
+            return customersCached ?? [];
         }
     }
 }

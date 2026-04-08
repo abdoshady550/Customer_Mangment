@@ -5,6 +5,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -15,6 +16,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
                                              IGenericRepo<Customer> customerRepo,
                                              ISyncGenericRepo<Address> syncRepo,
                                              IMessageBus bus,
+                                             IDistributedCache cache,
                                              IStringLocalizer<SharedResource> localizer,
                                              ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Result<Deleted>>
     {
@@ -22,6 +24,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
+        private readonly IDistributedCache _cache = cache;
         private readonly IMessageBus _bus = bus;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<DeleteAddressHandler> _logger = logger;
@@ -53,6 +56,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
             await _addressRepo.SaveChangesAsync(ct);
             //_syncRepo.Remove(address);
             //await _syncRepo.SaveChangesAsync(ct);
+            await _cache.RemoveAsync("GetAllAddresses", ct);
+
 
             return Result.Deleted;
         }

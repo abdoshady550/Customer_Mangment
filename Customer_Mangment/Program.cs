@@ -52,9 +52,11 @@ namespace Customer_Mangment
                     // Security Scheme config
                     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
                     options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
+
+                    // Global Headers
+                    options.AddOperationTransformer<DefaultHeadersOperationTransformer>();
                 });
             }
-
             //Global Exception Handler
             builder.Services.AddProblemDetails();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -141,6 +143,8 @@ namespace Customer_Mangment
             builder.Services.AddAppLocalization();
             //  Multi-tenancy 
             builder.Services.AddMultiTenancy(builder.Configuration);
+            //Cache
+            builder.Services.AddCaching(builder.Configuration);
 
             var app = builder.Build();
 

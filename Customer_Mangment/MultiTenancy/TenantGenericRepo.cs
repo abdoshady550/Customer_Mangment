@@ -20,6 +20,9 @@ public sealed class TenantGenericRepo<T>(TenantDbContextFactory factory) : IGene
 
     private void ResetQuery() => _query = Context.Set<T>();
 
+
+    public string? TenantId => Context.getTenantId();
+
     //  fluent chain 
 
     public IGenericRepo<T> AsNoTracking()

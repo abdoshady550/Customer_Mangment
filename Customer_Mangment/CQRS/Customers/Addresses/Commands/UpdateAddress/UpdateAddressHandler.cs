@@ -5,6 +5,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -15,6 +16,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
                                              IGenericRepo<Address> adressRepo,
                                              ISyncGenericRepo<Address> syncRepo,
                                              IStringLocalizer<SharedResource> localizer,
+                                             IDistributedCache cache,
                                              IMessageBus bus,
                                              ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
 
@@ -25,6 +27,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
         private readonly ISyncGenericRepo<Address> _syncRepo = syncRepo;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
+        private readonly IDistributedCache _cache = cache;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
         public async Task<Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
@@ -72,6 +75,8 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
             await _bus.PublishAsync(new AddressUpdatedEvent(address));
 
             _logger.LogInformation("Address with id {AddressId} updated successfully", request.AddressId);
+            await _cache.RemoveAsync("GetAllAddresses", ct);
+
             return Result.Updated;
         }
     };

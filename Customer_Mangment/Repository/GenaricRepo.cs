@@ -11,6 +11,8 @@ namespace Customer_Mangment.Repository
         private readonly AppDbContext _context = context;
         private IQueryable<T> _query = context.Set<T>();
 
+        public string? TenantId => "demo";
+
         public IGenericRepo<T> AsNoTracking()
         {
             _query = _query.AsNoTracking();

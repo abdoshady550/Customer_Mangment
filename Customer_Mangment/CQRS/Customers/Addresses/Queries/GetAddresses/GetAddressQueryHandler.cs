@@ -7,20 +7,24 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
+using System.Text.Json;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
 {
     public sealed class GetAddressQueryHandler(IGenericRepo<User> userRepo,
                                       IGenericRepo<Address> addressRepo,
                                       IGenericRepo<Customer> customerRepo,
-                                       IStringLocalizer<SharedResource> localizer,
+                                      IDistributedCache cache,
+                                      IStringLocalizer<SharedResource> localizer,
                                       ICustomerMapper mapper,
                                       ILogger<GetAddressQueryHandler> logger) : IAppRequestHandler<GetAddressQuery, Result<List<AddressDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
+        private readonly IDistributedCache _cache = cache;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<GetAddressQueryHandler> _logger = logger;
@@ -68,9 +72,26 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
             }
             else
             {
+                var cacheKey = "GetAllAddresses";
+                var cachedData = await _cache.GetStringAsync(cacheKey, ct);
+                if (cachedData is not null)
+                {
+                    _logger.LogInformation("GetAllAddresses From DistributedCache");
+                    return JsonSerializer.Deserialize<List<AddressDto>>(cachedData)!;
+                }
                 var addresses = await _addressRepo.AsNoTracking().ToListAsync(ct);
                 _logger.LogInformation("Retrieved all addresses  requested by user {UserId}.", request.UserId);
                 var dto = _mapper.ToAddressDtoList(addresses);
+
+                var jsonData = JsonSerializer.Serialize(dto);
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                };
+
+                await _cache.SetStringAsync(cacheKey, jsonData, cacheOptions, ct);
+                _logger.LogInformation("Data From DB but cached now");
+
                 return dto;
             }
         }

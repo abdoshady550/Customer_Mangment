@@ -5,6 +5,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -13,15 +14,18 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
     public sealed class DeleteCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
                                               ISyncGenericRepo<Customer> syncRepo,
-                                               IStringLocalizer<SharedResource> localizer,
+                                              IStringLocalizer<SharedResource> localizer,
                                               IMessageBus bus,
-                                              ILogger<DeleteCustomerHandler> logger) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
+                                              ILogger<DeleteCustomerHandler> logger,
+                                              HybridCache cache) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
+        private readonly HybridCache _cache = cache;
+
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
         public async Task<Result<Deleted>> Handle(DeleteCustomerCommand request, CancellationToken ct = default)
@@ -49,6 +53,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 
             await _bus.PublishAsync(new CustomerDeletedEvent(customer));
 
+            var cacheKey = $"GetCustomers_{_customerRepo.TenantId}";
+            await _cache.RemoveAsync(cacheKey, ct);
             _logger.LogInformation("Customer with ID {CustomerId} deleted by User with ID {UserId}.", request.CustomerId, request.UserId);
             return Result.Deleted;
         }

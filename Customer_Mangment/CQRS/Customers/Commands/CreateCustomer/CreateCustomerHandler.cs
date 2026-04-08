@@ -9,6 +9,8 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -19,7 +21,9 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                                               ISyncGenericRepo<Customer> syncRepo,
                                               IMessageBus bus,
                                               ICustomerMapper mapper,
-                                               IStringLocalizer<SharedResource> localizer,
+                                              HybridCache cache,
+                                              IDistributedCache distributedCache,
+                                              IStringLocalizer<SharedResource> localizer,
                                               ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
@@ -27,6 +31,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
         private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
         private readonly IMessageBus _bus = bus;
         private readonly ICustomerMapper _mapper = mapper;
+        private readonly HybridCache _cache = cache;
+        private readonly IDistributedCache _distributedCache = distributedCache;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
 
@@ -73,6 +79,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                     _logger.LogWarning("Failed to add address to customer {CustomerId}: {Errors}", customer.Id, addAddressResult.Errors);
                     return addAddressResult.Errors;
                 }
+                await _distributedCache.RemoveAsync("GetAllAddresses", ct);
+
             }
 
             await _bus.PublishAsync(new CustomerCreatedEvent(customer));
@@ -84,6 +92,9 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
 
             var customerDto = _mapper.ToCustomerDto(customerWithAddresses!);
+
+            var cacheKey = $"GetCustomers_{_repo.TenantId}";
+            await _cache.RemoveAsync(cacheKey, ct);
 
             return customerDto;
         }

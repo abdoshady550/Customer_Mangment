@@ -1,5 +1,7 @@
 using Customer_Mangment.Middlewares;
 using Customer_Mangment.MultiTenancy;
+using Customer_Mangment.Repository.Interfaces.tenantCache;
+using Customer_Mangment.Repository.Services.tenantCache;
 
 namespace Customer_Mangment.Extensions;
 
@@ -17,6 +19,9 @@ public static class MultiTenancyExtensions
 
         services.AddScoped<TenantContext>();
         //services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<ITenantContext, TenantContextAccessor>();
+        services.AddScoped<ITenantCachedQueryService, TenantCachedQueryService>();
+        services.AddHttpContextAccessor();
         services.AddScoped<TenantDatabaseProvisioner>();
 
         services.AddScoped<TenantDbContextFactory>();

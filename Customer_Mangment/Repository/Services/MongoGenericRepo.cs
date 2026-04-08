@@ -15,6 +15,8 @@ namespace Customer_Mangment.Repository.Services
         private int? _skip;
         private int? _take;
 
+        public string? TenantId => "demo";
+
         public MongoGenericRepo(IMongoCollection<T> collection)
         {
             _collection = collection;

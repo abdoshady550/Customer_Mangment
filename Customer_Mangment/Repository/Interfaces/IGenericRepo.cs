@@ -5,6 +5,7 @@ namespace Customer_Mangment.Repository.Interfaces
 {
     public interface IGenericRepo<T> where T : class
     {
+        string? TenantId { get; }
         IGenericRepo<T> AsNoTracking();
         IGenericRepo<T> Include(Expression<Func<T, object>> include);
         IGenericRepo<T> Where(Expression<Func<T, bool>> predicate);

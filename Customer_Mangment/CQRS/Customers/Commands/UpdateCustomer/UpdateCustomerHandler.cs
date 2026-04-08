@@ -5,6 +5,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -13,13 +14,15 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
     public sealed class UpdateCustomerHandler(IGenericRepo<User> userRepo,
                                               IGenericRepo<Customer> customerRepo,
                                               ISyncGenericRepo<Customer> syncRepo,
-                                               IStringLocalizer<SharedResource> localizer,
+                                              HybridCache cache,
+                                              IStringLocalizer<SharedResource> localizer,
                                               IMessageBus bus,
                                               ILogger<UpdateCustomerHandler> logger) : IAppRequestHandler<UpdateCustomerCommand, Result<Updated>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly ISyncGenericRepo<Customer> _syncRepo = syncRepo;
+        private readonly HybridCache _cache = cache;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateCustomerHandler> _logger = logger;
@@ -56,6 +59,8 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
 
             _logger.LogInformation("Customer with ID {CustomerId} updated successfully.", request.CustomerId);
 
+            var cacheKey = $"GetCustomers_{_customerRepo.TenantId}";
+            await _cache.RemoveAsync(cacheKey, ct);
             return Result.Updated;
         }
     };

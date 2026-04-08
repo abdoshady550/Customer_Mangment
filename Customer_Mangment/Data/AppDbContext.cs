@@ -14,6 +14,7 @@ namespace Customer_Mangment.Data
         public DbSet<Address> Addresses { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        public string? getTenantId() => _tenantContext?.TenantId;
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

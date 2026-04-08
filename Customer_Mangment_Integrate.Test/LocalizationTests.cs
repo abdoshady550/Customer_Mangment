@@ -12,7 +12,6 @@ namespace Customer_Mangment_Integrate.Test
         private readonly WebApplicationFactory<IAssmblyMarker> _factory;
         private const string DefaultTenantId = "demo";
 
-        // ── Expected messages verbatim from .resx ─────────────────────────
 
         // en
         private const string En_EmailRequired = "Email cannot be null or empty";
@@ -47,7 +46,6 @@ namespace Customer_Mangment_Integrate.Test
             return http;
         }
 
-        /// Customer / Address endpoints require the tenant header.
         private HttpClient TenantClient(string? acceptLanguage = null, string? bearerToken = null)
         {
             var http = _factory.CreateClient();
@@ -84,6 +82,7 @@ namespace Customer_Mangment_Integrate.Test
         private async Task<string> GetAdminTokenAsync()
         {
             var http = _factory.CreateClient();
+            http.DefaultRequestHeaders.Add("X-Tenant-Id", DefaultTenantId);
             var resp = await http.PostAsync(
                 "/api/Auth/token/generate",
                 Json(new { email = "admin@test.com", password = "Admin@123" }));

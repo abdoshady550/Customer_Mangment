@@ -36,6 +36,17 @@ public sealed class TenantDbContextFactory(
         _context = new AppDbContext(options, tenantContext);
         return _context;
     }
+    public AppDbContext Create(string tenantId, string connectionString)
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(connectionString)
+            .UseLoggerFactory(loggerFactory)
+            .Options;
+
+        var tenantContext = new TenantContext();
+        tenantContext.Resolve(tenantId, connectionString);
+        return new AppDbContext(options, tenantContext);
+    }
 
     public async ValueTask DisposeAsync()
     {

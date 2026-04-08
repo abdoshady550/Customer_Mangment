@@ -7,6 +7,7 @@ using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
 using Wolverine;
 
@@ -18,6 +19,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                                              ISyncGenericRepo<Address> SyncadressRepo,
                                              IStringLocalizer<SharedResource> localizer,
                                              IMessageBus bus,
+                                             IDistributedCache cache,
                                              ICustomerMapper mapper,
                                              ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Result<AddressDto>>
 
@@ -27,6 +29,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
         private readonly ISyncGenericRepo<Address> _syncadressRepo = SyncadressRepo;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
+        private readonly IDistributedCache _cache = cache;
         private readonly IMessageBus _bus = bus;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateAddressHandler> _logger = logger;
@@ -71,8 +74,9 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 
             await _bus.PublishAsync(new AddressCreatedEvent(address.Value));
 
-
             var addressDto = _mapper.ToAddressDto(address.Value);
+            await _cache.RemoveAsync("GetAllAddresses", ct);
+
 
             return addressDto;
 
