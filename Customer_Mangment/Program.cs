@@ -146,6 +146,8 @@ namespace Customer_Mangment
             //Cache
             builder.Services.AddCaching(builder.Configuration);
 
+
+
             var app = builder.Build();
 
             await app.InitialiseDatabaseAsync();
@@ -197,6 +199,9 @@ namespace Customer_Mangment
             app.UseMiddleware<TenantClaimValidationMiddleware>();
 
             app.UseRateLimiter();
+            app.UseResponseCompression();
+            app.UseOutputCache();
+            app.UseResponseCaching();
 
             app.MapControllers();
 

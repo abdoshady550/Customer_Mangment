@@ -21,7 +21,6 @@ public static class MultiTenancyExtensions
         //services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantContext, TenantContextAccessor>();
         services.AddScoped<ITenantCachedQueryService, TenantCachedQueryService>();
-        services.AddHttpContextAccessor();
         services.AddScoped<TenantDatabaseProvisioner>();
 
         services.AddScoped<TenantDbContextFactory>();

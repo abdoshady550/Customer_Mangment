@@ -27,6 +27,7 @@ namespace Customer_Mangment.Controllers
 
         [HttpGet]
         [Route("get")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         [ProducesResponseType(typeof(List<AddressDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -37,6 +38,7 @@ namespace Customer_Mangment.Controllers
         [EndpointDescription("Retrieves all addresses . If an AddressId is provided, retrieves the specific address with that ID , If an CustomerId is provided, retrieves the specific addresses for the given customer.")]
         public async Task<IActionResult> GetCustomerAddresses([FromQuery] Guid? CustomerId, [FromQuery] Guid? AddressId, CancellationToken ct)
         {
+            Console.WriteLine("controller visited");
             var result = await _sender.Send(new GetAddressQuery(GetCurrentUserId(), CustomerId, AddressId), ct);
             return result.Match(
                response => Ok(response),

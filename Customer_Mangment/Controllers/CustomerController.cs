@@ -11,6 +11,7 @@ using Customer_Mangment.Req;
 using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Localization;
 using System.Security.Claims;
@@ -22,13 +23,15 @@ namespace Customer_Mangment.Controllers
     [EnableRateLimiting(policyName: "DefaultPolicy")]
     [ApiVersion("1.0")]
 
-    public class CustomerController(IDispatcher sender, IStringLocalizer<SharedResource> localizer) : ApiController(localizer)
+    public class CustomerController(IDispatcher sender, IStringLocalizer<SharedResource> localizer, IOutputCacheStore outputCacheStore)
+        : ApiController(localizer)
     {
         private readonly IDispatcher _sender = sender;
         private string GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         [HttpGet]
         [Route("get")]
+        [OutputCache(PolicyName = "customers")]
         [ProducesResponseType(typeof(List<CustomerDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -39,6 +42,7 @@ namespace Customer_Mangment.Controllers
         [EndpointDescription("Retrieves a list of customers. If a CustomerId is provided, retrieves the specific customer with that ID.")]
         public async Task<IActionResult> GetCustomers([FromQuery] Guid? CustomerId, CancellationToken ct)
         {
+            Console.WriteLine("controller visited");
             var result = await _sender.Send(new GetCustomersQuery(GetCurrentUserId(), CustomerId), ct);
             return result.Match(
                response => Ok(response),
@@ -93,6 +97,8 @@ namespace Customer_Mangment.Controllers
         public async Task<IActionResult> UpdateCustomer([FromQuery] Guid CustomerId, [FromBody] UpdateCustomerReq req, CancellationToken ct)
         {
             var result = await _sender.Send(new UpdateCustomerCommand(GetCurrentUserId(), CustomerId, req.Name, req.Mobile), ct);
+            await outputCacheStore.EvictByTagAsync("CustomerCache", ct);
+
             return result.Match(
             response => Ok(response),
             Problem);
@@ -111,6 +117,7 @@ namespace Customer_Mangment.Controllers
         public async Task<IActionResult> DeleteCustomer([FromQuery] Guid CustomerId, CancellationToken ct)
         {
             var result = await _sender.Send(new DeleteCustomerCommand(GetCurrentUserId(), CustomerId), ct);
+            await outputCacheStore.EvictByTagAsync("CustomerCache", ct);
             return result.Match(
             response => Ok(response),
             Problem);
