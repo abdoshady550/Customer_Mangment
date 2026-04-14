@@ -1,5 +1,6 @@
 ﻿using Customer_Mangment.Model.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Customer_Mangment.Data
 {
@@ -18,7 +19,7 @@ namespace Customer_Mangment.Data
         {
             try
             {
-                await _context.Database.EnsureCreatedAsync();
+                await _context.Database.MigrateAsync();
             }
             catch (Exception ex)
             {
@@ -113,9 +114,12 @@ namespace Customer_Mangment.Data
             {
                 var sqlInitialiser = scope.ServiceProvider
                     .GetRequiredService<ApplicationDbContextInitialiser>();
+                var openIddictSeeder = scope.ServiceProvider
+                    .GetRequiredService<OpenIddictDataSeeder>();
 
                 await sqlInitialiser.InitialiseAsync();
                 await sqlInitialiser.SeedAsync();
+                await openIddictSeeder.SeedAsync();
             }
         }
     }

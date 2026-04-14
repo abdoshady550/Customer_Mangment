@@ -8,7 +8,7 @@ namespace Customer_Mangment.Extensions
         public static IServiceCollection AddCaching(this IServiceCollection services, IConfiguration configuration)
         {
             //InMemory
-            services.AddMemoryCache(option => option.SizeLimit = 100);
+            services.AddMemoryCache();
             //Distributed redis
             services.AddStackExchangeRedisCache(option =>
             {

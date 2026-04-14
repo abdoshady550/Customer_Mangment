@@ -2,6 +2,7 @@
 using Customer_Mangment.MultiTenancy;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace Customer_Mangment.Data
 {
@@ -20,6 +21,11 @@ namespace Customer_Mangment.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+            modelBuilder.UseOpenIddict<OpenIddictEntityFrameworkCoreApplication,
+                                       OpenIddictEntityFrameworkCoreAuthorization,
+                                       OpenIddictEntityFrameworkCoreScope,
+                                       OpenIddictEntityFrameworkCoreToken,
+                                       string>();
             modelBuilder.Entity<Customer>()
                         .HasQueryFilter(c =>
                             !c.IsDeleted &&

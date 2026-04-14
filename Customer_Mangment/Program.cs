@@ -19,16 +19,22 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Abstractions;
+using OpenIddict.Validation.AspNetCore;
 using Quartz;
 using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json.Serialization;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Customer_Mangment
 {
     public class Program
     {
+        private const string CombinedBearerScheme = "CombinedBearer";
+
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -74,7 +80,8 @@ namespace Customer_Mangment
             //DbContext and Identity
             builder.Services.AddDbContext<AppDbContext>(options =>
                options.UseSqlServer(
-                   builder.Configuration.GetConnectionString("DefaultConnection")));
+                   builder.Configuration.GetConnectionString("DefaultConnection"))
+               .UseOpenIddict());
 
             builder.Services.AddIdentity<User, IdentityRole>(
                options =>
@@ -102,9 +109,34 @@ namespace Customer_Mangment
             //Authentication and Authorization
             builder.Services.AddAuthentication(option =>
             {
-                option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(option =>
+                option.DefaultAuthenticateScheme = CombinedBearerScheme;
+                option.DefaultChallengeScheme = CombinedBearerScheme;
+            })
+            .AddPolicyScheme(CombinedBearerScheme, CombinedBearerScheme, option =>
+            {
+                option.ForwardDefaultSelector = context =>
+                {
+                    var authorization = context.Request.Headers.Authorization.ToString();
+                    if (!authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return JwtBearerDefaults.AuthenticationScheme;
+                    }
+
+                    var token = authorization["Bearer ".Length..].Trim();
+                    if (!new JwtSecurityTokenHandler().CanReadToken(token))
+                    {
+                        return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+                    }
+
+                    var issuer = new JwtSecurityTokenHandler().ReadJwtToken(token).Issuer;
+                    var legacyIssuer = builder.Configuration["Jwt:Issuer"];
+
+                    return string.Equals(issuer, legacyIssuer, StringComparison.OrdinalIgnoreCase)
+                        ? JwtBearerDefaults.AuthenticationScheme
+                        : OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+                };
+            })
+            .AddJwtBearer(option =>
             {
                 var jwtSettings = builder.Configuration.GetSection("Jwt");
                 option.TokenValidationParameters = new()
@@ -119,7 +151,58 @@ namespace Customer_Mangment
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!)),
                 };
             });
+
+            builder.Services.AddOpenIddict()
+                .AddCore(options =>
+                {
+                    options.UseEntityFrameworkCore()
+                           .UseDbContext<AppDbContext>();
+                })
+                .AddServer(options =>
+                {
+                    options.SetIssuer(new Uri(builder.Configuration["OpenIddict:Issuer"]!));
+                    options.SetTokenEndpointUris("/connect/token");
+
+                    options.AllowPasswordFlow();
+                    options.AllowRefreshTokenFlow();
+                    options.AcceptAnonymousClients();
+
+                    options.RegisterScopes(
+                        Scopes.Email,
+                        Scopes.Profile,
+                        Scopes.OfflineAccess,
+                        "api",
+                        "roles");
+
+                    options.SetAccessTokenLifetime(TimeSpan.FromMinutes(
+                        int.Parse(builder.Configuration["Jwt:ExpireMinutes"] ?? "60")));
+                    options.SetRefreshTokenLifetime(TimeSpan.FromDays(7));
+
+                    options.DisableAccessTokenEncryption();
+
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        options.AddDevelopmentEncryptionCertificate()
+                               .AddDevelopmentSigningCertificate();
+                    }
+                    else
+                    {
+                        options.AddEphemeralEncryptionKey()
+                               .AddEphemeralSigningKey();
+                    }
+
+                    options.UseAspNetCore()
+                           .EnableTokenEndpointPassthrough();
+                })
+                .AddValidation(options =>
+                {
+                    options.UseLocalServer();
+                    options.UseAspNetCore();
+                });
+
             builder.Services.AddAuthorization();
+
+            builder.Services.AddScoped<OpenIddictDataSeeder>();
 
             // Services
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
