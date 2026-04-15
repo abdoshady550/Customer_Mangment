@@ -15,14 +15,11 @@ using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
 using Customer_Mangment.Repository.Services.Reports;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Customer_Mangment
@@ -100,26 +97,11 @@ namespace Customer_Mangment
 
 
             //Authentication and Authorization
-            builder.Services.AddAuthentication(option =>
+            builder.Services.AddOpenIddictTokenValidation(builder.Configuration);
+            builder.Services.AddHttpClient<IIdentityServerTokenService, IdentityServerTokenService>(client =>
             {
-                option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(option =>
-            {
-                var jwtSettings = builder.Configuration.GetSection("Jwt");
-                option.TokenValidationParameters = new()
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!)),
-                };
+                client.BaseAddress = new Uri(builder.Configuration["Auth:Authority"]!);
             });
-            builder.Services.AddAuthorization();
 
             // Services
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();

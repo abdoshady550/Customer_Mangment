@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.13" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.13" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.13">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="OpenIddict.AspNetCore" Version="5.4.0" />
+	  <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.4.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+	  <PackageReference Include="Scalar.AspNetCore" Version="2.12.54" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Customer_Mangment.ServiceDefaults\Customer_Mangment.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
