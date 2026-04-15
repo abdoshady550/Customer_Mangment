@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using OpenIddict.Validation.AspNetCore;
+﻿using OpenIddict.Validation.AspNetCore;
 
 namespace Customer_Mangment.Extensions;
 
@@ -10,46 +8,34 @@ public static class AuthenticationExtension
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var authMode = configuration["Auth:Mode"] ?? "Jwt";
-        var authority = configuration["Auth:Authority"] ?? "http://localhost:5100";
+        var authority = configuration["Auth:Authority"]
+            ?? throw new InvalidOperationException("Auth:Authority is required.");
 
+        var introspectionSecret = configuration["Auth:IntrospectionSecret"]
+            ?? throw new InvalidOperationException("Auth:IntrospectionSecret is required.");
+
+        // Set OpenIddict as the default scheme
         services.AddAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme =
+                OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme =
+                OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
         });
 
-        var builder = services.AddOpenIddict()
+        services.AddOpenIddict()
             .AddValidation(options =>
             {
                 options.SetIssuer(authority);
+
+                options.UseIntrospection()
+                       .SetClientId("customer_api_resource")
+                       .SetClientSecret(introspectionSecret);
+
                 options.UseSystemNetHttp();
                 options.UseAspNetCore();
 
-                if (authMode.Equals("Introspect", StringComparison.OrdinalIgnoreCase))
-                {
-                    options.UseIntrospection()
-                           .SetClientId("customer_api_resource")
-                           .SetClientSecret(configuration["Auth:IntrospectionSecret"]!);
-                }
-
             });
-
-        if (authMode == "Jwt")
-        {
-            services.AddAuthentication()
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.Authority = authority;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateAudience = false,
-                        ValidateIssuer = true,
-                        ValidIssuer = authority,
-                        ValidateLifetime = true,
-                    };
-                });
-        }
 
         return services;
     }

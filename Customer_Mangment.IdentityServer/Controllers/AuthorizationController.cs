@@ -32,12 +32,12 @@ namespace Customer_Mangment.IdentityServer.Controllers
             _scopeManager = scopeManager;
         }
 
-        [HttpPost("~/connect/token"), Produces("application/json")]
+        [HttpPost("~/connect/token")]
         public async Task<IActionResult> Exchange()
         {
             var request = HttpContext.GetOpenIddictServerRequest();
             if (request == null)
-                return BadRequest(new { error = Errors.InvalidRequest, error_description = "The OpenID Connect request cannot be retrieved." });
+                return BadRequest("Invalid OpenIddict request");
 
             if (request.IsPasswordGrantType())
                 return await HandlePasswordGrant(request);
@@ -48,23 +48,32 @@ namespace Customer_Mangment.IdentityServer.Controllers
             if (request.IsRefreshTokenGrantType())
                 return await HandleRefreshTokenGrant(request);
 
-            return BadRequest(new { error = Errors.UnsupportedGrantType, error_description = "The specified grant type is not supported." });
+            return BadRequest("Unsupported grant type");
         }
 
+        // PASSWORD GRANT
         private async Task<IActionResult> HandlePasswordGrant(OpenIddictRequest request)
         {
             var user = await _userManager.FindByEmailAsync(request.Username);
             if (user == null)
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
+            var result = await _signInManager.CheckPasswordSignInAsync(
+                user,
+                request.Password,
+                lockoutOnFailure: false);
+
             if (!result.Succeeded)
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
             var principal = await CreateClaimsPrincipalAsync(user, request.GetScopes());
+
+            principal.SetClaim(Claims.Subject, user.Id);
+
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        //  CLIENT CREDENTIALS 
         private async Task<IActionResult> HandleClientCredentialsGrant(OpenIddictRequest request)
         {
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
@@ -72,30 +81,33 @@ namespace Customer_Mangment.IdentityServer.Controllers
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
             var identity = new ClaimsIdentity(
-                TokenValidationParameters.DefaultAuthenticationType,
-                Claims.Name, Claims.Role);
+                TokenValidationParameters.DefaultAuthenticationType);
 
-            identity.SetClaim(Claims.Subject, await _applicationManager.GetClientIdAsync(application));
-            identity.SetClaim(Claims.Name, await _applicationManager.GetDisplayNameAsync(application));
+            var clientId = await _applicationManager.GetClientIdAsync(application);
+            var displayName = await _applicationManager.GetDisplayNameAsync(application);
+
+            identity.SetClaim(Claims.Subject, clientId);
+            identity.SetClaim(Claims.Name, displayName);
 
             identity.SetScopes(request.GetScopes());
 
             var resources = new List<string>();
             await foreach (var resource in _scopeManager.ListResourcesAsync(identity.GetScopes()))
-            {
                 resources.Add(resource);
-            }
+
             identity.SetResources(resources);
 
             var principal = new ClaimsPrincipal(identity);
-            principal.SetClaim(Claims.ClientId, await _applicationManager.GetClientIdAsync(application));
+            principal.SetClaim(Claims.ClientId, clientId);
 
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        //  REFRESH TOKEN 
         private async Task<IActionResult> HandleRefreshTokenGrant(OpenIddictRequest request)
         {
             var info = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
             var userId = info.Principal?.FindFirst(Claims.Subject)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -104,67 +116,71 @@ namespace Customer_Mangment.IdentityServer.Controllers
             if (user == null)
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
-            if (!await _signInManager.CanSignInAsync(user))
-                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
             var principal = await CreateClaimsPrincipalAsync(user, info.Principal.GetScopes());
+
+            principal.SetClaim(Claims.Subject, user.Id);
+
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
-        private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(ApplicationUser user, IEnumerable<string> scopes)
+        //  CORE FACTORY 
+        private async Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(
+            ApplicationUser user,
+            IEnumerable<string> scopes)
         {
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
             var identity = (ClaimsIdentity)principal.Identity!;
 
-            // Add custom claims
-            identity.SetClaim(Claims.Email, user.Email)
-                    .SetClaim(Claims.EmailVerified, user.EmailConfirmed)
-                    .SetClaim(Claims.PhoneNumber, user.PhoneNumber)
-                    .SetClaim(Claims.PhoneNumberVerified, user.PhoneNumberConfirmed)
-                    .SetClaim("display_name", user.DisplayName ?? user.UserName);
+            identity.SetClaim(Claims.Subject, user.Id);
+            identity.SetClaim(Claims.Email, user.Email);
+            identity.SetClaim(Claims.EmailVerified, user.EmailConfirmed);
+            identity.SetClaim(Claims.PhoneNumber, user.PhoneNumber);
+            identity.SetClaim(Claims.PhoneNumberVerified, user.PhoneNumberConfirmed);
+            identity.SetClaim("display_name", user.DisplayName ?? user.UserName);
 
-            // Add roles as role claims
+            // Roles
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
-                identity.AddClaim(new Claim(Claims.Role, role));
+                identity.AddClaim(Claims.Role, role);
 
-            // Add tenant claim (from HTTP header? or user property)
-            // For demo, we can read X-Tenant-Id header and add it as claim
+            // Tenant
             if (HttpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantId))
-            {
                 identity.SetClaim("tenant_id", tenantId.ToString());
-            }
 
             identity.SetScopes(scopes);
+
             var resources = new List<string>();
             await foreach (var resource in _scopeManager.ListResourcesAsync(identity.GetScopes()))
-            {
                 resources.Add(resource);
-            }
-            identity.SetResources(resources); identity.SetDestinations(GetDestinations);
+
+            identity.SetResources(resources);
+
+            identity.SetDestinations(GetDestinations);
 
             return principal;
         }
 
+        //  DESTINATIONS 
         private static IEnumerable<string> GetDestinations(Claim claim)
         {
             switch (claim.Type)
             {
+                case Claims.Subject:
                 case Claims.Name:
                 case Claims.Email:
                 case "display_name":
                 case "tenant_id":
                     yield return Destinations.AccessToken;
                     yield return Destinations.IdentityToken;
-                    yield break;
+                    break;
 
                 case Claims.Role:
                     yield return Destinations.AccessToken;
-                    yield break;
+                    break;
 
                 default:
                     yield return Destinations.AccessToken;
-                    yield break;
+                    break;
             }
         }
 

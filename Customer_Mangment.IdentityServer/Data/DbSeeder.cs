@@ -46,7 +46,7 @@ public static class DbSeeder
         await CreateClientIfNotExists(appManager,
             clientId: "customer-management-swagger",
             displayName: "Swagger UI Client",
-            clientSecret: null, // public client for Swagger
+            clientSecret: null,
             grantTypes: [GrantTypes.Password, GrantTypes.RefreshToken],
             scopes: ["openid", "profile", "email", "roles", "offline_access", "customer_api"],
             redirectUris: [new Uri("http://localhost:5046/swagger/oauth2-redirect.html")],
@@ -59,12 +59,8 @@ public static class DbSeeder
             grantTypes: [GrantTypes.ClientCredentials],
             scopes: ["customer_api"]);
 
-        await CreateClientIfNotExists(appManager,
-            clientId: "customer_api_resource",
-            displayName: "Customer API Resource Server",
-            clientSecret: "api-secret",
-            grantTypes: [],
-            scopes: []);
+        await SeedResourceServerAsync(appManager);
+
     }
 
     private static async Task CreateUserIfNotExists(
@@ -80,6 +76,7 @@ public static class DbSeeder
             Email = email,
             EmailConfirmed = true,
             DisplayName = displayName
+
         };
 
         var result = await userManager.CreateAsync(user, password);
@@ -106,7 +103,22 @@ public static class DbSeeder
             Resources = { "customer_api_resource" }
         });
     }
+    private static async Task SeedResourceServerAsync(IOpenIddictApplicationManager manager)
+    {
+        if (await manager.FindByClientIdAsync("customer_api_resource") != null)
+            return;
 
+        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = "customer_api_resource",
+            ClientSecret = "api-secret",
+            DisplayName = "Customer API Resource Server",
+            Permissions =
+        {
+            OpenIddictConstants.Permissions.Endpoints.Introspection
+        }
+        });
+    }
     private static async Task CreateClientIfNotExists(
         IOpenIddictApplicationManager manager,
         string clientId,
@@ -124,7 +136,11 @@ public static class DbSeeder
         {
             ClientId = clientId,
             DisplayName = displayName,
-            Permissions = { }
+            Permissions =
+            {
+              OpenIddictConstants.Permissions.Endpoints.Token
+
+            }
         };
 
         // Add grant types
