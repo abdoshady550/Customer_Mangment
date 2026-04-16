@@ -5,8 +5,9 @@
 //----------------------
 namespace Customer_Mangment_Integrate.Test.Common
 {
+    using Customer_Mangment.CQRS.Identity.Dto;
     using System = global::System;
-
+    //FROM REF
     /// <summary>
     /// Single unified client: Auth + CustomerReport + CustomerAddress + Customer + RabbitMQ
     /// </summary>
@@ -54,10 +55,10 @@ namespace Customer_Mangment_Integrate.Test.Common
         // ── Auth ─────────────────────────────────────────────────────────
 
         /// <summary>Generates an access and refresh token for a valid user.</summary>
-        public virtual System.Threading.Tasks.Task<TokenResponse> GenerateTokenAsync(GenerateTokenQuery body)
+        public virtual System.Threading.Tasks.Task<TokenServerResponse> GenerateTokenAsync(GenerateTokenQuery body)
             => GenerateTokenAsync(body, System.Threading.CancellationToken.None);
 
-        public virtual async System.Threading.Tasks.Task<TokenResponse> GenerateTokenAsync(GenerateTokenQuery body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<TokenServerResponse> GenerateTokenAsync(GenerateTokenQuery body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
             var client_ = _httpClient;
@@ -89,7 +90,7 @@ namespace Customer_Mangment_Integrate.Test.Common
                     var status_ = (int)response_.StatusCode;
                     if (status_ == 200)
                     {
-                        var obj_ = await ReadObjectResponseAsync<TokenResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                        var obj_ = await ReadObjectResponseAsync<TokenServerResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                         if (obj_.Object == null) throw new ApiException("Response was null which was not expected.", status_, obj_.Text, headers_, null);
                         return obj_.Object;
                     }
@@ -104,10 +105,10 @@ namespace Customer_Mangment_Integrate.Test.Common
         }
 
         /// <summary>Refreshes access token using a valid refresh token.</summary>
-        public virtual System.Threading.Tasks.Task<TokenResponse> RefreshTokenAsync(RefreshTokenQuery body)
+        public virtual System.Threading.Tasks.Task<TokenServerResponse> RefreshTokenAsync(RefreshTokenQuery body)
             => RefreshTokenAsync(body, System.Threading.CancellationToken.None);
 
-        public virtual async System.Threading.Tasks.Task<TokenResponse> RefreshTokenAsync(RefreshTokenQuery body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<TokenServerResponse> RefreshTokenAsync(RefreshTokenQuery body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
             var client_ = _httpClient;
@@ -139,7 +140,7 @@ namespace Customer_Mangment_Integrate.Test.Common
                     var status_ = (int)response_.StatusCode;
                     if (status_ == 200)
                     {
-                        var obj_ = await ReadObjectResponseAsync<TokenResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                        var obj_ = await ReadObjectResponseAsync<TokenServerResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                         if (obj_.Object == null) throw new ApiException("Response was null which was not expected.", status_, obj_.Text, headers_, null);
                         return obj_.Object;
                     }

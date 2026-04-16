@@ -10,9 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.2.0" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Customer_Mangment.IdentityServer\Customer_Mangment.IdentityServer.csproj" />
     <ProjectReference Include="..\Customer_Mangment\Customer_Mangment.csproj" />
   </ItemGroup>
 

@@ -4,6 +4,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var sqlDb = builder.AddConnectionString("DefaultConnection");
 var alahly = builder.AddConnectionString("alahly");
 var meccano = builder.AddConnectionString("meccano");
+var sqlServerCache = builder.AddConnectionString("sqlServerCache");
+
 // MongoDB 
 var mongoDb = builder.AddConnectionString("mongodb");
 
@@ -14,6 +16,9 @@ var rabbit = builder.AddRabbitMQ("rabbitmq",
         port: 5672)
     .WithDataVolume("rabbitmq-data")
     .WithManagementPlugin(port: 15672);
+// Redis
+var redis = builder.AddRedis("redis", port: 6379)
+    .WithDataVolume("redis-data");
 
 //API
 
@@ -24,11 +29,14 @@ builder.AddContainer("customer-mangment", "customer-mangment")
         dockerfilePath: "Customer_Mangment/Docker/Dockerfile"
     )
     .WithReference(sqlDb)
+    .WithReference(sqlServerCache)
     .WithReference(alahly)
     .WithReference(meccano)
     .WithReference(mongoDb)
     .WithReference(rabbit)
+    .WithReference(redis)
     .WaitFor(rabbit)
+    .WaitFor(redis)
     .WithHttpEndpoint(port: 5000, targetPort: 8080)
     .WithUrls(c =>
     {
@@ -36,5 +44,7 @@ builder.AddContainer("customer-mangment", "customer-mangment")
         c.Urls.Add(new() { Url = "http://localhost:5000/scalar/v1", DisplayText = "Scalar UI" });
     })
     .WithHttpHealthCheck("/health");
+
+builder.AddProject<Projects.Customer_Mangment_IdentityServer>("customer-mangment-identityserver");
 
 builder.Build().Run();

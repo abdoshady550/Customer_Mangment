@@ -31,7 +31,7 @@ namespace Customer_Mangment.Controllers
 
         [HttpGet]
         [Route("get")]
-        [OutputCache(PolicyName = "customers")]
+        //[OutputCache(PolicyName = "customers")]
         [ProducesResponseType(typeof(List<CustomerDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

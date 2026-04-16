@@ -20,7 +20,6 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(result);
             Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
             Assert.False(string.IsNullOrWhiteSpace(result.RefreshToken));
-            Assert.True(result.ExpiresOnUtc > DateTimeOffset.UtcNow);
         }
 
         [Fact]
@@ -35,7 +34,6 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(result);
             Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
             Assert.False(string.IsNullOrWhiteSpace(result.RefreshToken));
-            Assert.True(result.ExpiresOnUtc > DateTimeOffset.UtcNow);
         }
 
         [Fact]
@@ -127,7 +125,6 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(refreshed);
             Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
             Assert.False(string.IsNullOrWhiteSpace(refreshed.RefreshToken));
-            Assert.True(refreshed.ExpiresOnUtc > DateTimeOffset.UtcNow);
         }
 
         [Fact]

@@ -1,18 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using Customer_Mangment.CQRS.Identity.Dto;
 
 namespace Customer_Mangment.Repository.Interfaces
 {
     public interface IIdentityServerTokenService
     {
-        Task<TokenServerResponse?> RequestPasswordTokenAsync(string email, string password, CancellationToken ct);
-        Task<TokenServerResponse?> RefreshTokenAsync(string refreshToken, CancellationToken ct);
+        Task<TokenServerResponse?> RequestPasswordTokenAsync(string email, string password, string? tenantId, CancellationToken ct);
+        Task<TokenServerResponse?> RefreshTokenAsync(string refreshToken, string? tenantId, CancellationToken ct);
     }
 
-    public record TokenServerResponse
-    {
-        [JsonPropertyName("access_token")] public string AccessToken { get; init; } = string.Empty;
-        [JsonPropertyName("token_type")] public string TokenType { get; init; } = string.Empty;
-        [JsonPropertyName("expires_in")] public int ExpiresIn { get; init; }
-        [JsonPropertyName("refresh_token")] public string? RefreshToken { get; init; }
-    }
+
 }

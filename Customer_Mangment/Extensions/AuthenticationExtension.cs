@@ -14,7 +14,13 @@ public static class AuthenticationExtension
         var introspectionSecret = configuration["Auth:IntrospectionSecret"]
             ?? throw new InvalidOperationException("Auth:IntrospectionSecret is required.");
 
-        // Set OpenIddict as the default scheme
+        services.AddHttpClient("OpenIddict.Validation.SystemNetHttp")
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
+
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme =
@@ -32,9 +38,14 @@ public static class AuthenticationExtension
                        .SetClientId("customer_api_resource")
                        .SetClientSecret(introspectionSecret);
 
-                options.UseSystemNetHttp();
-                options.UseAspNetCore();
+                options.UseSystemNetHttp()
+                       .ConfigureHttpClientHandler(_ => new HttpClientHandler
+                       {
+                           ServerCertificateCustomValidationCallback =
+                               HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                       });
 
+                options.UseAspNetCore();
             });
 
         return services;

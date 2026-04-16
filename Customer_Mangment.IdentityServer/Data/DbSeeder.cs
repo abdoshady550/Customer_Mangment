@@ -31,8 +31,8 @@ public static class DbSeeder
         }
 
         // Seed users
-        await CreateUserIfNotExists(userManager, "admin@test.com", "Admin@123", "Admin", "Admin User");
-        await CreateUserIfNotExists(userManager, "user@test.com", "User@123", "User", "Regular User");
+        await CreateUserIfNotExists(userManager, "11111111-1111-1111-1111-111111111111", "admin@test.com", "Admin@123", "Admin", "Admin User");
+        await CreateUserIfNotExists(userManager, "22222222-2222-2222-2222-222222222222", "user@test.com", "User@123", "User", "Regular User");
 
         // Seed OpenIddict scopes
         await CreateScopeIfNotExists(scopeManager, Scopes.OpenId, "OpenID Connect", "Your user identifier");
@@ -64,7 +64,7 @@ public static class DbSeeder
     }
 
     private static async Task CreateUserIfNotExists(
-        UserManager<ApplicationUser> userManager,
+        UserManager<ApplicationUser> userManager, string id,
         string email, string password, string role, string displayName)
     {
         if (await userManager.FindByEmailAsync(email) != null)
@@ -72,6 +72,7 @@ public static class DbSeeder
 
         var user = new ApplicationUser
         {
+            Id = id,
             UserName = email,
             Email = email,
             EmailConfirmed = true,
