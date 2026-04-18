@@ -1,4 +1,4 @@
-﻿using Customer_Mangment.IdentityServer.CQRS.Authorization;
+using Customer_Mangment.IdentityServer.CQRS.Authorization;
 using Customer_Mangment.IdentityServer.CQRS.Authorization.Commands;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -52,8 +52,13 @@ public class AuthorizationController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        // Wolverine could also handle logout, but for simplicity we keep it inline
         await HttpContext.SignOutAsync();
-        return SignOut(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        var feature = HttpContext.Features
+            .Get<OpenIddictServerAspNetCoreFeature>();
+
+        if (feature?.Transaction is not null)
+            return SignOut(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+        return Ok();
     }
 }
