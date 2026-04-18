@@ -15,8 +15,8 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 	  </PackageReference>
-	  <PackageReference Include="OpenIddict.AspNetCore" Version="5.4.0" />
-	  <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.4.0" />
+	  <PackageReference Include="OpenIddict.AspNetCore" Version="7.4.0" />
+	  <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.4.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
 	  <PackageReference Include="Scalar.AspNetCore" Version="2.12.54" />
 	  <PackageReference Include="WolverineFx.Http" Version="5.17.0" />

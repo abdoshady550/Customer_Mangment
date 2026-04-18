@@ -38,27 +38,27 @@ builder.Services.AddOpenIddict()
     .AddServer(options =>
     {
         options.SetTokenEndpointUris("/connect/token");
-        options.SetLogoutEndpointUris("/connect/logout");
         options.SetIntrospectionEndpointUris("/connect/introspect");
 
         options.AllowPasswordFlow()
                .AllowRefreshTokenFlow()
                .AllowClientCredentialsFlow();
 
-        options.RegisterScopes(OpenIddictConstants.Scopes.OpenId,
-                               OpenIddictConstants.Scopes.Profile,
-                               OpenIddictConstants.Scopes.Email,
-                               OpenIddictConstants.Scopes.Roles,
-                               OpenIddictConstants.Scopes.OfflineAccess,
-                               "customer_api");
+        options.RegisterScopes(
+            OpenIddictConstants.Scopes.OpenId,
+            OpenIddictConstants.Scopes.Profile,
+            OpenIddictConstants.Scopes.Email,
+            OpenIddictConstants.Scopes.Roles,
+            OpenIddictConstants.Scopes.OfflineAccess,
+            "customer_api");
 
         options.AddDevelopmentEncryptionCertificate()
                .AddDevelopmentSigningCertificate();
 
         options.UseAspNetCore()
                .EnableTokenEndpointPassthrough()
-               .EnableLogoutEndpointPassthrough()
                .EnableStatusCodePagesIntegration();
+
     })
     .AddValidation(options =>
     {
@@ -88,7 +88,6 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseMiddleware<RequestCultureMiddleware>();
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
