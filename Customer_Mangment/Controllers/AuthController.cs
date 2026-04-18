@@ -7,6 +7,7 @@ using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using static Customer_Mangment.SharedResources.Keys.ResourceKeys;
 
 namespace Customer_Mangment.Controllers
 {
@@ -34,8 +35,8 @@ namespace Customer_Mangment.Controllers
             var tenantId = Request.Headers["X-Tenant-Id"].FirstOrDefault();
 
             var result = await _identityServerToken.RequestPasswordTokenAsync(request.Email, request.Password, tenantId, ct);
-            if (result is null)
-                return Problem(statusCode: StatusCodes.Status500InternalServerError, title: localizer["TokenGenerationFailed"]);
+            if (string.IsNullOrEmpty(result.AccessToken))
+                return Problem(statusCode: StatusCodes.Status500InternalServerError, title: localizer[Auth.Unauthorized]);
 
             var response = new TokenServerResponse
             {
@@ -48,7 +49,7 @@ namespace Customer_Mangment.Controllers
         }
 
         [HttpPost("token/refresh-token")]
-        [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TokenServerResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -56,7 +57,6 @@ namespace Customer_Mangment.Controllers
         [EndpointSummary("Refreshes access token using a valid refresh token.")]
         [EndpointDescription("Exchanges an expired access token and a valid refresh token for a new token pair.")]
         [EndpointName("RefreshToken")]
-        [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenQuery request, CancellationToken ct)
         {
             var result = await _identityServerToken.RefreshTokenAsync(request.RefreshToken, null, ct);

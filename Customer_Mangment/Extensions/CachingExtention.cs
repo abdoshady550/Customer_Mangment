@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.Extensions.Caching.Hybrid;
+﻿using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Customer_Mangment.Extensions
 {
@@ -48,27 +47,27 @@ namespace Customer_Mangment.Extensions
             //response
             services.AddResponseCaching();
             //response compression
-            services.AddResponseCompression(option =>
-            {
-                option.EnableForHttps = true;
-                option.Providers.Add<GzipCompressionProvider>();
-                option.Providers.Add<BrotliCompressionProvider>();
+            //services.AddResponseCompression(option =>
+            //{
+            //    option.EnableForHttps = true;
+            //    option.Providers.Add<GzipCompressionProvider>();
+            //    option.Providers.Add<BrotliCompressionProvider>();
 
-                option.MimeTypes = new[]
-                {
-                    "application/json",
-                    "text/plain",
-                    "application/xml",
-                };
-            });
-            services.Configure<GzipCompressionProviderOptions>(option =>
-            {
-                option.Level = System.IO.Compression.CompressionLevel.Fastest;
-            });
-            services.Configure<BrotliCompressionProviderOptions>(option =>
-            {
-                option.Level = System.IO.Compression.CompressionLevel.Fastest;
-            });
+            //    option.MimeTypes = new[]
+            //    {
+            //        "application/json",
+            //        "text/plain",
+            //        "application/xml",
+            //    };
+            //});
+            //services.Configure<GzipCompressionProviderOptions>(option =>
+            //{
+            //    option.Level = System.IO.Compression.CompressionLevel.Fastest;
+            //});
+            //services.Configure<BrotliCompressionProviderOptions>(option =>
+            //{
+            //    option.Level = System.IO.Compression.CompressionLevel.Fastest;
+            //});
             return services;
         }
     }

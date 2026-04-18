@@ -1,4 +1,6 @@
 using Customer_Mangment.IdentityServer.Data;
+using Customer_Mangment.IdentityServer.Extensions;
+using Customer_Mangment.IdentityServer.Middlewares;
 using Customer_Mangment.IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -60,6 +65,15 @@ builder.Services.AddOpenIddict()
         options.UseLocalServer();
         options.UseAspNetCore();
     });
+//Wolverine
+builder.Services.AddIdentityServerWolverineServices();
+builder.Host.AddIdentityServerWolverine();
+//Localization
+
+builder.Services.AddAppLocalization();
+
+//rate limiting
+builder.Services.AddRateLimiting();
 
 
 var app = builder.Build();
@@ -72,10 +86,12 @@ using (var scope = app.Services.CreateScope())
 
 app.MapOpenApi();
 app.MapScalarApiReference();
-
+app.UseMiddleware<RequestCultureMiddleware>();
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

@@ -181,7 +181,7 @@ namespace Customer_Mangment
             app.UseMiddleware<TenantClaimValidationMiddleware>();
 
             app.UseRateLimiter();
-            app.UseResponseCompression();
+            //app.UseResponseCompression();
             app.UseOutputCache();
             app.UseResponseCaching();
 

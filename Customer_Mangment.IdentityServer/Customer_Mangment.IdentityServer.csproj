@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
 	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.13" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.13" />
@@ -18,10 +19,13 @@
 	  <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.4.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
 	  <PackageReference Include="Scalar.AspNetCore" Version="2.12.54" />
+	  <PackageReference Include="WolverineFx.Http" Version="5.17.0" />
+	  <PackageReference Include="WolverineFx.Http.FluentValidation" Version="5.17.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Customer_Mangment.ServiceDefaults\Customer_Mangment.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Localization\Localization.csproj" />
   </ItemGroup>
 
 </Project>
