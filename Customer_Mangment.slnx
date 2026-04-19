@@ -7,5 +7,6 @@
   <Project Path="Customer_Mangment_Integrate.Test/Customer_Mangment_Integrate.Test.csproj" Id="9b88b0e9-f14a-4152-8955-ff4406b34d9d" />
   <Project Path="IdentityServer.Integration.Tests/IdentityServer.Integration.Tests.csproj" Id="314d7882-76ed-47cf-a517-fda7cf4109ff" />
   <Project Path="Localization/Localization.csproj" Id="800b9428-8667-45c2-917a-9e7c937ab2f1" />
+  <Project Path="Rabbitmq-client-console.tests/Rabbitmq-client-console.tests.csproj" Id="ccc71bdc-9585-4cc9-9dbd-de8f04b9c242" />
   <Project Path="RabbitMQ_Client_Console/RabbitMQ_Client_Console.csproj" Id="73bebc15-5e96-43d4-9f47-059c243fdf93" />
 </Solution>

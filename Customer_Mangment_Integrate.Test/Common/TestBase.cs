@@ -40,7 +40,7 @@ namespace Customer_Mangment_Integrate.Test.Common
             return http;
         }
 
-        // ── Token helpers ─────────────────────────────────────────────────
+        // ── Token  
 
         protected Task<string> GetAdminTokenAsync()
             => GetTokenAsync(AdminEmail, AdminPassword, DefaultTenantId);
@@ -52,7 +52,6 @@ namespace Customer_Mangment_Integrate.Test.Common
         private async Task<string> GetTokenAsync(
             string email, string password, string tenantId)
         {
-            // POST directly to the identity server factory so we hit OpenIddict
             var identityHttp = _factory.CreateIdentityClient();
             identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
 
@@ -114,7 +113,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected async Task<string> GetRefreshedAccessTokenAsync(string refreshToken)
             => (await DoRefreshTokenAsync(refreshToken)).AccessToken;
 
-        // ── CRUD helpers ──────────────────────────────────────────────────
+        // ── CRUD  
 
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();

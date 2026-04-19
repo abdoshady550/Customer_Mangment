@@ -67,7 +67,7 @@ namespace Customer_Mangment_Integrate.Test
             return new TokenResult(access, refresh, (int)response.StatusCode, true);
         }
 
-        // ── Password grant ────────────────────────────────────────────────
+        // ── Password grant 
 
         [Fact]
         public async Task PasswordGrant_AdminValidCredentials_ReturnsAccessAndRefreshToken()
@@ -152,7 +152,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(customers);
         }
 
-        // ── Refresh grant ─────────────────────────────────────────────────
+        // ── Refresh grant 
 
         [Fact]
         public async Task RefreshGrant_WithValidRefreshToken_ReturnsNewTokenPair()
@@ -220,7 +220,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
         }
 
-        // ── Token / tenant interaction ────────────────────────────────────
+        // ── Token / tenant interaction 
 
         [Fact]
         public async Task Token_IssuedForDemoTenant_Rejected_WhenUsedWithDifferentTenant()

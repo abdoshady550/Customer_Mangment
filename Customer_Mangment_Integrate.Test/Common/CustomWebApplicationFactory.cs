@@ -5,26 +5,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace Customer_Mangment_Integrate.Test.Common
 {
-    /// <summary>
-    /// A custom <see cref="WebApplicationFactory{TEntryPoint}"/> that:
-    /// <list type="bullet">
-    ///   <item>Spins up the main Customer Management API in-process.</item>
-    ///   <item>Replaces <see cref="IIdentityServerTokenService"/> with
-    ///         <see cref="InProcessIdentityServerTokenService"/>, which forwards
-    ///         token requests to the <b>IdentityServer application</b> hosted
-    ///         by a second <see cref="WebApplicationFactory{T}"/>.</item>
-    /// </list>
-    /// </summary>
+
     public class CustomWebApplicationFactory
         : WebApplicationFactory<IAssmblyMarker>
     {
-        // ── Inner factory for the Identity Server ──────────────────────────
-
         private readonly WebApplicationFactory<Customer_Mangment.IdentityServer.IMarkerIdentity>
             _identityFactory;
 
@@ -35,10 +23,26 @@ namespace Customer_Mangment_Integrate.Test.Common
                     .WithWebHostBuilder(builder =>
                     {
                         builder.UseEnvironment("Development");
+
+                        builder.ConfigureServices(services =>
+                        {
+                            services.Configure<OpenIddict.Server.AspNetCore.OpenIddictServerAspNetCoreOptions>(options =>
+                            {
+                                options.DisableTransportSecurityRequirement = true;
+                            });
+
+                            services.Configure<OpenIddict.Server.OpenIddictServerOptions>(options =>
+                            {
+                                options.TokenEndpointUris.Clear();
+                                options.TokenEndpointUris.Add(new Uri("/connect/token", UriKind.Relative));
+
+                                options.EndSessionEndpointUris.Clear();
+                                options.EndSessionEndpointUris.Add(new Uri("/connect/logout", UriKind.Relative));
+                            });
+                        });
                     });
         }
 
-        // ── Override the main API's composition root ───────────────────────
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -46,9 +50,6 @@ namespace Customer_Mangment_Integrate.Test.Common
 
             builder.ConfigureServices(services =>
             {
-                // Replace the real IIdentityServerTokenService (which calls an
-                // external process) with one that uses the in-process identity
-                // server test client.
                 services.RemoveAll<IIdentityServerTokenService>();
                 services.AddSingleton<IIdentityServerTokenService>(
                     _ => new InProcessIdentityServerTokenService(
@@ -56,16 +57,9 @@ namespace Customer_Mangment_Integrate.Test.Common
             });
         }
 
-        // ── Expose the identity server's test client ───────────────────────
 
-        /// <summary>
-        /// Returns an <see cref="HttpClient"/> that points directly at the
-        /// in-process Identity Server.  Use this to acquire / refresh tokens
-        /// without going through the main API.
-        /// </summary>
         public HttpClient CreateIdentityClient() => _identityFactory.CreateClient();
 
-        // ── Dispose both factories ─────────────────────────────────────────
 
         protected override void Dispose(bool disposing)
         {
@@ -76,17 +70,8 @@ namespace Customer_Mangment_Integrate.Test.Common
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Token service that delegates to the in-process identity server
-    // ──────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Implements <see cref="IIdentityServerTokenService"/> by calling the
-    /// OpenIddict token endpoint on the <b>in-process</b> identity server test
-    /// client.  Mirrors the logic in the real
-    /// <c>IdentityServerTokenService</c>, but targets the in-memory test host
-    /// instead of an external URL.
-    /// </summary>
+
     internal sealed class InProcessIdentityServerTokenService : IIdentityServerTokenService
     {
         private readonly HttpClient _identityClient;
@@ -107,10 +92,10 @@ namespace Customer_Mangment_Integrate.Test.Common
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["grant_type"] = "password",
-                    ["username"]   = email,
-                    ["password"]   = password,
-                    ["scope"]      = "customer_api offline_access roles",
-                    ["client_id"]  = "customer-management-swagger"
+                    ["username"] = email,
+                    ["password"] = password,
+                    ["scope"] = "customer_api offline_access roles",
+                    ["client_id"] = "customer-management-swagger"
                 })
             };
 
@@ -134,9 +119,9 @@ namespace Customer_Mangment_Integrate.Test.Common
         {
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["grant_type"]    = "refresh_token",
+                ["grant_type"] = "refresh_token",
                 ["refresh_token"] = refreshToken,
-                ["client_id"]     = "customer-management-swagger"
+                ["client_id"] = "customer-management-swagger"
             });
 
             var response = await _identityClient.PostAsync("connect/token", content, ct);

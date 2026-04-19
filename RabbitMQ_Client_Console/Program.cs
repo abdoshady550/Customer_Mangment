@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ_Client_Console.DTOs;
 using System.Text.Json;
+
 
 namespace RabbitMQ_Client_Console
 {
@@ -12,6 +14,8 @@ namespace RabbitMQ_Client_Console
             PropertyNameCaseInsensitive = true
         };
         private const string ApiBaseUrl = "https://localhost:7279";
+        private const string IdentityBaseUrl = "https://localhost:7278";
+
 
         private const string BaseSecretsPath = @"D:\CS\TECH\c#\Meccano";
 
@@ -88,28 +92,39 @@ namespace RabbitMQ_Client_Console
         }
 
         // Get Token 
+
         private static async Task<string> GetTokenAsync(string email, string password)
         {
-            using var http = new HttpClient();
-
-            var payload = new
+            using var http = new HttpClient(new HttpClientHandler
             {
-                email,
-                password
-            };
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
 
-            var json = JsonSerializer.Serialize(payload);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["username"] = email,
+                ["password"] = password,
+                ["scope"] = "openid profile email roles offline_access customer_api",
+                ["client_id"] = "customer-management-swagger"
+            });
 
-            var response = await http.PostAsync($"{ApiBaseUrl}/api/Auth/token/generate", content);
-            response.EnsureSuccessStatusCode();
+            var response = await http.PostAsync(
+                $"{IdentityBaseUrl}/connect/token", content);
 
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseJson, _jsonOptions);
+            var body = await response.Content.ReadAsStringAsync();
 
-            return tokenResponse?.AccessToken
-                ?? throw new Exception("Failed to get access token.");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Token request failed [{response.StatusCode}]: {body}");
+
+            var tokenResponse = JsonSerializer.Deserialize<TokenServerResponse>(body, _jsonOptions)
+                ?? throw new Exception("Empty token response.");
+
+            return tokenResponse.AccessToken
+                ?? throw new Exception("No access_token in response.");
         }
+
         // Connection builder
         private static HubConnection BuildConnection(string hubUrl, string? token)
         {
