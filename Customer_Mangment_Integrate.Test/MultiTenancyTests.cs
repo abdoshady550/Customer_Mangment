@@ -1,4 +1,4 @@
-﻿using Customer_Mangment;
+using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Headers;
@@ -13,6 +13,7 @@ namespace Customer_Mangment_Integrate.Test
         private const string TenantAlahly = "alahly";
         private const string TenantMeccano = "meccano";
 
+        // ── Helpers ───────────────────────────────────────────────────────
 
         private Client ApiClientForTenant(string tenantId, string? accessToken = null)
         {
@@ -24,30 +25,48 @@ namespace Customer_Mangment_Integrate.Test
             return new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "" };
         }
 
+        /// <summary>
+        /// Acquires a token via the OpenIddict password grant for a specific tenant.
+        /// Uses raw HttpClient to avoid any dependency on Client partial-class extensions.
+        /// </summary>
         private async Task<string> GetAdminTokenForTenantAsync(string tenantId)
         {
             var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
-            var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "" };
-            var response = await client.GenerateTokenAsync(new GenerateTokenQuery
+
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                Email = AdminEmail,
-                Password = AdminPassword
+                ["grant_type"] = "password",
+                ["username"]   = AdminEmail,
+                ["password"]   = AdminPassword,
+                ["client_id"]  = "customer-management-swagger",
+                ["scope"]      = "customer_api offline_access roles"
             });
-            return response.AccessToken;
+
+            var response = await http.PostAsync("connect/token", content);
+            var body = await response.Content.ReadAsStringAsync();
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            return doc.RootElement.GetProperty("access_token").GetString()!;
         }
 
         private async Task<string> GetUserTokenForTenantAsync(string tenantId)
         {
             var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
-            var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "" };
-            var response = await client.GenerateTokenAsync(new GenerateTokenQuery
+
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                Email = UserEmail,
-                Password = UserPassword
+                ["grant_type"] = "password",
+                ["username"]   = UserEmail,
+                ["password"]   = UserPassword,
+                ["client_id"]  = "customer-management-swagger",
+                ["scope"]      = "customer_api offline_access roles"
             });
-            return response.AccessToken;
+
+            var response = await http.PostAsync("connect/token", content);
+            var body = await response.Content.ReadAsStringAsync();
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            return doc.RootElement.GetProperty("access_token").GetString()!;
         }
 
         private async Task CleanupTenantCustomerAsync(string tenantId, Guid customerId)
@@ -61,7 +80,7 @@ namespace Customer_Mangment_Integrate.Test
             catch { }
         }
 
-        //  Header check  
+        // ── Tenant header validation ───────────────────────────────────────
 
         [Fact]
         public async Task Request_WithoutTenantHeader_Returns400()
@@ -99,46 +118,79 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        // endpoints bypass tenant check 
+        // ── Auth endpoints bypass tenant check ────────────────────────────
 
         [Fact]
-        public async Task GenerateToken_WithoutTenantHeader_Succeeds()
+        public async Task PasswordGrant_WithoutTenantHeader_Succeeds()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = AdminEmail,
-                Password = AdminPassword
-            });
-            Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
-        }
-
-        [Fact]
-        public async Task RefreshToken_WithoutTenantHeader_Succeeds()
-        {
+            // /connect/token is bypassed by TenantResolutionMiddleware
             var http = _factory.CreateClient();
-            var client = new Client(http) { BaseUrl = http.BaseAddress?.ToString() ?? "" };
-
-            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                Email = AdminEmail,
-                Password = AdminPassword
+                ["grant_type"] = "password",
+                ["username"]   = AdminEmail,
+                ["password"]   = AdminPassword,
+                ["client_id"]  = "customer-management-swagger",
+                ["scope"]      = "customer_api offline_access roles"
             });
 
-            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
-            {
-                RefreshToken = initial.RefreshToken,
-                ExpiredAccessToken = initial.AccessToken
-            });
+            var response = await http.PostAsync("connect/token", content);
+            var body = await response.Content.ReadAsStringAsync();
 
-            Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
+            Assert.True(response.IsSuccessStatusCode,
+                $"Expected success but got {(int)response.StatusCode}: {body}");
+
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            var accessToken = doc.RootElement.GetProperty("access_token").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(accessToken));
         }
 
-        // Tenant claim
+        [Fact]
+        public async Task RefreshGrant_WithoutTenantHeader_Succeeds()
+        {
+            // First get an initial token (also without tenant header)
+            var http = _factory.CreateClient();
+            var initialContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["username"]   = AdminEmail,
+                ["password"]   = AdminPassword,
+                ["client_id"]  = "customer-management-swagger",
+                ["scope"]      = "customer_api offline_access roles"
+            });
+
+            var initialResponse = await http.PostAsync("connect/token", initialContent);
+            var initialBody = await initialResponse.Content.ReadAsStringAsync();
+            var initialDoc = System.Text.Json.JsonDocument.Parse(initialBody);
+            var refreshToken = initialDoc.RootElement
+                .GetProperty("refresh_token").GetString()!;
+
+            // Now refresh — still no tenant header
+            var refreshContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"]    = "refresh_token",
+                ["refresh_token"] = refreshToken,
+                ["client_id"]     = "customer-management-swagger"
+            });
+
+            var refreshResponse = await http.PostAsync("connect/token", refreshContent);
+            var refreshBody = await refreshResponse.Content.ReadAsStringAsync();
+
+            Assert.True(refreshResponse.IsSuccessStatusCode,
+                $"Refresh failed ({(int)refreshResponse.StatusCode}): {refreshBody}");
+
+            var refreshDoc = System.Text.Json.JsonDocument.Parse(refreshBody);
+            var newAccessToken = refreshDoc.RootElement
+                .GetProperty("access_token").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(newAccessToken));
+        }
+
+        // ── Tenant claim validation ────────────────────────────────────────
 
         [Fact]
-        public async Task Token_IssuedForOneTenant_Rejected_WhenUsedWithDifferentTenant()
+        public async Task Token_IssuedForDefaultTenant_Rejected_WhenUsedWithAlahly()
         {
-            var token = await GetAdminTokenAsync();
+            var token = await GetAdminTokenAsync();   // carries tenant_id = "demo"
 
             var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Add("X-Tenant-Id", TenantAlahly);
@@ -173,7 +225,7 @@ namespace Customer_Mangment_Integrate.Test
         }
 
         [Fact]
-        public async Task UserToken_IssuedForTenant_Rejected_OnDifferentTenant()
+        public async Task UserToken_IssuedForDefaultTenant_Rejected_OnAlahly()
         {
             var token = await GetUserTokenAsync();
 
@@ -199,7 +251,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        // Data isolation
+        // ── Data isolation ────────────────────────────────────────────────
 
         [Fact]
         public async Task CustomerCreatedInDefaultTenant_NotVisibleInAlahly()
@@ -313,7 +365,7 @@ namespace Customer_Mangment_Integrate.Test
             }
         }
 
-        // Cross-tenant write operations are blocked          
+        // ── Cross-tenant write protection ─────────────────────────────────
 
         [Fact]
         public async Task UpdateCustomer_UsingDifferentTenantToken_Returns403()
@@ -348,7 +400,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
         }
 
-        // Business rules are tenant-scoped
+        // ── Business rules are tenant-scoped ──────────────────────────────
 
         [Fact]
         public async Task SameMobileInDifferentTenants_BothSucceed()

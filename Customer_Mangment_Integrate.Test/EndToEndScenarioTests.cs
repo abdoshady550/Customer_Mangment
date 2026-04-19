@@ -24,18 +24,14 @@ namespace Customer_Mangment_Integrate.Test
 
             try
             {
-                // 1. Verify create
                 Assert.NotEqual(Guid.Empty, customer.Id);
                 Assert.Equal(AdminEmail, customer.CreatedBy);
 
-                // 2. Read customer
                 var fetched = (await client.Get2Async(customer.Id)).First();
                 Assert.Equal(customer.Name, fetched.Name);
-                // Read addresses via CustomerAddress endpoint
                 var fetchedAddr = await client.GetAsync(customer.Id, null);
                 Assert.Single(fetchedAddr);
 
-                // 3. Update customer
                 await client.Update2Async(customer.Id, new UpdateCustomerReq
                 {
                     Name = "Lifecycle Updated",
@@ -45,7 +41,6 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Equal("Lifecycle Updated", afterUpdate.Name);
                 Assert.Equal(AdminEmail, afterUpdate.UpdatedBy);
 
-                // 4. Add address
                 var countBefore = (await client.GetAsync(customer.Id, null)).Count;
                 var newAddr = await client.AddAsync(customer.Id, new AddAddressReq
                 {
@@ -57,7 +52,6 @@ namespace Customer_Mangment_Integrate.Test
                 var afterAddAddr = (await client.GetAsync(customer.Id, null)).Count;
                 Assert.Equal(countBefore + 1, afterAddAddr);
 
-                // 5. Update address
                 await client.UpdateAsync(newAddr.Id, new UpdateAddressReq
                 {
                     Type = 3,
@@ -67,12 +61,10 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.Contains(afterAddrUpdate,
                     a => a.Id == newAddr.Id && a.Value == "Second Address Updated");
 
-                // 6. Delete address
                 await client.DeleteAsync(newAddr.Id);
                 var afterAddrDelete = await client.GetAsync(null, null);
                 Assert.DoesNotContain(afterAddrDelete, a => a.Id == newAddr.Id);
 
-                // 7. History
                 var history = await client.HistoryAsync(customer.Id);
                 var customerHistory = await client.History2Async(customer.Id);
 
@@ -96,12 +88,10 @@ namespace Customer_Mangment_Integrate.Test
 
             await client.Delete2Async(customer.Id);
 
-            // Get → 404
             var notFound = await Assert.ThrowsAnyAsync<ApiException>(
                 () => client.Get2Async(customer.Id));
             Assert.Equal(404, notFound.StatusCode);
 
-            // History → still accessible with IsDeleted = true
             var customerHistoryAfter = await client.History2Async(customer.Id);
             Assert.True(customerHistoryAfter.Count >= 2);
         }
@@ -128,7 +118,6 @@ namespace Customer_Mangment_Integrate.Test
                 var updated = (await adminClient.Get2Async(customer.Id)).First();
                 Assert.Equal(AdminEmail, updated.UpdatedBy);
 
-                // User cannot delete
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
                     () => userClient.Delete2Async(customer.Id));
                 Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
@@ -136,23 +125,34 @@ namespace Customer_Mangment_Integrate.Test
             finally { await CleanupCustomerAsync(adminClient, customer.Id); }
         }
 
+        /// <summary>
+        /// Verifies that a token obtained via the OpenIddict refresh-token grant
+        /// can still access protected API endpoints.
+        /// </summary>
         [Fact]
         public async Task TokenRefresh_NewTokenWorksOnProtectedEndpoint()
         {
-            var client = CreateApiClient();
-            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
+            // 1. Get initial token pair via OpenIddict password grant (raw HttpClient)
+            var http = _factory.CreateClient();
+            var initialContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                Email = AdminEmail,
-                Password = AdminPassword
+                ["grant_type"] = "password",
+                ["username"]   = AdminEmail,
+                ["password"]   = AdminPassword,
+                ["client_id"]  = "customer-management-swagger",
+                ["scope"]      = "customer_api offline_access roles"
             });
+            var initialResponse = await http.PostAsync("connect/token", initialContent);
+            var initialBody = await initialResponse.Content.ReadAsStringAsync();
+            var initialDoc = System.Text.Json.JsonDocument.Parse(initialBody);
+            var refreshToken = initialDoc.RootElement
+                .GetProperty("refresh_token").GetString()!;
 
-            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
-            {
-                RefreshToken = initial.RefreshToken,
-                ExpiredAccessToken = initial.AccessToken
-            });
+            // 2. Refresh via the refresh_token grant
+            var (newAccessToken, _) = await DoRefreshTokenAsync(refreshToken);
 
-            var authed = CreateApiClient(refreshed.AccessToken);
+            // 3. Use the new access token on the API (with tenant header)
+            var authed = CreateApiClient(newAccessToken);
             var customers = await authed.Get2Async(null);
             Assert.NotNull(customers);
         }
@@ -173,14 +173,12 @@ namespace Customer_Mangment_Integrate.Test
                 var afterAdd = (await client.GetAsync(customer.Id, null)).Count;
                 Assert.Equal(countBefore + 3, afterAdd);
 
-                // Update addr2
                 await client.UpdateAsync(addr2.Id, new UpdateAddressReq
                 {
                     Type = 2,
                     Value = "Modified Addr2"
                 });
 
-                // Delete addr1 and addr3
                 await client.DeleteAsync(addr1.Id);
                 await client.DeleteAsync(addr3.Id);
 
