@@ -1,12 +1,11 @@
-using Customer_Mangment;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Headers;
 
 namespace Customer_Mangment_Integrate.Test.Common
 {
-    public class TestBase : IClassFixture<WebApplicationFactory<IAssmblyMarker>>
+
+    public class TestBase : IClassFixture<CustomWebApplicationFactory>
     {
-        protected readonly WebApplicationFactory<IAssmblyMarker> _factory;
+        protected readonly CustomWebApplicationFactory _factory;
 
         protected const string AdminEmail = "admin@test.com";
         protected const string AdminPassword = "Admin@123";
@@ -15,11 +14,9 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         protected const string DefaultTenantId = "demo";
 
-        private const string IdentityServerBaseUrl = "https://localhost:7278/";
+        public TestBase(CustomWebApplicationFactory factory) => _factory = factory;
 
-        public TestBase(WebApplicationFactory<IAssmblyMarker> factory) => _factory = factory;
-
-
+        // ── Client factories 
 
         protected Client CreateApiClient()
         {
@@ -42,18 +39,22 @@ namespace Customer_Mangment_Integrate.Test.Common
                     new AuthenticationHeaderValue("Bearer", accessToken);
             return http;
         }
-        protected async Task<string> GetAdminTokenAsync()
-            => await GetTokenAsync(AdminEmail, AdminPassword, DefaultTenantId);
 
-        protected async Task<string> GetUserTokenAsync()
-            => await GetTokenAsync(UserEmail, UserPassword, DefaultTenantId);
+        // ── Token helpers ─────────────────────────────────────────────────
+
+        protected Task<string> GetAdminTokenAsync()
+            => GetTokenAsync(AdminEmail, AdminPassword, DefaultTenantId);
+
+        protected Task<string> GetUserTokenAsync()
+            => GetTokenAsync(UserEmail, UserPassword, DefaultTenantId);
+
 
         private async Task<string> GetTokenAsync(
             string email, string password, string tenantId)
         {
-            var http = _factory.CreateClient();
-
-            http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
+            // POST directly to the identity server factory so we hit OpenIddict
+            var identityHttp = _factory.CreateIdentityClient();
+            identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
 
             var parameters = new Dictionary<string, string>
             {
@@ -64,7 +65,7 @@ namespace Customer_Mangment_Integrate.Test.Common
                 ["scope"] = "customer_api offline_access roles"
             };
 
-            var response = await http.PostAsync(
+            var response = await identityHttp.PostAsync(
                 "connect/token",
                 new FormUrlEncodedContent(parameters));
 
@@ -75,22 +76,16 @@ namespace Customer_Mangment_Integrate.Test.Common
                     $"Token request failed ({(int)response.StatusCode}): {body}");
 
             var doc = System.Text.Json.JsonDocument.Parse(body);
-            var accessToken = doc.RootElement
-                .GetProperty("access_token")
-                .GetString();
-
-            return accessToken
-                ?? throw new InvalidOperationException(
-                    "access_token was null in token response");
+            return doc.RootElement.GetProperty("access_token").GetString()
+                ?? throw new InvalidOperationException("access_token was null in token response");
         }
-
 
         protected async Task<(string AccessToken, string RefreshToken)> DoRefreshTokenAsync(
             string refreshToken, string? tenantId = null)
         {
-            var http = _factory.CreateClient();
+            var identityHttp = _factory.CreateIdentityClient();
             if (!string.IsNullOrEmpty(tenantId))
-                http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
+                identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
 
             var parameters = new Dictionary<string, string>
             {
@@ -99,7 +94,7 @@ namespace Customer_Mangment_Integrate.Test.Common
                 ["client_id"] = "customer-management-swagger"
             };
 
-            var response = await http.PostAsync(
+            var response = await identityHttp.PostAsync(
                 "connect/token",
                 new FormUrlEncodedContent(parameters));
 
@@ -119,7 +114,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected async Task<string> GetRefreshedAccessTokenAsync(string refreshToken)
             => (await DoRefreshTokenAsync(refreshToken)).AccessToken;
 
-        //  CRUD  
+        // ── CRUD helpers ──────────────────────────────────────────────────
 
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();

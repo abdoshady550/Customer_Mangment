@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Customer_Mangment.IdentityServer\Customer_Mangment.IdentityServer.csproj" />
     <ProjectReference Include="..\Customer_Mangment\Customer_Mangment.csproj" />
   </ItemGroup>
 

@@ -1,12 +1,10 @@
-using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Customer_Mangment_Integrate.Test
 {
     public class AdminPermissionTests : TestBase
     {
-        public AdminPermissionTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
+        public AdminPermissionTests(CustomWebApplicationFactory factory) : base(factory) { }
 
         [Fact]
         public async Task Admin_CanCreate_Customer()
@@ -26,11 +24,7 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
             var created = await CreateTestCustomerAsync(client);
-            try
-            {
-                var list = await client.Get2Async(null);
-                Assert.NotNull(list);
-            }
+            try { Assert.NotNull(await client.Get2Async(null)); }
             finally { await CleanupCustomerAsync(client, created.Id); }
         }
 
@@ -55,12 +49,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(client, "Admin Update");
             try
             {
-                await client.Update2Async(created.Id, new UpdateCustomerReq
-                {
-                    Name = "Admin Updated",
-                    Mobile = UniqueMobile()
-                });
-
+                await client.Update2Async(created.Id, new UpdateCustomerReq { Name = "Admin Updated", Mobile = UniqueMobile() });
                 var updated = (await client.Get2Async(created.Id)).First();
                 Assert.Equal("Admin Updated", updated.Name);
                 Assert.Equal(AdminEmail, updated.UpdatedBy);
@@ -73,11 +62,8 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
             var created = await CreateTestCustomerAsync(client, "Admin Delete");
-
             await client.Delete2Async(created.Id);
-
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => client.Get2Async(created.Id));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => client.Get2Async(created.Id));
             Assert.Equal(404, ex.StatusCode);
         }
 
@@ -88,12 +74,7 @@ namespace Customer_Mangment_Integrate.Test
             var customer = await CreateTestCustomerAsync(client);
             try
             {
-                var address = await client.AddAsync(customer.Id, new AddAddressReq
-                {
-                    Type = 1,
-                    Value = "Admin Address"
-                });
-
+                var address = await client.AddAsync(customer.Id, new AddAddressReq { Type = 1, Value = "Admin Address" });
                 Assert.NotEqual(Guid.Empty, address.Id);
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
@@ -107,17 +88,9 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var address = await AddAddressAsync(client, customer.Id);
-
-                await client.UpdateAsync(address.Id, new UpdateAddressReq
-                {
-                    Type = 1,
-                    Value = "Admin Updated Address"
-                });
-
-                // Verify via CustomerAddress GetAsync
+                await client.UpdateAsync(address.Id, new UpdateAddressReq { Type = 1, Value = "Admin Updated Address" });
                 var addresses = await client.GetAsync(null, null);
-                Assert.Contains(addresses,
-                    a => a.Id == address.Id && a.Value == "Admin Updated Address");
+                Assert.Contains(addresses, a => a.Id == address.Id && a.Value == "Admin Updated Address");
             }
             finally { await CleanupCustomerAsync(client, customer.Id); }
         }
@@ -130,10 +103,7 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var address = await AddAddressAsync(client, customer.Id);
-
                 await client.DeleteAsync(address.Id);
-
-                // Verify via Customer Get2Async
                 var updatedCustomer = (await client.Get2Async(customer.Id)).First();
                 Assert.DoesNotContain(updatedCustomer.Addresses, a => a.Id == address.Id);
             }
@@ -159,9 +129,7 @@ namespace Customer_Mangment_Integrate.Test
         {
             var client = CreateApiClient(await GetAdminTokenAsync());
             var customer = await CreateTestCustomerAsync(client);
-
             await client.Delete2Async(customer.Id);
-
             var history = await client.History2Async(customer.Id);
             Assert.NotNull(history);
         }
@@ -169,12 +137,8 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task Admin_CanGenerateToken()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = AdminEmail,
-                Password = AdminPassword
-            });
-
+            var result = await CreateApiClient().GenerateTokenAsync(
+                new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
             Assert.NotNull(result.AccessToken);
         }
 
@@ -182,29 +146,17 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Admin_CanRefreshToken()
         {
             var client = CreateApiClient();
-            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = AdminEmail,
-                Password = AdminPassword
-            });
-
-            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
-            {
-                RefreshToken = initial.RefreshToken,
-                ExpiredAccessToken = initial.AccessToken
-            });
-
+            var initial = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
+            var refreshed = await client.RefreshTokenAsync(
+                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
             Assert.NotNull(refreshed.AccessToken);
         }
     }
 
-    // ── User ─────────────────────────────────────────────────────────────
-
     public class UserPermissionTests : TestBase
     {
-        public UserPermissionTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
-
-        // Allowed
+        public UserPermissionTests(CustomWebApplicationFactory factory) : base(factory) { }
 
         [Fact]
         public async Task User_CanCreate_Customer_And_CreatedBy_IsUser()
@@ -227,8 +179,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-                var list = await user.Get2Async(null);
+                var list = await CreateApiClient(await GetUserTokenAsync()).Get2Async(null);
                 Assert.NotNull(list);
                 Assert.NotEmpty(list);
             }
@@ -242,8 +193,7 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-                var result = await user.Get2Async(created.Id);
+                var result = await CreateApiClient(await GetUserTokenAsync()).Get2Async(created.Id);
                 Assert.Single(result);
                 Assert.Equal(created.Id, result.First().Id);
             }
@@ -267,12 +217,8 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task User_CanGenerateToken()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = UserEmail,
-                Password = UserPassword
-            });
-
+            var result = await CreateApiClient().GenerateTokenAsync(
+                new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
             Assert.NotNull(result.AccessToken);
         }
 
@@ -280,18 +226,10 @@ namespace Customer_Mangment_Integrate.Test
         public async Task User_CanRefreshToken()
         {
             var client = CreateApiClient();
-            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = UserEmail,
-                Password = UserPassword
-            });
-
-            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
-            {
-                RefreshToken = initial.RefreshToken,
-                ExpiredAccessToken = initial.AccessToken
-            });
-
+            var initial = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
+            var refreshed = await client.RefreshTokenAsync(
+                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
             Assert.NotNull(refreshed.AccessToken);
         }
 
@@ -302,14 +240,11 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-                var history = await user.History2Async(created.Id);
+                var history = await CreateApiClient(await GetUserTokenAsync()).History2Async(created.Id);
                 Assert.NotNull(history);
             }
             finally { await CleanupCustomerAsync(admin, created.Id); }
         }
-
-        // Forbidden
 
         [Fact]
         public async Task User_CannotUpdate_Customer()
@@ -318,17 +253,10 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.Update2Async(created.Id, new UpdateCustomerReq
-                    {
-                        Name = "Should Not Update",
-                        Mobile = UniqueMobile()
-                    }));
-
-                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                    $"Expected 401/403 but got {ex.StatusCode}");
+                      async () => CreateApiClient(await GetUserTokenAsync()).Update2Async(created.Id,
+                        new UpdateCustomerReq { Name = "Should Not Update", Mobile = UniqueMobile() }));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(admin, created.Id); }
         }
@@ -340,13 +268,9 @@ namespace Customer_Mangment_Integrate.Test
             var created = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.Delete2Async(created.Id));
-
-                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                    $"Expected 401/403 but got {ex.StatusCode}");
+                      async () => CreateApiClient(await GetUserTokenAsync()).Delete2Async(created.Id));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(admin, created.Id); }
         }
@@ -358,17 +282,10 @@ namespace Customer_Mangment_Integrate.Test
             var customer = await CreateTestCustomerAsync(admin);
             try
             {
-                var user = CreateApiClient(await GetUserTokenAsync());
-
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.AddAsync(customer.Id, new AddAddressReq
-                    {
-                        Type = 1,
-                        Value = "Unauthorized"
-                    }));
-
-                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                    $"Expected 401/403 but got {ex.StatusCode}");
+                      async () => CreateApiClient(await GetUserTokenAsync()).AddAsync(customer.Id,
+                        new AddAddressReq { Type = 1, Value = "Unauthorized" }));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(admin, customer.Id); }
         }
@@ -381,17 +298,10 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var address = await AddAddressAsync(admin, customer.Id);
-                var user = CreateApiClient(await GetUserTokenAsync());
-
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.UpdateAsync(address.Id, new UpdateAddressReq
-                    {
-                        Type = 1,
-                        Value = "Unauthorized"
-                    }));
-
-                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                    $"Expected 401/403 but got {ex.StatusCode}");
+                     async () => CreateApiClient(await GetUserTokenAsync()).UpdateAsync(address.Id,
+                        new UpdateAddressReq { Type = 1, Value = "Unauthorized" }));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(admin, customer.Id); }
         }
@@ -404,13 +314,9 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var address = await AddAddressAsync(admin, customer.Id);
-                var user = CreateApiClient(await GetUserTokenAsync());
-
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => user.DeleteAsync(address.Id));
-
-                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403,
-                    $"Expected 401/403 but got {ex.StatusCode}");
+                      async () => CreateApiClient(await GetUserTokenAsync()).DeleteAsync(address.Id));
+                Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(admin, customer.Id); }
         }
@@ -424,12 +330,8 @@ namespace Customer_Mangment_Integrate.Test
             try
             {
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                    () => userClient.Update2Async(created.Id, new UpdateCustomerReq
-                    {
-                        Name = "Should Still Fail",
-                        Mobile = UniqueMobile()
-                    }));
-
+                    () => userClient.Update2Async(created.Id,
+                        new UpdateCustomerReq { Name = "Should Still Fail", Mobile = UniqueMobile() }));
                 Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(adminClient, created.Id); }
@@ -445,40 +347,34 @@ namespace Customer_Mangment_Integrate.Test
             {
                 var ex = await Assert.ThrowsAnyAsync<ApiException>(
                     () => userClient.Delete2Async(created.Id));
-
                 Assert.True(ex.StatusCode == 401 || ex.StatusCode == 403);
             }
             finally { await CleanupCustomerAsync(adminClient, created.Id); }
         }
     }
 
-    // ── Anonymous ─────────────────────────────────────────────────────────
-
     public class AnonymousPermissionTests : TestBase
     {
-        public AnonymousPermissionTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
+        public AnonymousPermissionTests(CustomWebApplicationFactory factory) : base(factory) { }
 
         [Fact]
         public async Task Anonymous_CannotCreate_Customer()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateTestCustomerAsync(CreateApiClient()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateTestCustomerAsync(CreateApiClient()));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CannotRead_Customers()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Get2Async(null));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateApiClient().Get2Async(null));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CannotRead_SpecificCustomer()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Get2Async(Guid.NewGuid()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateApiClient().Get2Async(Guid.NewGuid()));
             Assert.Equal(401, ex.StatusCode);
         }
 
@@ -486,19 +382,15 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CannotUpdate_Customer()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Update2Async(Guid.NewGuid(), new UpdateCustomerReq
-                {
-                    Name = "Test",
-                    Mobile = "01000000000"
-                }));
+                () => CreateApiClient().Update2Async(Guid.NewGuid(),
+                    new UpdateCustomerReq { Name = "Test", Mobile = "01000000000" }));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CannotDelete_Customer()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().Delete2Async(Guid.NewGuid()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateApiClient().Delete2Async(Guid.NewGuid()));
             Assert.Equal(401, ex.StatusCode);
         }
 
@@ -506,11 +398,7 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CannotAddAddress()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().AddAsync(Guid.NewGuid(), new AddAddressReq
-                {
-                    Type = 1,
-                    Value = "Test"
-                }));
+                () => CreateApiClient().AddAsync(Guid.NewGuid(), new AddAddressReq { Type = 1, Value = "Test" }));
             Assert.Equal(401, ex.StatusCode);
         }
 
@@ -518,38 +406,29 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CannotUpdateAddress()
         {
             var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().UpdateAsync(Guid.NewGuid(), new UpdateAddressReq
-                {
-                    Type = 1,
-                    Value = "Test"
-                }));
+                () => CreateApiClient().UpdateAsync(Guid.NewGuid(), new UpdateAddressReq { Type = 1, Value = "Test" }));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CannotDeleteAddress()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().DeleteAsync(Guid.NewGuid()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateApiClient().DeleteAsync(Guid.NewGuid()));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CannotRead_History()
         {
-            var ex = await Assert.ThrowsAnyAsync<ApiException>(
-                () => CreateApiClient().History2Async(Guid.NewGuid()));
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(() => CreateApiClient().History2Async(Guid.NewGuid()));
             Assert.Equal(401, ex.StatusCode);
         }
 
         [Fact]
         public async Task Anonymous_CanGenerateToken_WithValidCredentials()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = AdminEmail,
-                Password = AdminPassword
-            });
+            var result = await CreateApiClient().GenerateTokenAsync(
+                new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
             Assert.NotNull(result.AccessToken);
         }
 
@@ -557,18 +436,10 @@ namespace Customer_Mangment_Integrate.Test
         public async Task Anonymous_CanRefreshToken_WithValidTokens()
         {
             var client = CreateApiClient();
-            var initial = await client.GenerateTokenAsync(new GenerateTokenQuery
-            {
-                Email = UserEmail,
-                Password = UserPassword
-            });
-
-            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
-            {
-                RefreshToken = initial.RefreshToken,
-                ExpiredAccessToken = initial.AccessToken
-            });
-
+            var initial = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
+            var refreshed = await client.RefreshTokenAsync(
+                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
             Assert.NotNull(refreshed.AccessToken);
         }
     }

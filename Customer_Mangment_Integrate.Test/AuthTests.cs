@@ -1,21 +1,13 @@
-using Customer_Mangment;
 using Customer_Mangment_Integrate.Test.Common;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace Customer_Mangment_Integrate.Test
 {
-    /// <summary>
-    /// Authentication tests targeting the OpenIddict password-grant flow
-    /// (POST /connect/token). All token calls go directly to the test server
-    /// via raw HttpClient — no dependency on the Client partial-class extensions.
-    /// </summary>
     public class AuthTests : TestBase
     {
-        public AuthTests(WebApplicationFactory<IAssmblyMarker> factory) : base(factory) { }
+        public AuthTests(CustomWebApplicationFactory factory) : base(factory) { }
 
-        // ── Raw helpers ───────────────────────────────────────────────────
 
         private record TokenResult(
             string? AccessToken, string? RefreshToken, int StatusCode, bool IsSuccess);
@@ -23,7 +15,7 @@ namespace Customer_Mangment_Integrate.Test
         private async Task<TokenResult> RequestPasswordTokenRawAsync(
             string email, string password, string? tenantId = null)
         {
-            var http = _factory.CreateClient();
+            var http = _factory.CreateIdentityClient();
             if (!string.IsNullOrEmpty(tenantId))
                 http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
 
@@ -52,7 +44,7 @@ namespace Customer_Mangment_Integrate.Test
 
         private async Task<TokenResult> RequestRefreshTokenRawAsync(string refreshToken)
         {
-            var http = _factory.CreateClient();
+            var http = _factory.CreateIdentityClient();
 
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -75,7 +67,7 @@ namespace Customer_Mangment_Integrate.Test
             return new TokenResult(access, refresh, (int)response.StatusCode, true);
         }
 
-        // ── Password grant 
+        // ── Password grant ────────────────────────────────────────────────
 
         [Fact]
         public async Task PasswordGrant_AdminValidCredentials_ReturnsAccessAndRefreshToken()
@@ -160,7 +152,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(customers);
         }
 
-        // ── Refresh grant 
+        // ── Refresh grant ─────────────────────────────────────────────────
 
         [Fact]
         public async Task RefreshGrant_WithValidRefreshToken_ReturnsNewTokenPair()
@@ -228,12 +220,12 @@ namespace Customer_Mangment_Integrate.Test
             Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
         }
 
-        // ── Token / tenant interaction 
+        // ── Token / tenant interaction ────────────────────────────────────
 
         [Fact]
         public async Task Token_IssuedForDemoTenant_Rejected_WhenUsedWithDifferentTenant()
         {
-            var token = await GetAdminTokenAsync();
+            var token = await GetAdminTokenAsync();   // carries tenant_id = "demo"
 
             var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Add("X-Tenant-Id", "alahly");
