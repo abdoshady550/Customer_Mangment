@@ -5,6 +5,7 @@ using Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer;
 using Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer;
 using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
+using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Req;
@@ -85,7 +86,7 @@ namespace Customer_Mangment.Controllers
         }
         [HttpPut]
         [Route("update")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(Role.Admin))]
         [ProducesResponseType(typeof(Updated), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -105,7 +106,7 @@ namespace Customer_Mangment.Controllers
         }
         [HttpDelete]
         [Route("delete")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(Role.Admin))]
         [ProducesResponseType(typeof(Deleted), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

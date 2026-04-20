@@ -4,9 +4,11 @@ namespace Customer_Mangment.Model.Entities
 {
     public class User : IdentityUser;
 
+
     public enum Role
     {
-        User,
-        Admin
+        User = 0,
+        Admin = 1
     }
+
 }

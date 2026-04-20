@@ -47,4 +47,6 @@ builder.AddContainer("customer-mangment", "customer-mangment")
 
 builder.AddProject<Projects.Customer_Mangment_IdentityServer>("customer-mangment-identityserver");
 
+builder.AddProject<Projects.API_Getway>("api-getway");
+
 builder.Build().Run();

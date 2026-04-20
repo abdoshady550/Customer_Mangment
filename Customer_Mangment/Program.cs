@@ -15,6 +15,7 @@ using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
 using Customer_Mangment.Repository.Services.Background;
 using Customer_Mangment.Repository.Services.Reports;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -102,6 +103,8 @@ namespace Customer_Mangment
             {
                 client.BaseAddress = new Uri(builder.Configuration["Auth:Authority"]!);
             });
+            builder.Services.AddTransient<IClaimsTransformation, RoleClaimTransformer>();
+
 
             // Services
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
@@ -127,8 +130,6 @@ namespace Customer_Mangment
             builder.Services.AddMultiTenancy(builder.Configuration);
             //Cache
             builder.Services.AddCaching(builder.Configuration);
-
-
 
             var app = builder.Build();
 

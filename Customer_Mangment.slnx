@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="API_Getway/API_Getway.csproj" />
   <Project Path="Customer_Mangment.AppHost/Customer_Mangment.AppHost.csproj" Id="532fe49c-9760-4e25-b06c-20aee8823648" />
   <Project Path="Customer_Mangment.IdentityServer/Customer_Mangment.IdentityServer.csproj" />
   <Project Path="Customer_Mangment.ServiceDefaults/Customer_Mangment.ServiceDefaults.csproj" />

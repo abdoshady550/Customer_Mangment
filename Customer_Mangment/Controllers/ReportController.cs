@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using Customer_Mangment.CQRS.Customers.Queries.Report;
+using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ namespace Customer_Mangment.Controllers
 
 
         [HttpGet("download")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(Role.Admin))]
         [Produces("application/pdf")]
         [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

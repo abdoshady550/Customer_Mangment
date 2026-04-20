@@ -137,20 +137,31 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task Admin_CanGenerateToken()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var result = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
-            Assert.NotNull(result.AccessToken);
+
+            Assert.False(string.IsNullOrWhiteSpace(result.Access_token));
         }
 
         [Fact]
         public async Task Admin_CanRefreshToken()
         {
-            var client = CreateApiClient();
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
             var initial = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
-            var refreshed = await client.RefreshTokenAsync(
-                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
-            Assert.NotNull(refreshed.AccessToken);
+
+            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
+            {
+                RefreshToken = initial.Refresh_token,
+                ExpiredAccessToken = initial.Access_token
+            });
+
+            Assert.False(string.IsNullOrWhiteSpace(refreshed.Access_token));
         }
     }
 
@@ -217,20 +228,31 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task User_CanGenerateToken()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var result = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
-            Assert.NotNull(result.AccessToken);
+
+            Assert.False(string.IsNullOrWhiteSpace(result.Access_token));
         }
 
         [Fact]
         public async Task User_CanRefreshToken()
         {
-            var client = CreateApiClient();
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
             var initial = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
-            var refreshed = await client.RefreshTokenAsync(
-                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
-            Assert.NotNull(refreshed.AccessToken);
+
+            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
+            {
+                RefreshToken = initial.Refresh_token,
+                ExpiredAccessToken = initial.Access_token
+            });
+
+            Assert.False(string.IsNullOrWhiteSpace(refreshed.Access_token));
         }
 
         [Fact]
@@ -427,20 +449,31 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task Anonymous_CanGenerateToken_WithValidCredentials()
         {
-            var result = await CreateApiClient().GenerateTokenAsync(
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var result = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
-            Assert.NotNull(result.AccessToken);
+
+            Assert.False(string.IsNullOrWhiteSpace(result.Access_token));
         }
 
         [Fact]
         public async Task Anonymous_CanRefreshToken_WithValidTokens()
         {
-            var client = CreateApiClient();
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
             var initial = await client.GenerateTokenAsync(
                 new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
-            var refreshed = await client.RefreshTokenAsync(
-                new RefreshTokenQuery { RefreshToken = initial.RefreshToken, ExpiredAccessToken = initial.AccessToken });
-            Assert.NotNull(refreshed.AccessToken);
+
+            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
+            {
+                RefreshToken = initial.Refresh_token,
+                ExpiredAccessToken = initial.Access_token
+            });
+
+            Assert.False(string.IsNullOrWhiteSpace(refreshed.Access_token));
         }
     }
 }

@@ -6,4 +6,9 @@ namespace Customer_Mangment.IdentityServer.Models
     {
         public string? DisplayName { get; set; }
     }
+    public enum Role
+    {
+        User = 0,
+        Admin = 1
+    }
 }

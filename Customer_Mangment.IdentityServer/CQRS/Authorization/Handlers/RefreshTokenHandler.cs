@@ -56,7 +56,6 @@ namespace Customer_Mangment.IdentityServer.CQRS.Authorization.Handlers
             ImmutableArray<string> scopes,
             HttpContext httpContext)
         {
-            // Reuse the same logic as in PasswordTokenHandler
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
             var identity = (ClaimsIdentity)principal.Identity!;
 
@@ -69,7 +68,12 @@ namespace Customer_Mangment.IdentityServer.CQRS.Authorization.Handlers
 
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
-                identity.AddClaim(Claims.Role, role);
+            {
+                if (Enum.TryParse<Role>(role, ignoreCase: true, out var roleEnum))
+                    identity.AddClaim(Claims.Role, ((int)roleEnum).ToString());
+                else
+                    identity.AddClaim(Claims.Role, role);
+            }
 
             if (httpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantId))
                 identity.SetClaim("tenant_id", tenantId.ToString());

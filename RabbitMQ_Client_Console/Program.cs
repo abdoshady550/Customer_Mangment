@@ -92,7 +92,6 @@ namespace RabbitMQ_Client_Console
         }
 
         // Get Token 
-
         private static async Task<string> GetTokenAsync(string email, string password)
         {
             using var http = new HttpClient(new HttpClientHandler

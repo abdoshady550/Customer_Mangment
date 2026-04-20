@@ -122,20 +122,8 @@ namespace Customer_Mangment_Integrate.Test
         [Fact]
         public async Task TokenRefresh_NewTokenWorksOnProtectedEndpoint()
         {
-            // Get token pair directly from the identity server
-            var identityHttp = _factory.CreateIdentityClient();
-            var initialContent = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["grant_type"] = "password",
-                ["username"] = AdminEmail,
-                ["password"] = AdminPassword,
-                ["client_id"] = "customer-management-swagger",
-                ["scope"] = "customer_api offline_access roles"
-            });
-            var initialResponse = await identityHttp.PostAsync("connect/token", initialContent);
-            var initialBody = await initialResponse.Content.ReadAsStringAsync();
-            var initialDoc = System.Text.Json.JsonDocument.Parse(initialBody);
-            var refreshToken = initialDoc.RootElement.GetProperty("refresh_token").GetString()!;
+            // Get initial token pair directly from identity server
+            var (_, refreshToken) = await GetTokenPairAsync(AdminEmail, AdminPassword, DefaultTenantId);
 
             var (newAccessToken, _) = await DoRefreshTokenAsync(refreshToken);
 

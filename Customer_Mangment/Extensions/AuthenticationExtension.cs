@@ -44,6 +44,7 @@ public static class AuthenticationExtension
                            ServerCertificateCustomValidationCallback =
                                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                        });
+                options.Configure(o => o.TokenValidationParameters.RoleClaimType = "role");
 
                 options.UseAspNetCore();
             });

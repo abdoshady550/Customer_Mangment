@@ -8,7 +8,6 @@ namespace Customer_Mangment_Integrate.Test
     {
         public AuthTests(CustomWebApplicationFactory factory) : base(factory) { }
 
-
         private record TokenResult(
             string? AccessToken, string? RefreshToken, int StatusCode, bool IsSuccess);
 
@@ -67,7 +66,7 @@ namespace Customer_Mangment_Integrate.Test
             return new TokenResult(access, refresh, (int)response.StatusCode, true);
         }
 
-        // ── Password grant 
+        // ── Password grant ────────────────────────────────────────────────────
 
         [Fact]
         public async Task PasswordGrant_AdminValidCredentials_ReturnsAccessAndRefreshToken()
@@ -152,7 +151,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.NotNull(customers);
         }
 
-        // ── Refresh grant 
+        // ── Refresh grant ─────────────────────────────────────────────────────
 
         [Fact]
         public async Task RefreshGrant_WithValidRefreshToken_ReturnsNewTokenPair()
@@ -220,7 +219,7 @@ namespace Customer_Mangment_Integrate.Test
             Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
         }
 
-        // ── Token / tenant interaction 
+        // ── Token / tenant interaction ─────────────────────────────────────────
 
         [Fact]
         public async Task Token_IssuedForDemoTenant_Rejected_WhenUsedWithDifferentTenant()
@@ -253,6 +252,72 @@ namespace Customer_Mangment_Integrate.Test
                 () => CreateApiClient().Get2Async(null));
 
             Assert.Equal(401, ex.StatusCode);
+        }
+
+        // ── Via typed Client (GenerateTokenAsync / RefreshTokenAsync) ──────────
+        // These tests use the new NSwag-generated signatures on the typed Client.
+
+        [Fact]
+        public async Task GenerateToken_Admin_ReturnsAccessToken()
+        {
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var result = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
+
+            Assert.False(string.IsNullOrWhiteSpace(result.Access_token));
+            Assert.Equal("Bearer", result.Token_type, ignoreCase: true);
+            Assert.True(result.Expires_in > 0);
+        }
+
+        [Fact]
+        public async Task GenerateToken_User_ReturnsAccessToken()
+        {
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var result = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = UserEmail, Password = UserPassword });
+
+            Assert.False(string.IsNullOrWhiteSpace(result.Access_token));
+        }
+
+        [Fact]
+        public async Task RefreshToken_WithValidTokens_ReturnsNewPair()
+        {
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var initial = await client.GenerateTokenAsync(
+                new GenerateTokenQuery { Email = AdminEmail, Password = AdminPassword });
+
+            Assert.False(string.IsNullOrWhiteSpace(initial.Refresh_token));
+
+            var refreshed = await client.RefreshTokenAsync(new RefreshTokenQuery
+            {
+                RefreshToken = initial.Refresh_token,
+                ExpiredAccessToken = initial.Access_token
+            });
+
+            Assert.False(string.IsNullOrWhiteSpace(refreshed.Access_token));
+            Assert.NotEqual(initial.Access_token, refreshed.Access_token);
+        }
+
+        [Fact]
+        public async Task RefreshToken_InvalidToken_ThrowsApiException()
+        {
+            var identityHttp = _factory.CreateIdentityClient();
+            var client = new Client(identityHttp) { BaseUrl = identityHttp.BaseAddress?.ToString() ?? "" };
+
+            var ex = await Assert.ThrowsAnyAsync<ApiException>(
+                () => client.RefreshTokenAsync(new RefreshTokenQuery
+                {
+                    RefreshToken = "invalid-token",
+                    ExpiredAccessToken = "invalid-access"
+                }));
+
+            Assert.True(ex.StatusCode == 400 || ex.StatusCode == 401);
         }
     }
 }

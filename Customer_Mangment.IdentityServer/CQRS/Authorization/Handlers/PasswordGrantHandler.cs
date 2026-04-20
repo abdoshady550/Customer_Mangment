@@ -57,6 +57,12 @@ namespace Customer_Mangment.IdentityServer.CQRS.Authorization.Handlers
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
             var identity = (ClaimsIdentity)principal.Identity!;
 
+            var existingRoleClaims = identity
+                .FindAll(identity.RoleClaimType)
+                .ToList();
+            foreach (var c in existingRoleClaims)
+                identity.RemoveClaim(c);
+
             identity.SetClaim(Claims.Subject, user.Id)
                     .SetClaim(Claims.Email, user.Email)
                     .SetClaim(Claims.EmailVerified, user.EmailConfirmed)
@@ -66,7 +72,12 @@ namespace Customer_Mangment.IdentityServer.CQRS.Authorization.Handlers
 
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
-                identity.AddClaim(Claims.Role, role);
+            {
+                if (Enum.TryParse<Role>(role, ignoreCase: true, out var roleEnum))
+                    identity.AddClaim(new Claim(Claims.Role, ((int)roleEnum).ToString()));
+                else
+                    identity.AddClaim(new Claim(Claims.Role, role));
+            }
 
             if (httpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantId))
                 identity.SetClaim("tenant_id", tenantId.ToString());

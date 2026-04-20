@@ -20,7 +20,7 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         public Client(System.Net.Http.HttpClient httpClient)
         {
-            BaseUrl = "http://localhost:5000/";
+            BaseUrl = "https://localhost:7279/";
             _httpClient = httpClient;
             Initialize();
         }
@@ -53,11 +53,19 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         // ── Auth ─────────────────────────────────────────────────────────
 
-        /// <summary>Generates an access and refresh token for a valid user.</summary>
-        public virtual System.Threading.Tasks.Task<TokenResponse> GenerateTokenAsync(GenerateTokenQuery body)
+        /// <summary>
+        /// Generates an access and refresh token for a valid user.
+        /// </summary>
+        /// <remarks>
+        /// Authenticates a user using provided credentials and returns a JWT token pair.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<TokenServerResponse> GenerateTokenAsync(GenerateTokenQuery body)
             => GenerateTokenAsync(body, System.Threading.CancellationToken.None);
 
-        public virtual async System.Threading.Tasks.Task<TokenResponse> GenerateTokenAsync(GenerateTokenQuery body, System.Threading.CancellationToken cancellationToken)
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        public virtual async System.Threading.Tasks.Task<TokenServerResponse> GenerateTokenAsync(GenerateTokenQuery body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
             var client_ = _httpClient;
@@ -89,13 +97,13 @@ namespace Customer_Mangment_Integrate.Test.Common
                     var status_ = (int)response_.StatusCode;
                     if (status_ == 200)
                     {
-                        var obj_ = await ReadObjectResponseAsync<TokenResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                        var obj_ = await ReadObjectResponseAsync<TokenServerResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                         if (obj_.Object == null) throw new ApiException("Response was null which was not expected.", status_, obj_.Text, headers_, null);
                         return obj_.Object;
                     }
-                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 409) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Conflict", status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request",            status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found",             status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 409) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Conflict",              status_, obj_.Text, headers_, obj_.Object, null); }
                     else if (status_ == 500) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Internal Server Error", status_, obj_.Text, headers_, obj_.Object, null); }
                     else { var data_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false); throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, data_, headers_, null); }
                 }
@@ -103,11 +111,19 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>Refreshes access token using a valid refresh token.</summary>
-        public virtual System.Threading.Tasks.Task<TokenResponse> RefreshTokenAsync(RefreshTokenQuery body)
+        /// <summary>
+        /// Refreshes access token using a valid refresh token.
+        /// </summary>
+        /// <remarks>
+        /// Exchanges an expired access token and a valid refresh token for a new token pair.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<TokenServerResponse> RefreshTokenAsync(RefreshTokenQuery body)
             => RefreshTokenAsync(body, System.Threading.CancellationToken.None);
 
-        public virtual async System.Threading.Tasks.Task<TokenResponse> RefreshTokenAsync(RefreshTokenQuery body, System.Threading.CancellationToken cancellationToken)
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        public virtual async System.Threading.Tasks.Task<TokenServerResponse> RefreshTokenAsync(RefreshTokenQuery body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
             var client_ = _httpClient;
@@ -139,13 +155,13 @@ namespace Customer_Mangment_Integrate.Test.Common
                     var status_ = (int)response_.StatusCode;
                     if (status_ == 200)
                     {
-                        var obj_ = await ReadObjectResponseAsync<TokenResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                        var obj_ = await ReadObjectResponseAsync<TokenServerResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                         if (obj_.Object == null) throw new ApiException("Response was null which was not expected.", status_, obj_.Text, headers_, null);
                         return obj_.Object;
                     }
-                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 409) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Conflict", status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request",            status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found",             status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 409) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Conflict",              status_, obj_.Text, headers_, obj_.Object, null); }
                     else if (status_ == 500) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Internal Server Error", status_, obj_.Text, headers_, obj_.Object, null); }
                     else { var data_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false); throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, data_, headers_, null); }
                 }
@@ -155,10 +171,18 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         // ── CustomerReport ────────────────────────────────────────────────
 
-        /// <summary>Generates and downloads a PDF report of all customers. Requires the Admin role.</summary>
+        /// <summary>
+        /// DownloadCustomerReport
+        /// </summary>
+        /// <remarks>
+        /// Generates and downloads a PDF report of all customers. Pass optional 'from' / 'to' query parameters (UTC dates) to narrow the result set. Requires the Admin role.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<FileContentResult> DownloadCustomerReportAsync(System.DateTimeOffset? from, System.DateTimeOffset? to)
             => DownloadCustomerReportAsync(from, to, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<FileContentResult> DownloadCustomerReportAsync(System.DateTimeOffset? from, System.DateTimeOffset? to, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -172,7 +196,7 @@ namespace Customer_Mangment_Integrate.Test.Common
                 urlBuilder_.Append("api/CustomerReport/download");
                 urlBuilder_.Append('?');
                 if (from != null) urlBuilder_.Append(System.Uri.EscapeDataString("from")).Append('=').Append(System.Uri.EscapeDataString(from.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                if (to != null)   urlBuilder_.Append(System.Uri.EscapeDataString("to")).Append('=').Append(System.Uri.EscapeDataString(to.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                if (to   != null) urlBuilder_.Append(System.Uri.EscapeDataString("to")).Append('=').Append(System.Uri.EscapeDataString(to.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                 urlBuilder_.Length--;
                 PrepareRequest(client_, request_, urlBuilder_);
                 var url_ = urlBuilder_.ToString();
@@ -194,9 +218,9 @@ namespace Customer_Mangment_Integrate.Test.Common
                         if (obj_.Object == null) throw new ApiException("Response was null which was not expected.", status_, obj_.Text, headers_, null);
                         return obj_.Object;
                     }
-                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 401) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Unauthorized", status_, obj_.Text, headers_, obj_.Object, null); }
-                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found", status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 400) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Bad Request",            status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 401) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Unauthorized",          status_, obj_.Text, headers_, obj_.Object, null); }
+                    else if (status_ == 404) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Not Found",             status_, obj_.Text, headers_, obj_.Object, null); }
                     else if (status_ == 500) { var obj_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false); throw new ApiException<ProblemDetails>("Internal Server Error", status_, obj_.Text, headers_, obj_.Object, null); }
                     else { var data_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false); throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, data_, headers_, null); }
                 }
@@ -206,10 +230,18 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         // ── CustomerAddress ───────────────────────────────────────────────
 
-        /// <summary>GetCustomerAddresses</summary>
+        /// <summary>
+        /// GetCustomerAddresses
+        /// </summary>
+        /// <remarks>
+        /// Retrieves all addresses. If an AddressId is provided, retrieves the specific address with that ID. If a CustomerId is provided, retrieves the specific addresses for the given customer.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressDto>> GetAsync(System.Guid? customerId, System.Guid? addressId)
             => GetAsync(customerId, addressId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressDto>> GetAsync(System.Guid? customerId, System.Guid? addressId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -256,10 +288,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>AddAddress</summary>
+        /// <summary>
+        /// AddAddress
+        /// </summary>
+        /// <remarks>
+        /// This endpoint allows the authenticated user with role admin to create a new address. The request body should contain the address details, including the type and value.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<AddressDto> AddAsync(System.Guid? customerId, AddAddressReq body)
             => AddAsync(customerId, body, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<AddressDto> AddAsync(System.Guid? customerId, AddAddressReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
@@ -310,10 +350,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>GetAddressHistory</summary>
+        /// <summary>
+        /// GetAddressHistory
+        /// </summary>
+        /// <remarks>
+        /// Retrieves the Address history of a specific customer based on the provided CustomerId.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressHistoryDto>> HistoryAsync(System.Guid? customerId)
             => HistoryAsync(customerId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AddressHistoryDto>> HistoryAsync(System.Guid? customerId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -359,10 +407,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>UpdateAddress</summary>
+        /// <summary>
+        /// UpdateAddress
+        /// </summary>
+        /// <remarks>
+        /// This endpoint allows the authenticated user with role admin to update an existing one. The request body should contain the address details, including the address ID (for updates), type, and value.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Updated> UpdateAsync(System.Guid? addressId, UpdateAddressReq body)
             => UpdateAsync(addressId, body, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<Updated> UpdateAsync(System.Guid? addressId, UpdateAddressReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
@@ -413,10 +469,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>DeleteAddress</summary>
+        /// <summary>
+        /// DeleteAddress
+        /// </summary>
+        /// <remarks>
+        /// This endpoint allows the authenticated user with role admin to delete an existing address. The request should include the address ID as a query parameter.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Deleted> DeleteAsync(System.Guid? addressId)
             => DeleteAsync(addressId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<Deleted> DeleteAsync(System.Guid? addressId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -464,10 +528,18 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         // ── Customer ──────────────────────────────────────────────────────
 
-        /// <summary>GetCustomers</summary>
+        /// <summary>
+        /// GetCustomers
+        /// </summary>
+        /// <remarks>
+        /// Retrieves a list of customers. If a CustomerId is provided, retrieves the specific customer with that ID.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CustomerDto>> Get2Async(System.Guid? customerId)
             => Get2Async(customerId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CustomerDto>> Get2Async(System.Guid? customerId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -513,10 +585,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>GetCustomerHistory</summary>
+        /// <summary>
+        /// GetCustomerHistory
+        /// </summary>
+        /// <remarks>
+        /// Retrieves the history of a specific customer based on the provided CustomerId.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CustomerHistoryDto>> History2Async(System.Guid? customerId)
             => History2Async(customerId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CustomerHistoryDto>> History2Async(System.Guid? customerId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -562,10 +642,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>CreateCustomer</summary>
+        /// <summary>
+        /// CreateCustomer
+        /// </summary>
+        /// <remarks>
+        /// Creates a new customer with the provided details.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<CustomerDto> Add2Async(CreateCustomerReq body)
             => Add2Async(body, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<CustomerDto> Add2Async(CreateCustomerReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
@@ -613,10 +701,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>UpdateCustomer</summary>
+        /// <summary>
+        /// UpdateCustomer
+        /// </summary>
+        /// <remarks>
+        /// Updates an existing customer's details based on the provided information.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Updated> Update2Async(System.Guid? customerId, UpdateCustomerReq body)
             => Update2Async(customerId, body, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<Updated> Update2Async(System.Guid? customerId, UpdateCustomerReq body, System.Threading.CancellationToken cancellationToken)
         {
             if (body == null) throw new System.ArgumentNullException("body");
@@ -667,10 +763,18 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>DeleteCustomer</summary>
+        /// <summary>
+        /// DeleteCustomer
+        /// </summary>
+        /// <remarks>
+        /// Deletes a customer based on the provided CustomerId.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Deleted> Delete2Async(System.Guid? customerId)
             => Delete2Async(customerId, System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task<Deleted> Delete2Async(System.Guid? customerId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -718,9 +822,17 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         // ── RabbitMQ ──────────────────────────────────────────────────────
 
-        /// <summary>RabbitMQ Health Check</summary>
+        /// <summary>
+        /// RabbitMQ Health Check
+        /// </summary>
+        /// <remarks>
+        /// Checks the health status of the RabbitMQ server.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task HealthAsync() => HealthAsync(System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task HealthAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -745,9 +857,17 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>RabbitMQ Connections</summary>
+        /// <summary>
+        /// RabbitMQ Connections
+        /// </summary>
+        /// <remarks>
+        /// Get the Connections of the RabbitMQ server.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task ConnectionsAsync() => ConnectionsAsync(System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task ConnectionsAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -772,9 +892,17 @@ namespace Customer_Mangment_Integrate.Test.Common
             }
         }
 
-        /// <summary>RabbitMQ Queues</summary>
+        /// <summary>
+        /// RabbitMQ Queues
+        /// </summary>
+        /// <remarks>
+        /// Get the Queues of the RabbitMQ server.
+        /// </remarks>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task QueuesAsync() => QueuesAsync(System.Threading.CancellationToken.None);
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         public virtual async System.Threading.Tasks.Task QueuesAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
@@ -853,10 +981,10 @@ namespace Customer_Mangment_Integrate.Test.Common
                 try
                 {
                     using var responseStream = await ReadAsStreamAsync(response.Content, cancellationToken).ConfigureAwait(false);
-                    using var streamReader = new System.IO.StreamReader(responseStream);
+                    using var streamReader   = new System.IO.StreamReader(responseStream);
                     using var jsonTextReader = new Newtonsoft.Json.JsonTextReader(streamReader);
                     var serializer = Newtonsoft.Json.JsonSerializer.Create(JsonSerializerSettings);
-                    var typedBody = serializer.Deserialize<T>(jsonTextReader);
+                    var typedBody  = serializer.Deserialize<T>(jsonTextReader);
                     return new ObjectResponseResult<T>(typedBody, string.Empty);
                 }
                 catch (Newtonsoft.Json.JsonException exception)
@@ -884,12 +1012,12 @@ namespace Customer_Mangment_Integrate.Test.Common
                     return converted == null ? string.Empty : converted;
                 }
             }
-            else if (value is bool) return System.Convert.ToString((bool)value, cultureInfo).ToLowerInvariant();
-            else if (value is byte[]) return System.Convert.ToBase64String((byte[])value);
+            else if (value is bool)     return System.Convert.ToString((bool)value, cultureInfo).ToLowerInvariant();
+            else if (value is byte[])   return System.Convert.ToBase64String((byte[])value);
             else if (value is string[]) return string.Join(",", (string[])value);
             else if (value.GetType().IsArray)
             {
-                var arr = (System.Array)value;
+                var arr   = (System.Array)value;
                 var parts = new string[arr.Length];
                 for (var i = 0; i < arr.Length; i++) parts[i] = ConvertToString(arr.GetValue(i), cultureInfo);
                 return string.Join(",", parts);
@@ -899,7 +1027,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         }
     }
 
-    // ── DTOs & Exceptions (unchanged from generated) ──────────────────────
+    // ── DTOs ──────────────────────────────────────────────────────────────
 
     public partial class AddAddressReq
     {
@@ -919,11 +1047,11 @@ namespace Customer_Mangment_Integrate.Test.Common
 
     public partial class AddressHistoryDto
     {
-        [Newtonsoft.Json.JsonProperty("id",         Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid        Id         { get; set; }
-        [Newtonsoft.Json.JsonProperty("customerId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid        CustomerId { get; set; }
-        [Newtonsoft.Json.JsonProperty("type",       Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public int                Type       { get; set; }
-        [Newtonsoft.Json.JsonProperty("value",      Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             Value      { get; set; }
-        [Newtonsoft.Json.JsonProperty("operation",  Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             Operation  { get; set; }
+        [Newtonsoft.Json.JsonProperty("id",         Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid         Id         { get; set; }
+        [Newtonsoft.Json.JsonProperty("customerId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid         CustomerId { get; set; }
+        [Newtonsoft.Json.JsonProperty("type",       Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public int                 Type       { get; set; }
+        [Newtonsoft.Json.JsonProperty("value",      Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              Value      { get; set; }
+        [Newtonsoft.Json.JsonProperty("operation",  Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              Operation  { get; set; }
         [Newtonsoft.Json.JsonProperty("validFrom",  Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset  ValidFrom  { get; set; }
         [Newtonsoft.Json.JsonProperty("validTo",    Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset? ValidTo    { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
@@ -938,8 +1066,8 @@ namespace Customer_Mangment_Integrate.Test.Common
 
     public partial class CreateCustomerReq
     {
-        [Newtonsoft.Json.JsonProperty("name",     Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Name    { get; set; }
-        [Newtonsoft.Json.JsonProperty("mobile",   Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Mobile  { get; set; }
+        [Newtonsoft.Json.JsonProperty("name",     Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Name     { get; set; }
+        [Newtonsoft.Json.JsonProperty("mobile",   Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Mobile   { get; set; }
         [Newtonsoft.Json.JsonProperty("adresses", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Collections.Generic.ICollection<CreateAddressReq> Adresses { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
@@ -957,13 +1085,13 @@ namespace Customer_Mangment_Integrate.Test.Common
 
     public partial class CustomerHistoryDto
     {
-        [Newtonsoft.Json.JsonProperty("id",        Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid        Id        { get; set; }
-        [Newtonsoft.Json.JsonProperty("name",      Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             Name      { get; set; }
-        [Newtonsoft.Json.JsonProperty("mobile",    Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             Mobile    { get; set; }
-        [Newtonsoft.Json.JsonProperty("createdBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             CreatedBy { get; set; }
-        [Newtonsoft.Json.JsonProperty("updatedBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             UpdatedBy { get; set; }
-        [Newtonsoft.Json.JsonProperty("isDeleted", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public bool               IsDeleted { get; set; }
-        [Newtonsoft.Json.JsonProperty("operation", Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string             Operation { get; set; }
+        [Newtonsoft.Json.JsonProperty("id",        Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.Guid         Id        { get; set; }
+        [Newtonsoft.Json.JsonProperty("name",      Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              Name      { get; set; }
+        [Newtonsoft.Json.JsonProperty("mobile",    Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              Mobile    { get; set; }
+        [Newtonsoft.Json.JsonProperty("createdBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              CreatedBy { get; set; }
+        [Newtonsoft.Json.JsonProperty("updatedBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              UpdatedBy { get; set; }
+        [Newtonsoft.Json.JsonProperty("isDeleted", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public bool                IsDeleted { get; set; }
+        [Newtonsoft.Json.JsonProperty("operation", Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string              Operation { get; set; }
         [Newtonsoft.Json.JsonProperty("validFrom", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset  ValidFrom { get; set; }
         [Newtonsoft.Json.JsonProperty("validTo",   Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset? ValidTo   { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
@@ -988,11 +1116,11 @@ namespace Customer_Mangment_Integrate.Test.Common
 
     public partial class FileContentResult
     {
-        [Newtonsoft.Json.JsonProperty("fileContents",        Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public byte[]                FileContents        { get; set; }
-        [Newtonsoft.Json.JsonProperty("contentType",         Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               ContentType         { get; set; }
-        [Newtonsoft.Json.JsonProperty("fileDownloadName",    Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               FileDownloadName    { get; set; }
-        [Newtonsoft.Json.JsonProperty("lastModified",        Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset? LastModified      { get; set; }
-        [Newtonsoft.Json.JsonProperty("entityTag",           Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public EntityTagHeaderValue  EntityTag           { get; set; }
+        [Newtonsoft.Json.JsonProperty("fileContents",         Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public byte[]                FileContents          { get; set; }
+        [Newtonsoft.Json.JsonProperty("contentType",          Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               ContentType           { get; set; }
+        [Newtonsoft.Json.JsonProperty("fileDownloadName",     Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               FileDownloadName      { get; set; }
+        [Newtonsoft.Json.JsonProperty("lastModified",         Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset? LastModified          { get; set; }
+        [Newtonsoft.Json.JsonProperty("entityTag",            Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public EntityTagHeaderValue  EntityTag             { get; set; }
         [Newtonsoft.Json.JsonProperty("enableRangeProcessing",Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public bool                 EnableRangeProcessing { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
@@ -1016,8 +1144,8 @@ namespace Customer_Mangment_Integrate.Test.Common
 
     public partial class RefreshTokenQuery
     {
-        [Newtonsoft.Json.JsonProperty("refreshToken",      Required = Newtonsoft.Json.Required.Always)] public string RefreshToken      { get; set; }
-        [Newtonsoft.Json.JsonProperty("expiredAccessToken",Required = Newtonsoft.Json.Required.Always)] public string ExpiredAccessToken { get; set; }
+        [Newtonsoft.Json.JsonProperty("refreshToken",       Required = Newtonsoft.Json.Required.Always)] public string RefreshToken       { get; set; }
+        [Newtonsoft.Json.JsonProperty("expiredAccessToken", Required = Newtonsoft.Json.Required.Always)] public string ExpiredAccessToken { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
 
@@ -1031,11 +1159,13 @@ namespace Customer_Mangment_Integrate.Test.Common
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
 
-    public partial class TokenResponse
+    /// <summary>Token response returned by the Auth endpoints.</summary>
+    public partial class TokenServerResponse
     {
-        [Newtonsoft.Json.JsonProperty("accessToken",  Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               AccessToken  { get; set; }
-        [Newtonsoft.Json.JsonProperty("refreshToken", Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string               RefreshToken { get; set; }
-        [Newtonsoft.Json.JsonProperty("expiresOnUtc", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public System.DateTimeOffset ExpiresOnUtc { get; set; }
+        [Newtonsoft.Json.JsonProperty("access_token",  Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Access_token  { get; set; }
+        [Newtonsoft.Json.JsonProperty("token_type",    Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Token_type    { get; set; }
+        [Newtonsoft.Json.JsonProperty("expires_in",    Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public int    Expires_in    { get; set; }
+        [Newtonsoft.Json.JsonProperty("refresh_token", Required = Newtonsoft.Json.Required.Default,      NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)] public string Refresh_token { get; set; }
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
 
@@ -1053,6 +1183,8 @@ namespace Customer_Mangment_Integrate.Test.Common
         [Newtonsoft.Json.JsonExtensionData] public System.Collections.Generic.IDictionary<string, object> AdditionalProperties { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
     }
 
+    // ── Exceptions ────────────────────────────────────────────────────────
+
     public partial class ApiException : System.Exception
     {
         public int StatusCode { get; private set; }
@@ -1063,8 +1195,8 @@ namespace Customer_Mangment_Integrate.Test.Common
             : base(message + "\n\nStatus: " + statusCode + "\nResponse: \n" + ((response == null) ? "(null)" : response.Substring(0, response.Length >= 512 ? 512 : response.Length)), innerException)
         {
             StatusCode = statusCode;
-            Response = response;
-            Headers = headers;
+            Response   = response;
+            Headers    = headers;
         }
 
         public override string ToString() => string.Format("HTTP Response: \n\n{0}\n\n{1}", Response, base.ToString());
@@ -1073,6 +1205,7 @@ namespace Customer_Mangment_Integrate.Test.Common
     public partial class ApiException<TResult> : ApiException
     {
         public TResult Result { get; private set; }
+
         public ApiException(string message, int statusCode, string response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, TResult result, System.Exception innerException)
             : base(message, statusCode, response, headers, innerException) { Result = result; }
     }

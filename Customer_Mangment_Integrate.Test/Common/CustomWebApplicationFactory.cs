@@ -1,5 +1,4 @@
 using Customer_Mangment;
-using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Repository.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -81,7 +80,7 @@ namespace Customer_Mangment_Integrate.Test.Common
             _identityClient = identityClient;
         }
 
-        public async Task<TokenServerResponse?> RequestPasswordTokenAsync(
+        public async Task<Customer_Mangment.CQRS.Identity.Dto.TokenServerResponse?> RequestPasswordTokenAsync(
             string email,
             string password,
             string? tenantId,
@@ -108,11 +107,11 @@ namespace Customer_Mangment_Integrate.Test.Common
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return JsonSerializer.Deserialize<TokenServerResponse>(body,
+            return JsonSerializer.Deserialize<Customer_Mangment.CQRS.Identity.Dto.TokenServerResponse>(body,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<TokenServerResponse?> RefreshTokenAsync(
+        public async Task<Customer_Mangment.CQRS.Identity.Dto.TokenServerResponse?> RefreshTokenAsync(
             string refreshToken,
             string? tenantId,
             CancellationToken ct)
@@ -130,8 +129,10 @@ namespace Customer_Mangment_Integrate.Test.Common
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return JsonSerializer.Deserialize<TokenServerResponse>(body,
+            return JsonSerializer.Deserialize<Customer_Mangment.CQRS.Identity.Dto.TokenServerResponse>(body,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
+
+
     }
 }

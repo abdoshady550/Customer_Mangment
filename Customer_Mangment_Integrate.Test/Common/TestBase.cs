@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 
 namespace Customer_Mangment_Integrate.Test.Common
 {
-
     public class TestBase : IClassFixture<CustomWebApplicationFactory>
     {
         protected readonly CustomWebApplicationFactory _factory;
@@ -40,14 +39,13 @@ namespace Customer_Mangment_Integrate.Test.Common
             return http;
         }
 
-        // ── Token  
+        //  Token 
 
         protected Task<string> GetAdminTokenAsync()
             => GetTokenAsync(AdminEmail, AdminPassword, DefaultTenantId);
 
         protected Task<string> GetUserTokenAsync()
             => GetTokenAsync(UserEmail, UserPassword, DefaultTenantId);
-
 
         private async Task<string> GetTokenAsync(
             string email, string password, string tenantId)
@@ -77,6 +75,38 @@ namespace Customer_Mangment_Integrate.Test.Common
             var doc = System.Text.Json.JsonDocument.Parse(body);
             return doc.RootElement.GetProperty("access_token").GetString()
                 ?? throw new InvalidOperationException("access_token was null in token response");
+        }
+
+        protected async Task<(string AccessToken, string RefreshToken)> GetTokenPairAsync(
+            string email, string password, string? tenantId = null)
+        {
+            var identityHttp = _factory.CreateIdentityClient();
+            if (!string.IsNullOrEmpty(tenantId))
+                identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
+
+            var parameters = new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["username"] = email,
+                ["password"] = password,
+                ["client_id"] = "customer-management-swagger",
+                ["scope"] = "customer_api offline_access roles"
+            };
+
+            var response = await identityHttp.PostAsync(
+                "connect/token",
+                new FormUrlEncodedContent(parameters));
+
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(
+                    $"Token request failed ({(int)response.StatusCode}): {body}");
+
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            var access = doc.RootElement.GetProperty("access_token").GetString()!;
+            var refresh = doc.RootElement.GetProperty("refresh_token").GetString()!;
+            return (access, refresh);
         }
 
         protected async Task<(string AccessToken, string RefreshToken)> DoRefreshTokenAsync(
@@ -113,7 +143,7 @@ namespace Customer_Mangment_Integrate.Test.Common
         protected async Task<string> GetRefreshedAccessTokenAsync(string refreshToken)
             => (await DoRefreshTokenAsync(refreshToken)).AccessToken;
 
-        // ── CRUD  
+        // s CRUD  
 
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();
