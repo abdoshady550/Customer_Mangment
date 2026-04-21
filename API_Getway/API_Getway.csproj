@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+	  <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.4.0" />
+	  <PackageReference Include="OpenIddict.Validation.SystemNetHttp" Version="7.4.0" />
 	  <PackageReference Include="Scalar.AspNetCore" Version="2.12.54" />
 	  <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
   </ItemGroup>
