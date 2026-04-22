@@ -1,7 +1,6 @@
 ﻿using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Interfaces.Audit;
@@ -14,13 +13,13 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
     public sealed class GetAddressHistoryQueryHandler(IGenericRepo<User> userRepo,
                                           IHistoryService historyService,
                                           IStringLocalizer<SharedResource> localizer,
-                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetAddressHistoryQuery, Result<List<AddressHistoryDto>>>
+                                          ILogger<GetCustomerHistoryQueryHandler> logger) : IAppRequestHandler<GetAddressHistoryQuery, Model.Results.Result<List<AddressHistoryDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IHistoryService _historyService = historyService;
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<GetCustomerHistoryQueryHandler> _logger = logger;
-        public async Task<Result<List<AddressHistoryDto>>> Handle(GetAddressHistoryQuery request, CancellationToken ct)
+        public async Task<Model.Results.Result<List<AddressHistoryDto>>> Handle(GetAddressHistoryQuery request, CancellationToken ct)
         {
             var user = await _userRepo.AsNoTracking().FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

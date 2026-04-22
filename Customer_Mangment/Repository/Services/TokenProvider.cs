@@ -1,7 +1,6 @@
 using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,7 +20,7 @@ public class TokenProvider(IConfiguration configuration,
     private readonly RefreshTokenErrors _tokenErrors = tokenErrors;
     private readonly IHttpContextAccessor _httpContext = httpContext;
 
-    public async Task<Result<TokenResponse>> GenerateJwtTokenAsync(AppUserDto user, CancellationToken ct = default)
+    public async Task<Model.Results.Result<TokenResponse>> GenerateJwtTokenAsync(AppUserDto user, CancellationToken ct = default)
     {
         var tokenResult = await CreateAsync(user, _tokenErrors, ct);
 
@@ -80,7 +79,7 @@ public class TokenProvider(IConfiguration configuration,
             return null;
         }
     }
-    private async Task<Result<TokenResponse>> CreateAsync(AppUserDto user, RefreshTokenErrors tokenErrors, CancellationToken ct = default)
+    private async Task<Model.Results.Result<TokenResponse>> CreateAsync(AppUserDto user, RefreshTokenErrors tokenErrors, CancellationToken ct = default)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
 

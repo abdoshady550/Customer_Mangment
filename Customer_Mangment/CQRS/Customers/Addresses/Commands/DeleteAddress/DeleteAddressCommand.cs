@@ -3,5 +3,5 @@ using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
 {
-    public sealed record DeleteAddressCommand(string UserId, Guid AddressId) : IAppRequest<Result<Deleted>>;
+    public sealed record DeleteAddressCommand(string UserId, Guid AddressId) : IAppRequest<Model.Results.Result<Deleted>>;
 }

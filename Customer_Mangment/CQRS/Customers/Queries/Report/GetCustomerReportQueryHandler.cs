@@ -1,7 +1,6 @@
 ﻿using Customer_Mangment.CQRS.Customers.Queries.Report.Dtos;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Entities.History;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Interfaces.Report;
 using Customer_Mangment.SharedResources;
@@ -17,7 +16,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
          IStringLocalizer<SharedResource> localizer,
         ICustomerReportBuilder reportBuilder,
         ILogger<GetCustomerReportQueryHandler> logger)
-        : IAppRequestHandler<GetCustomerReportQuery, Result<byte[]>>
+        : IAppRequestHandler<GetCustomerReportQuery, Model.Results.Result<byte[]>>
     {
         private readonly IMongoCollection<User> _userRepo = userRepo;
         private readonly IMongoCollection<CustomerSnapshot> _customerRepo = customerRepo;
@@ -25,7 +24,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.Report
         private readonly ICustomerReportBuilder _reportBuilder = reportBuilder;
         private readonly ILogger<GetCustomerReportQueryHandler> _logger = logger;
 
-        public async Task<Result<byte[]>> Handle(GetCustomerReportQuery request,
+        public async Task<Model.Results.Result<byte[]>> Handle(GetCustomerReportQuery request,
                                                  CancellationToken ct = default)
         {
             var user = await _userRepo

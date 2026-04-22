@@ -17,7 +17,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
                                               IStringLocalizer<SharedResource> localizer,
                                               IMessageBus bus,
                                               ILogger<DeleteCustomerHandler> logger,
-                                              HybridCache cache) : IAppRequestHandler<DeleteCustomerCommand, Result<Deleted>>
+                                              HybridCache cache) : IAppRequestHandler<DeleteCustomerCommand, Model.Results.Result<Deleted>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
@@ -28,7 +28,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.DeleteCustomer
 
         private readonly ILogger<DeleteCustomerHandler> _logger = logger;
 
-        public async Task<Result<Deleted>> Handle(DeleteCustomerCommand request, CancellationToken ct = default)
+        public async Task<Model.Results.Result<Deleted>> Handle(DeleteCustomerCommand request, CancellationToken ct = default)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

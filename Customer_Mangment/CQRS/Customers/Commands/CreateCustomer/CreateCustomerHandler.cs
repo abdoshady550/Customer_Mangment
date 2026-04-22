@@ -4,7 +4,6 @@ using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Events;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
@@ -24,7 +23,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
                                               HybridCache cache,
                                               IDistributedCache distributedCache,
                                               IStringLocalizer<SharedResource> localizer,
-                                              ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
+                                              ILogger<CreateCustomerHandler> logger) : IAppRequestHandler<CreateCustomerCommand, Model.Results.Result<CustomerDto>>
     {
         private readonly IGenericRepo<Customer> _repo = repo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
@@ -36,7 +35,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<CreateCustomerHandler> _logger = logger;
 
-        public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken ct = default)
+        public async Task<Model.Results.Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken ct = default)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)
@@ -71,7 +70,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.CreateCustomer
 
             foreach (var address in request.Adresses)
             {
-                var addAddressResult = await _bus.InvokeAsync<Result<AddressDto>>(
+                var addAddressResult = await _bus.InvokeAsync<Model.Results.Result<AddressDto>>(
                     new AddAddressCommand(request.UserId, customer.Id, address.Type, address.Value), ct);
 
                 if (addAddressResult.IsError)

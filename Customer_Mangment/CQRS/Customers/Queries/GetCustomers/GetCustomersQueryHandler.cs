@@ -1,7 +1,6 @@
 ﻿using Customer_Mangment.CQRS.Customers.DTOS;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.Repository.Interfaces.tenantCache;
@@ -17,7 +16,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
                                           ICustomerMapper mapper,
                                           ITenantCachedQueryService cacheService,
                                           IStringLocalizer<SharedResource> localizer,
-                                          ILogger<GetCustomersQueryHandler> logger) : IAppRequestHandler<GetCustomersQuery, Result<List<CustomerDto>>>
+                                          ILogger<GetCustomersQueryHandler> logger) : IAppRequestHandler<GetCustomersQuery, Model.Results.Result<List<CustomerDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
@@ -26,7 +25,7 @@ namespace Customer_Mangment.CQRS.Customers.Queries.GetCustomers
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<GetCustomersQueryHandler> _logger = logger;
 
-        public async Task<Result<List<CustomerDto>>> Handle(GetCustomersQuery request, CancellationToken ct)
+        public async Task<Model.Results.Result<List<CustomerDto>>> Handle(GetCustomersQuery request, CancellationToken ct)
         {
             var user = await _userRepo.AsNoTracking().FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user is null)

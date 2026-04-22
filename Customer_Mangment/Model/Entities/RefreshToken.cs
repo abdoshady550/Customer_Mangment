@@ -1,5 +1,4 @@
-﻿using Customer_Mangment.Model.Results;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Customer_Mangment.Model.Entities
@@ -24,7 +23,7 @@ namespace Customer_Mangment.Model.Entities
             ExpiresOnUtc = expiresOnUtc;
         }
 
-        public static Result<RefreshToken> Create(Guid id, string? token, string? userId, DateTimeOffset expiresOnUtc, RefreshTokenErrors tokenErrors)
+        public static Model.Results.Result<RefreshToken> Create(Guid id, string? token, string? userId, DateTimeOffset expiresOnUtc, RefreshTokenErrors tokenErrors)
         {
             if (id == Guid.Empty)
             {

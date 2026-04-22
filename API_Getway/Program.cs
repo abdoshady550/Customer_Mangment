@@ -74,7 +74,19 @@ public class Program
             .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
         var app = builder.Build();
+        app.Use(async (context, next) =>
+        {
+            context.Request.EnableBuffering();
 
+            using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
+            var body = await reader.ReadToEndAsync();
+
+            context.Request.Body.Position = 0;
+
+            Console.WriteLine($"BODY: {body}");
+
+            await next();
+        });
         app.MapDefaultEndpoints();
 
         app.MapOpenApi();

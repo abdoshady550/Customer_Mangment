@@ -1,5 +1,4 @@
-﻿using Customer_Mangment.Model.Results;
-using Microsoft.Extensions.Localization;
+﻿using Microsoft.Extensions.Localization;
 
 namespace Customer_Mangment.SharedResources.Keys
 {
@@ -7,48 +6,48 @@ namespace Customer_Mangment.SharedResources.Keys
     {
         //   NotFound  
 
-        public static Error NotFound(
+        public static Model.Results.Error NotFound(
             IStringLocalizer<SharedResource> l,
             string code,
             string resourceKey,
             params object[] args)
-            => Error.NotFound(code, Format(l, resourceKey, args));
+            => Model.Results.Error.NotFound(code, Format(l, resourceKey, args));
 
         //   Conflict  
 
-        public static Error Conflict(
+        public static Model.Results.Error Conflict(
             IStringLocalizer<SharedResource> l,
             string code,
             string resourceKey,
             params object[] args)
-            => Error.Conflict(code, Format(l, resourceKey, args));
+            => Model.Results.Error.Conflict(code, Format(l, resourceKey, args));
 
         //   Unauthorized  
 
-        public static Error Unauthorized(
+        public static Model.Results.Error Unauthorized(
             IStringLocalizer<SharedResource> l,
             string code,
             string resourceKey,
             params object[] args)
-            => Error.Unauthorized(code, Format(l, resourceKey, args));
+            => Model.Results.Error.Unauthorized(code, Format(l, resourceKey, args));
 
         //   Validation   
 
-        public static Error Validation(
+        public static Model.Results.Error Validation(
             IStringLocalizer<SharedResource> l,
             string code,
             string resourceKey,
             params object[] args)
-            => Error.Validation(code, Format(l, resourceKey, args));
+            => Model.Results.Error.Validation(code, Format(l, resourceKey, args));
 
         //   Failure   
 
-        public static Error Failure(
+        public static Model.Results.Error Failure(
             IStringLocalizer<SharedResource> l,
             string code,
             string resourceKey,
             params object[] args)
-            => Error.Failure(code, Format(l, resourceKey, args));
+            => Model.Results.Error.Failure(code, Format(l, resourceKey, args));
 
         //   private   
 

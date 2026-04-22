@@ -106,7 +106,7 @@ namespace Customer_Mangment.Controllers
         }
         [HttpDelete]
         [Route("delete")]
-        [Authorize(Roles = nameof(Role.Admin))]
+        [Authorize(Roles = $"{nameof(Role.Admin)},{nameof(Role.User)}")]
         [ProducesResponseType(typeof(Deleted), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

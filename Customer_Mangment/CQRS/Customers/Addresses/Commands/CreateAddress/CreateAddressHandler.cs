@@ -2,7 +2,6 @@
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.Model.Events;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
@@ -21,7 +20,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                                              IMessageBus bus,
                                              IDistributedCache cache,
                                              ICustomerMapper mapper,
-                                             ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Result<AddressDto>>
+                                             ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Model.Results.Result<AddressDto>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
@@ -34,7 +33,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<CreateAddressHandler> _logger = logger;
 
-        public async Task<Result<AddressDto>> Handle(AddAddressCommand request, CancellationToken ct)
+        public async Task<Model.Results.Result<AddressDto>> Handle(AddAddressCommand request, CancellationToken ct)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
 

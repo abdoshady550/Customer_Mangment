@@ -1,4 +1,3 @@
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
 using Microsoft.Extensions.Localization;
@@ -7,33 +6,33 @@ namespace Customer_Mangment.Model;
 
 public sealed class RefreshTokenErrors(IStringLocalizer<SharedResource> l)
 {
-    public Error IdRequired =>
+    public Results.Error IdRequired =>
         LocalizedError.Validation(l, "RefreshToken_Id_Required", ResourceKeys.Token.IdRequired);
 
-    public Error TokenRequired =>
+    public Results.Error TokenRequired =>
         LocalizedError.Validation(l, "RefreshToken_Token_Required", ResourceKeys.Token.TokenRequired);
 
-    public Error UserIdRequired =>
+    public Results.Error UserIdRequired =>
         LocalizedError.Validation(l, "RefreshToken_UserId_Required", ResourceKeys.Token.UserIdRequired);
 
-    public Error ExpiryInvalid =>
+    public Results.Error ExpiryInvalid =>
         LocalizedError.Validation(l, "RefreshToken_Expiry_Invalid", ResourceKeys.Token.ExpiryInvalid);
 
-    public Error InvalidRefreshToken =>
+    public Results.Error InvalidRefreshToken =>
         LocalizedError.Validation(l, "RefreshToken.Expiry.Invalid", ResourceKeys.Token.ExpiryInvalid);
 
-    public Error ExpiredAccessTokenInvalid =>
+    public Results.Error ExpiredAccessTokenInvalid =>
         LocalizedError.Conflict(l, "Auth.ExpiredAccessToken.Invalid", ResourceKeys.Auth.TokenExpired);
 
-    public Error UserIdClaimInvalid =>
+    public Results.Error UserIdClaimInvalid =>
         LocalizedError.Conflict(l, "Auth.UserIdClaim.Invalid", ResourceKeys.Auth.UserIdClaimInvalid);
 
-    public Error RefreshTokenExpired =>
+    public Results.Error RefreshTokenExpired =>
         LocalizedError.Conflict(l, "Auth.RefreshToken.Expired", ResourceKeys.Auth.RefreshTokenExpired);
 
-    public Error UserNotFound =>
+    public Results.Error UserNotFound =>
         LocalizedError.NotFound(l, "Auth.User.NotFound", ResourceKeys.User.NotFound);
 
-    public Error TokenGenerationFailed =>
+    public Results.Error TokenGenerationFailed =>
         LocalizedError.Failure(l, "Auth.TokenGeneration.Failed", ResourceKeys.Token.GenerationFailed);
 }

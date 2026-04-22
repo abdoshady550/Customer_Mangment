@@ -1,7 +1,6 @@
 using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using System.Security.Claims;
@@ -13,7 +12,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
                                       IGenericRepo<RefreshToken> repo,
                                       RefreshTokenErrors tokenErrors,
                                       ITokenProvider tokenProvider)
-    : IAppRequestHandler<RefreshTokenQuery, Result<TokenResponse>>
+    : IAppRequestHandler<RefreshTokenQuery, Model.Results.Result<TokenResponse>>
 {
     private readonly ILogger<RefreshTokenQueryHandler> _logger = logger;
     private readonly IIdentityService _identityService = identityService;
@@ -21,7 +20,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger,
     private readonly RefreshTokenErrors _tokenErrors = tokenErrors;
     private readonly ITokenProvider _tokenProvider = tokenProvider;
 
-    public async Task<Result<TokenResponse>> Handle(RefreshTokenQuery request, CancellationToken ct)
+    public async Task<Model.Results.Result<TokenResponse>> Handle(RefreshTokenQuery request, CancellationToken ct)
     {
         var principal = _tokenProvider.GetPrincipalFromExpiredToken(request.ExpiredAccessToken);
 

@@ -2,7 +2,6 @@
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.CQRS.Customers.Queries.GetCustomers;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 using Customer_Mangment.SharedResources;
@@ -19,7 +18,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
                                       IDistributedCache cache,
                                       IStringLocalizer<SharedResource> localizer,
                                       ICustomerMapper mapper,
-                                      ILogger<GetAddressQueryHandler> logger) : IAppRequestHandler<GetAddressQuery, Result<List<AddressDto>>>
+                                      ILogger<GetAddressQueryHandler> logger) : IAppRequestHandler<GetAddressQuery, Model.Results.Result<List<AddressDto>>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
@@ -28,7 +27,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ICustomerMapper _mapper = mapper;
         private readonly ILogger<GetAddressQueryHandler> _logger = logger;
-        public async Task<Result<List<AddressDto>>> Handle(GetAddressQuery request, CancellationToken ct = default)
+        public async Task<Model.Results.Result<List<AddressDto>>> Handle(GetAddressQuery request, CancellationToken ct = default)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)
@@ -57,7 +56,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Queries.GetAddresses
                 if (!addresses.Any())
                 {
                     _logger.LogInformation("Address with ID {AddressId} not found for customer {CustomerId} when requested by user {UserId}.", request.AddressId, request.CustomerId, request.UserId);
-                    return Error.NotFound("AddressNotFound", $"Address with ID {request.AddressId} not found for customer {request.CustomerId}.");
+                    return Model.Results.Error.NotFound("AddressNotFound", $"Address with ID {request.AddressId} not found for customer {request.CustomerId}.");
                 }
                 var dto = _mapper.ToAddressDtoList(addresses);
                 return dto;

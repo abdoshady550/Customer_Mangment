@@ -13,7 +13,7 @@ public class ApiController(IStringLocalizer<SharedResource> localizer) : Control
     private readonly IStringLocalizer<SharedResource> _l = localizer;
 
     [NonAction]
-    protected ActionResult Problem(List<Error> errors)
+    protected ActionResult Problem(List<Model.Results.Error> errors)
     {
         if (errors.Count is 0)
         {
@@ -23,7 +23,7 @@ public class ApiController(IStringLocalizer<SharedResource> localizer) : Control
         return ValidationProblem(errors);
     }
 
-    private ActionResult ValidationProblem(List<Error> errors)
+    private ActionResult ValidationProblem(List<Model.Results.Error> errors)
     {
         var modelStateDictionary = new ModelStateDictionary();
         var statusCode = StatusCodes.Status400BadRequest;

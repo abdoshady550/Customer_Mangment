@@ -17,7 +17,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
                                               HybridCache cache,
                                               IStringLocalizer<SharedResource> localizer,
                                               IMessageBus bus,
-                                              ILogger<UpdateCustomerHandler> logger) : IAppRequestHandler<UpdateCustomerCommand, Result<Updated>>
+                                              ILogger<UpdateCustomerHandler> logger) : IAppRequestHandler<UpdateCustomerCommand, Model.Results.Result<Updated>>
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
@@ -26,7 +26,7 @@ namespace Customer_Mangment.CQRS.Customers.Commands.UpdateCustomer
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly IMessageBus _bus = bus;
         private readonly ILogger<UpdateCustomerHandler> _logger = logger;
-        public async Task<Result<Updated>> Handle(UpdateCustomerCommand request, CancellationToken ct = default)
+        public async Task<Model.Results.Result<Updated>> Handle(UpdateCustomerCommand request, CancellationToken ct = default)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

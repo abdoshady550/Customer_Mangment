@@ -35,7 +35,7 @@ namespace Customer_Mangment.Model.Entities
             UpdatedBy = createdBy;
 
         }
-        public static Result<Customer> CreateCustomer(string name, string mobile, string createdBy, IEnumerable<(AdressType type, string value)> addresses, IStringLocalizer<SharedResource> localizer)
+        public static Model.Results.Result<Customer> CreateCustomer(string name, string mobile, string createdBy, IEnumerable<(AdressType type, string value)> addresses, IStringLocalizer<SharedResource> localizer)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return LocalizedError.Validation(localizer, "Invalide_Name", ResourceKeys.Validation.NameEmpty);
@@ -55,7 +55,7 @@ namespace Customer_Mangment.Model.Entities
 
             return customer;
         }
-        public Result<Updated> UpdateCustomer(string? name, string? mobile, string updatedBy)
+        public Model.Results.Result<Updated> UpdateCustomer(string? name, string? mobile, string updatedBy)
         {
             if (!string.IsNullOrWhiteSpace(name))
                 Name = name;
@@ -64,7 +64,7 @@ namespace Customer_Mangment.Model.Entities
             UpdatedBy = updatedBy;
             return Result.Updated;
         }
-        public Result<Address> AddAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
+        public Model.Results.Result<Address> AddAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
         {
             if (_addresses.Any(a => a.Type == type))
                 return LocalizedError.Conflict(localizer, "DuplicateAddressType", ResourceKeys.Address.Duplicate, type);

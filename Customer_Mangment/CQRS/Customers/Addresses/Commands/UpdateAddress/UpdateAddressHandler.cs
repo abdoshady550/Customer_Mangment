@@ -18,7 +18,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
                                              IStringLocalizer<SharedResource> localizer,
                                              IDistributedCache cache,
                                              IMessageBus bus,
-                                             ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Result<Updated>>
+                                             ILogger<UpdateAddressHandler> logger) : IAppRequestHandler<UpdateAddressCommand, Model.Results.Result<Updated>>
 
     {
         private readonly IGenericRepo<User> _userRepo = userRepo;
@@ -30,7 +30,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.UpdateAddress
         private readonly IDistributedCache _cache = cache;
         private readonly ILogger<UpdateAddressHandler> _logger = logger;
 
-        public async Task<Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
+        public async Task<Model.Results.Result<Updated>> Handle(UpdateAddressCommand request, CancellationToken ct)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

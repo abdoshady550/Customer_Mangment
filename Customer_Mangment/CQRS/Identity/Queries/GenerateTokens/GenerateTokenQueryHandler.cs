@@ -1,18 +1,17 @@
 using Customer_Mangment.CQRS.Identity.Dto;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.AppMediator;
 
 namespace Customer_Mangment.CQRS.Identity.Queries.GenerateTokens;
 
 public class GenerateTokenQueryHandler(ILogger<GenerateTokenQueryHandler> logger, IIdentityService identityService, ITokenProvider tokenProvider)
-    : IAppRequestHandler<GenerateTokenQuery, Result<TokenResponse>>
+    : IAppRequestHandler<GenerateTokenQuery, Model.Results.Result<TokenResponse>>
 {
     private readonly ILogger<GenerateTokenQueryHandler> _logger = logger;
     private readonly IIdentityService _identityService = identityService;
     private readonly ITokenProvider _tokenProvider = tokenProvider;
 
-    public async Task<Result<TokenResponse>> Handle(GenerateTokenQuery query, CancellationToken ct)
+    public async Task<Model.Results.Result<TokenResponse>> Handle(GenerateTokenQuery query, CancellationToken ct)
     {
         var userResponse = await _identityService.AuthenticateAsync(query.Email, query.Password);
 

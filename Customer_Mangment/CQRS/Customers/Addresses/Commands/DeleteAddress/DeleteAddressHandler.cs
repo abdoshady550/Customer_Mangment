@@ -18,7 +18,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
                                              IMessageBus bus,
                                              IDistributedCache cache,
                                              IStringLocalizer<SharedResource> localizer,
-                                             ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Result<Deleted>>
+                                             ILogger<DeleteAddressHandler> logger) : IAppRequestHandler<DeleteAddressCommand, Model.Results.Result<Deleted>>
     {
         private readonly IGenericRepo<Address> _addressRepo = addressRepo;
         private readonly IGenericRepo<User> _userRepo = userRepo;
@@ -29,7 +29,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.DeleteAddress
         private readonly IStringLocalizer<SharedResource> _localizer = localizer;
         private readonly ILogger<DeleteAddressHandler> _logger = logger;
 
-        public async Task<Result<Deleted>> Handle(DeleteAddressCommand request, CancellationToken ct)
+        public async Task<Model.Results.Result<Deleted>> Handle(DeleteAddressCommand request, CancellationToken ct)
         {
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
             if (user == null)

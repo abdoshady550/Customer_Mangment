@@ -130,6 +130,8 @@ namespace Customer_Mangment
             builder.Services.AddMultiTenancy(builder.Configuration);
             //Cache
             builder.Services.AddCaching(builder.Configuration);
+            //GraphQL
+            builder.Services.AddGraphQL();
 
             var app = builder.Build();
 
@@ -182,9 +184,12 @@ namespace Customer_Mangment
             app.UseMiddleware<TenantClaimValidationMiddleware>();
 
             app.UseRateLimiter();
+
             //app.UseResponseCompression();
             app.UseOutputCache();
             app.UseResponseCaching();
+
+            app.MapGraphQL();
 
             app.MapControllers();
 

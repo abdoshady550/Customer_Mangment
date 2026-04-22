@@ -1,6 +1,5 @@
 using Customer_Mangment.CQRS.Identity.Dto;
 using Customer_Mangment.Model.Entities;
-using Customer_Mangment.Model.Results;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.SharedResources;
 using Customer_Mangment.SharedResources.Keys;
@@ -43,7 +42,7 @@ public class IdentityService(UserManager<User> userManager,
         return result.Succeeded;
     }
 
-    public async Task<Result<AppUserDto>> AuthenticateAsync(string email, string password)
+    public async Task<Model.Results.Result<AppUserDto>> AuthenticateAsync(string email, string password)
     {
         var user = await _userManager.FindByEmailAsync(email);
 
@@ -67,7 +66,7 @@ public class IdentityService(UserManager<User> userManager,
         return new AppUserDto(user.Id, user.Email!, await _userManager.GetRolesAsync(user), await _userManager.GetClaimsAsync(user));
     }
 
-    public async Task<Result<AppUserDto>> GetUserByIdAsync(string userId)
+    public async Task<Model.Results.Result<AppUserDto>> GetUserByIdAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId) ?? throw new InvalidOperationException(nameof(userId));
 

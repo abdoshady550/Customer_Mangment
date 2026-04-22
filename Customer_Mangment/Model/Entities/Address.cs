@@ -27,7 +27,7 @@ namespace Customer_Mangment.Model.Entities
             Type = type;
             Value = value;
         }
-        public static Result<Address> CreateAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
+        public static Model.Results.Result<Address> CreateAddress(AdressType type, string value, IStringLocalizer<SharedResource> localizer)
         {
 
             if (string.IsNullOrWhiteSpace(value))
@@ -35,7 +35,7 @@ namespace Customer_Mangment.Model.Entities
 
             return new Address(type, value);
         }
-        public Result<Updated> UpdateAddress(AdressType? type, string? value, string updatedBy)
+        public Model.Results.Result<Updated> UpdateAddress(AdressType? type, string? value, string updatedBy)
         {
             if (!string.IsNullOrWhiteSpace(value))
                 Value = value;
