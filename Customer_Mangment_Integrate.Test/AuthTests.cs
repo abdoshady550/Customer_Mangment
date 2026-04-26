@@ -219,12 +219,12 @@ namespace Customer_Mangment_Integrate.Test
             Assert.False(string.IsNullOrWhiteSpace(refreshed.AccessToken));
         }
 
-        // ── Token / tenant interaction ─────────────────────────────────────────
+        // ── Token / tenant interaction 
 
         [Fact]
         public async Task Token_IssuedForDemoTenant_Rejected_WhenUsedWithDifferentTenant()
         {
-            var token = await GetAdminTokenAsync();   // carries tenant_id = "demo"
+            var token = await GetAdminTokenAsync();
 
             var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Add("X-Tenant-Id", "alahly");
@@ -255,7 +255,7 @@ namespace Customer_Mangment_Integrate.Test
         }
 
         // ── Via typed Client (GenerateTokenAsync / RefreshTokenAsync) ──────────
-        // These tests use the new NSwag-generated signatures on the typed Client.
+
 
         [Fact]
         public async Task GenerateToken_Admin_ReturnsAccessToken()

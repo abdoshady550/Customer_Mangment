@@ -54,8 +54,8 @@ namespace Customer_Mangment_Integrate.Test
         //  GetCustomers query 
 
         private const string GetCustomersQuery = @"
-            query GetCustomers($customerId: UUID) {
-                getCustomers(customerId: $customerId) {
+            query customers($customerId: UUID) {
+                customers(customerId: $customerId) {
                     id
                     name
                     mobile
@@ -644,7 +644,6 @@ namespace Customer_Mangment_Integrate.Test
                         input = new { customerId = customer.Id, type = "HOME", value = "Should Fail" }
                     });
 
-                // GraphQL returns 200 with errors for authorization failures
                 Assert.True(HasErrors(result), "Expected auth error for User role");
             }
             finally { await CleanupCustomerAsync(admin, customer.Id); }
@@ -680,7 +679,6 @@ namespace Customer_Mangment_Integrate.Test
                     });
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                // Type is returned as integer in the DTO (AdressType enum)
                 var typeVal = result.GetProperty("data").GetProperty("addAddress").GetProperty("type");
                 Assert.True(typeVal.ValueKind == JsonValueKind.Number || typeVal.ValueKind == JsonValueKind.String,
                     "type field should be present");
@@ -696,7 +694,6 @@ namespace Customer_Mangment_Integrate.Test
             var token = await GetAdminTokenAsync();
             var http = CreateGraphQLClient(token);
 
-            // Step 1: Create customer via GraphQL
             var createResult = await ExecuteAsync(http, CreateCustomerMutation,
                 new
                 {
@@ -714,7 +711,6 @@ namespace Customer_Mangment_Integrate.Test
 
             try
             {
-                // Step 2: Add address via GraphQL
                 var addResult = await ExecuteAsync(http, AddAddressMutation,
                     new
                     {
@@ -725,12 +721,11 @@ namespace Customer_Mangment_Integrate.Test
                 var addressId = addResult.GetProperty("data").GetProperty("addAddress")
                     .GetProperty("id").GetString();
 
-                // Step 3: Query customer – should include the new address
                 var queryResult = await ExecuteAsync(http, GetCustomersQuery,
                     new { customerId });
 
                 Assert.False(HasErrors(queryResult), $"Query errors: {queryResult}");
-                var customer = queryResult.GetProperty("data").GetProperty("getCustomers")[0];
+                var customer = queryResult.GetProperty("data").GetProperty("customers")[0];
                 var addresses = customer.GetProperty("addresses");
 
                 Assert.True(addresses.GetArrayLength() > 0);
@@ -739,7 +734,6 @@ namespace Customer_Mangment_Integrate.Test
                     .ToList();
                 Assert.Contains(addressId, addrIds);
 
-                // Step 4: Query addresses directly
                 var addrQueryResult = await ExecuteAsync(http, GetAddressesQuery,
                     new { customerId, addressId = Guid.Parse(addressId!) });
 
@@ -760,7 +754,6 @@ namespace Customer_Mangment_Integrate.Test
             var userHttp = CreateGraphQLClient(userToken);
             var adminHttp = CreateGraphQLClient(adminToken);
 
-            // User creates customer
             var createResult = await ExecuteAsync(userHttp, CreateCustomerMutation,
                 new
                 {

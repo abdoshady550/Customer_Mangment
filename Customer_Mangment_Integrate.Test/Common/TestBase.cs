@@ -15,7 +15,18 @@ namespace Customer_Mangment_Integrate.Test.Common
 
         public TestBase(CustomWebApplicationFactory factory) => _factory = factory;
 
-        // ── Client factories 
+        // ── IdentityClient factory ────────────────────────────────────────────
+
+        /// <summary>Creates a typed IdentityClient backed by the in-process identity server.</summary>
+        protected IdentityClient CreateIdentityClient(string? tenantId = null)
+        {
+            var http = _factory.CreateIdentityClient();
+            if (!string.IsNullOrWhiteSpace(tenantId))
+                http.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
+            return new IdentityClient(http);
+        }
+
+        // ── API client factories ──────────────────────────────────────────────
 
         protected Client CreateApiClient()
         {
@@ -39,111 +50,44 @@ namespace Customer_Mangment_Integrate.Test.Common
             return http;
         }
 
-        //  Token 
+        // ── Token helpers (now all go through IdentityClient) ─────────────────
 
-        protected Task<string> GetAdminTokenAsync()
-            => GetTokenAsync(AdminEmail, AdminPassword, DefaultTenantId);
-
-        protected Task<string> GetUserTokenAsync()
-            => GetTokenAsync(UserEmail, UserPassword, DefaultTenantId);
-
-        private async Task<string> GetTokenAsync(
-            string email, string password, string tenantId)
+        protected async Task<string> GetAdminTokenAsync()
         {
-            var identityHttp = _factory.CreateIdentityClient();
-            identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
-
-            var parameters = new Dictionary<string, string>
-            {
-                ["grant_type"] = "password",
-                ["username"] = email,
-                ["password"] = password,
-                ["client_id"] = "customer-management-swagger",
-                ["scope"] = "customer_api offline_access roles"
-            };
-
-            var response = await identityHttp.PostAsync(
-                "connect/token",
-                new FormUrlEncodedContent(parameters));
-
-            var body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException(
-                    $"Token request failed ({(int)response.StatusCode}): {body}");
-
-            var doc = System.Text.Json.JsonDocument.Parse(body);
-            return doc.RootElement.GetProperty("access_token").GetString()
-                ?? throw new InvalidOperationException("access_token was null in token response");
+            var token = await CreateIdentityClient(DefaultTenantId)
+                .GetPasswordTokenAsync(AdminEmail, AdminPassword);
+            return token.AccessToken;
         }
 
+        protected async Task<string> GetUserTokenAsync()
+        {
+            var token = await CreateIdentityClient(DefaultTenantId)
+                .GetPasswordTokenAsync(UserEmail, UserPassword);
+            return token.AccessToken;
+        }
+
+        /// <summary>Returns both access and refresh tokens for the given credentials.</summary>
         protected async Task<(string AccessToken, string RefreshToken)> GetTokenPairAsync(
             string email, string password, string? tenantId = null)
         {
-            var identityHttp = _factory.CreateIdentityClient();
-            if (!string.IsNullOrEmpty(tenantId))
-                identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
-
-            var parameters = new Dictionary<string, string>
-            {
-                ["grant_type"] = "password",
-                ["username"] = email,
-                ["password"] = password,
-                ["client_id"] = "customer-management-swagger",
-                ["scope"] = "customer_api offline_access roles"
-            };
-
-            var response = await identityHttp.PostAsync(
-                "connect/token",
-                new FormUrlEncodedContent(parameters));
-
-            var body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException(
-                    $"Token request failed ({(int)response.StatusCode}): {body}");
-
-            var doc = System.Text.Json.JsonDocument.Parse(body);
-            var access = doc.RootElement.GetProperty("access_token").GetString()!;
-            var refresh = doc.RootElement.GetProperty("refresh_token").GetString()!;
-            return (access, refresh);
+            var token = await CreateIdentityClient(tenantId)
+                .GetPasswordTokenAsync(email, password, tenantId: tenantId);
+            return (token.AccessToken, token.RefreshToken);
         }
 
+        /// <summary>Exchanges a refresh token for a new token pair.</summary>
         protected async Task<(string AccessToken, string RefreshToken)> DoRefreshTokenAsync(
             string refreshToken, string? tenantId = null)
         {
-            var identityHttp = _factory.CreateIdentityClient();
-            if (!string.IsNullOrEmpty(tenantId))
-                identityHttp.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
-
-            var parameters = new Dictionary<string, string>
-            {
-                ["grant_type"] = "refresh_token",
-                ["refresh_token"] = refreshToken,
-                ["client_id"] = "customer-management-swagger"
-            };
-
-            var response = await identityHttp.PostAsync(
-                "connect/token",
-                new FormUrlEncodedContent(parameters));
-
-            var body = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException(
-                    $"Refresh token request failed ({(int)response.StatusCode}): {body}");
-
-            var doc = System.Text.Json.JsonDocument.Parse(body);
-            var newAccess = doc.RootElement.GetProperty("access_token").GetString()!;
-            var newRefresh = doc.RootElement.GetProperty("refresh_token").GetString()!;
-
-            return (newAccess, newRefresh);
+            var token = await CreateIdentityClient(tenantId)
+                .RefreshTokenAsync(refreshToken, tenantId: tenantId);
+            return (token.AccessToken, token.RefreshToken);
         }
 
         protected async Task<string> GetRefreshedAccessTokenAsync(string refreshToken)
             => (await DoRefreshTokenAsync(refreshToken)).AccessToken;
 
-        // s CRUD  
+        // ── CRUD helpers ──────────────────────────────────────────────────────
 
         protected static string UniqueMobile()
             => "01" + Random.Shared.Next(100000000, 999999999).ToString();
