@@ -2,7 +2,6 @@
 using Customer_Mangment.GraphQL.Schema.Queries;
 using Customer_Mangment.GraphQL.Schema.Types;
 using Customer_Mangment.Model.Results;
-
 namespace Customer_Mangment.Extensions
 {
     public static class GraphQL
@@ -21,13 +20,17 @@ namespace Customer_Mangment.Extensions
                 .BindRuntimeType<Deleted, AnyType>()
                 .BindRuntimeType<Created, AnyType>()
                 .AddAuthorization()
-                .ModifyRequestOptions(o => o.IncludeExceptionDetails = true);
-
-
-
-
-
-
+                .AddMaxExecutionDepthRule(5)
+                .DisableIntrospection()
+                .ModifyRequestOptions(o => o.IncludeExceptionDetails = true)
+                .ModifyCostOptions(options =>
+                {
+                    options.MaxFieldCost = 1500;
+                    options.MaxTypeCost = 1500;
+                    options.EnforceCostLimits = true;
+                    options.ApplyCostDefaults = true;
+                    options.DefaultResolverCost = 10.0;
+                });
             return services;
         }
     }

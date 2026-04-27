@@ -1,6 +1,7 @@
 using OpenIddict.Validation.AspNetCore;
 using Scalar.AspNetCore;
 
+
 namespace API_Getway;
 
 public class Program

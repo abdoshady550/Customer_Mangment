@@ -23,6 +23,7 @@ public sealed class Result<TValue> : IResult<TValue>
     private readonly TValue? _value = default;
 
     private readonly List<Error>? _errors = null;
+    public static Result<TValue> Ok(TValue value) => new(value);
 
     public bool IsSuccess { get; }
 
@@ -89,7 +90,6 @@ public sealed class Result<TValue> : IResult<TValue>
 
     public TNextValue Match<TNextValue>(Func<TValue, TNextValue> onValue, Func<List<Error>, TNextValue> onError)
         => IsSuccess ? onValue(Value!) : onError(Errors);
-
 
     public static implicit operator Result<TValue>(TValue value)
         => new(value);

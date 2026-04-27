@@ -71,8 +71,7 @@ public sealed class TenantResolutionMiddleware(
             || path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/scalar", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/hubs", StringComparison.OrdinalIgnoreCase)
-            || path.Equals("/graphqL/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/graphqL/assets/", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/graphqL/", StringComparison.OrdinalIgnoreCase)
 
 
             ;

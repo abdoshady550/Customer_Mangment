@@ -7,6 +7,7 @@ using Customer_Mangment.Middlewares;
 using Customer_Mangment.Model;
 using Customer_Mangment.Model.Entities;
 using Customer_Mangment.MultiTenancy;
+using Customer_Mangment.O_Data;
 using Customer_Mangment.OpenApi;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.Audit;
@@ -17,6 +18,7 @@ using Customer_Mangment.Repository.Services.Background;
 using Customer_Mangment.Repository.Services.Reports;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using QuestPDF.Infrastructure;
@@ -32,11 +34,19 @@ namespace Customer_Mangment
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers()
-                    .AddJsonOptions(options =>
-                    {
-                        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-                        options.JsonSerializerOptions.WriteIndented = true;
-                    });
+                .AddOData(opt => opt
+                  .AddRouteComponents("odata", EdmModel.GetEdmModel())
+                  .Select()
+                  .Filter()
+                  .OrderBy()
+                  .Expand()
+                  .Count()
+                  .SetMaxTop(100))
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.WriteIndented = true;
+                });
             //OpenApi
             string[] versions = ["v1", "v2"];
 

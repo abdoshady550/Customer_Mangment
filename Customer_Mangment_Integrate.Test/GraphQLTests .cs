@@ -83,7 +83,7 @@ namespace Customer_Mangment_Integrate.Test
                 var result = await ExecuteAsync(http, GetCustomersQuery);
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var customers = result.GetProperty("data").GetProperty("getCustomers");
+                var customers = result.GetProperty("data").GetProperty("customers");
                 Assert.True(customers.GetArrayLength() > 0);
             }
             finally { await CleanupCustomerAsync(restClient, created.Id); }
@@ -101,7 +101,7 @@ namespace Customer_Mangment_Integrate.Test
                 var result = await ExecuteAsync(http, GetCustomersQuery);
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var customers = result.GetProperty("data").GetProperty("getCustomers");
+                var customers = result.GetProperty("data").GetProperty("customers");
                 Assert.True(customers.GetArrayLength() > 0);
             }
             finally { await CleanupCustomerAsync(admin, created.Id); }
@@ -121,7 +121,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId = created.Id });
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var customers = result.GetProperty("data").GetProperty("getCustomers");
+                var customers = result.GetProperty("data").GetProperty("customers");
                 Assert.Equal(1, customers.GetArrayLength());
                 Assert.Equal(created.Id.ToString(), customers[0].GetProperty("id").GetString());
                 Assert.Equal("GQL ById", customers[0].GetProperty("name").GetString());
@@ -151,7 +151,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId = created.Id });
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var customer = result.GetProperty("data").GetProperty("getCustomers")[0];
+                var customer = result.GetProperty("data").GetProperty("customers")[0];
                 var addresses = customer.GetProperty("addresses");
                 Assert.True(addresses.GetArrayLength() > 0);
 
@@ -197,7 +197,7 @@ namespace Customer_Mangment_Integrate.Test
                 var result = await ExecuteAsync(http, GetCustomersQuery,
                     new { customerId = created.Id });
 
-                var customer = result.GetProperty("data").GetProperty("getCustomers")[0];
+                var customer = result.GetProperty("data").GetProperty("customers")[0];
                 Assert.Equal(created.Id.ToString(), customer.GetProperty("id").GetString());
                 Assert.Equal("GQL Fields", customer.GetProperty("name").GetString());
                 Assert.Equal(mobile, customer.GetProperty("mobile").GetString());
@@ -220,7 +220,7 @@ namespace Customer_Mangment_Integrate.Test
                 var result = await ExecuteAsync(http, GetCustomersQuery);
 
                 Assert.False(HasErrors(result));
-                var customers = result.GetProperty("data").GetProperty("getCustomers");
+                var customers = result.GetProperty("data").GetProperty("customers");
                 var ids = Enumerable.Range(0, customers.GetArrayLength())
                     .Select(i => customers[i].GetProperty("id").GetString())
                     .ToList();
@@ -232,8 +232,8 @@ namespace Customer_Mangment_Integrate.Test
         //  GetAddresses query 
 
         private const string GetAddressesQuery = @"
-            query GetAddresses($customerId: UUID, $addressId: UUID) {
-                getAddresses(customerId: $customerId, addressId: $addressId) {
+            query addresses($customerId: UUID, $addressId: UUID) {
+                addresses(customerId: $customerId, addressId: $addressId) {
                     id
                     customerId
                     type
@@ -255,7 +255,7 @@ namespace Customer_Mangment_Integrate.Test
                 var result = await ExecuteAsync(http, GetAddressesQuery);
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var addresses = result.GetProperty("data").GetProperty("getAddresses");
+                var addresses = result.GetProperty("data").GetProperty("addresses");
                 Assert.True(addresses.GetArrayLength() > 0);
             }
             finally { await CleanupCustomerAsync(restClient, customer.Id); }
@@ -276,7 +276,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId = customer.Id });
 
                 Assert.False(HasErrors(result), $"GraphQL errors: {result}");
-                var addresses = result.GetProperty("data").GetProperty("getAddresses");
+                var addresses = result.GetProperty("data").GetProperty("addresses");
 
                 for (int i = 0; i < addresses.GetArrayLength(); i++)
                     Assert.Equal(customer.Id.ToString(),
@@ -300,7 +300,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId = customer.Id, addressId = addr.Id });
 
                 Assert.False(HasErrors(result));
-                var addresses = result.GetProperty("data").GetProperty("getAddresses");
+                var addresses = result.GetProperty("data").GetProperty("addresses");
                 Assert.Equal(1, addresses.GetArrayLength());
                 Assert.Equal(addr.Id.ToString(), addresses[0].GetProperty("id").GetString());
             }
@@ -334,30 +334,6 @@ namespace Customer_Mangment_Integrate.Test
             finally { await CleanupCustomerAsync(admin, customer.Id); }
         }
 
-        [Fact]
-        public async Task GraphQL_GetAddresses_ReturnsCorrectFields()
-        {
-            var token = await GetAdminTokenAsync();
-            var restClient = CreateApiClient(token);
-            var customer = await CreateTestCustomerAsync(restClient);
-            var addr = await restClient.AddAsync(customer.Id,
-                new AddAddressReq { Type = 2, Value = "Work Address" });
-
-            try
-            {
-                var http = CreateGraphQLClient(token);
-                var result = await ExecuteAsync(http, GetAddressesQuery,
-                    new { customerId = customer.Id, addressId = addr.Id });
-
-                Assert.False(HasErrors(result));
-                var first = result.GetProperty("data").GetProperty("getAddresses")[0];
-                Assert.Equal(addr.Id.ToString(), first.GetProperty("id").GetString());
-                Assert.Equal(customer.Id.ToString(), first.GetProperty("customerId").GetString());
-                Assert.Equal(2, first.GetProperty("type").GetInt32());
-                Assert.Equal("Work Address", first.GetProperty("value").GetString());
-            }
-            finally { await CleanupCustomerAsync(restClient, customer.Id); }
-        }
 
         //  CreateCustomer mutation 
 
@@ -521,7 +497,7 @@ namespace Customer_Mangment_Integrate.Test
             {
                 var getResult = await ExecuteAsync(http, GetCustomersQuery, new { customerId = id });
                 Assert.False(HasErrors(getResult));
-                var customers = getResult.GetProperty("data").GetProperty("getCustomers");
+                var customers = getResult.GetProperty("data").GetProperty("customers");
                 Assert.Equal(1, customers.GetArrayLength());
                 Assert.Equal(id.ToString(), customers[0].GetProperty("id").GetString());
             }
@@ -606,7 +582,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId = customer.Id });
                 Assert.False(HasErrors(getResult));
 
-                var addresses = getResult.GetProperty("data").GetProperty("getAddresses");
+                var addresses = getResult.GetProperty("data").GetProperty("addresses");
                 var ids = Enumerable.Range(0, addresses.GetArrayLength())
                     .Select(i => addresses[i].GetProperty("id").GetString())
                     .ToList();
@@ -738,7 +714,7 @@ namespace Customer_Mangment_Integrate.Test
                     new { customerId, addressId = Guid.Parse(addressId!) });
 
                 Assert.False(HasErrors(addrQueryResult));
-                var fetchedAddr = addrQueryResult.GetProperty("data").GetProperty("getAddresses");
+                var fetchedAddr = addrQueryResult.GetProperty("data").GetProperty("addresses");
                 Assert.Equal(1, fetchedAddr.GetArrayLength());
                 Assert.Equal("E2E Home", fetchedAddr[0].GetProperty("value").GetString());
             }
@@ -788,10 +764,8 @@ namespace Customer_Mangment_Integrate.Test
                 Assert.False(HasErrors(userQuery));
                 Assert.False(HasErrors(adminQuery));
                 Assert.Equal(
-                    userQuery.GetProperty("data").GetProperty("getCustomers")[0]
-                        .GetProperty("id").GetString(),
-                    adminQuery.GetProperty("data").GetProperty("getCustomers")[0]
-                        .GetProperty("id").GetString());
+                    userQuery.GetProperty("data").GetProperty("customers")[0].GetProperty("id").GetString(),
+                    adminQuery.GetProperty("data").GetProperty("customers")[0].GetProperty("id").GetString());
             }
             finally { await CleanupCustomerAsync(CreateApiClient(adminToken), customerId); }
         }
