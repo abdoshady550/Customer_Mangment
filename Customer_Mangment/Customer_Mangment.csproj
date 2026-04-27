@@ -70,7 +70,6 @@
 
   <ItemGroup>
     <Folder Include="Docker\" />
-    <Folder Include="Protos\" />
   </ItemGroup>
 
   <ItemGroup>

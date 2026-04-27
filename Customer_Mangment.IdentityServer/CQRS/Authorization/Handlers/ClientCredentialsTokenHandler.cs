@@ -46,7 +46,6 @@ namespace Customer_Mangment.IdentityServer.CQRS.Authorization.Handlers
                 resources.Add(resource);
             identity.SetResources(resources);
 
-            // ✅ Required so OpenIddict knows which claims to include in the token
             identity.SetDestinations(claim => claim.Type switch
             {
                 Claims.Subject or Claims.Name

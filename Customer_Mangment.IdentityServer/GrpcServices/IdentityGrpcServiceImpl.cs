@@ -5,10 +5,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Customer_Mangment.IdentityServer.GrpcServices;
 
-public sealed class IdentityGrpcServiceImpl(
-    UserManager<ApplicationUser> userManager,
-    SignInManager<ApplicationUser> signInManager,
-    ILogger<IdentityGrpcServiceImpl> logger)
+public sealed class IdentityGrpcServiceImpl(UserManager<ApplicationUser> userManager,
+                                            SignInManager<ApplicationUser> signInManager,
+                                            ILogger<IdentityGrpcServiceImpl> logger)
     : IdentityGrpcService.IdentityGrpcServiceBase
 {
     public override async Task<UserResponse> GetUserById(

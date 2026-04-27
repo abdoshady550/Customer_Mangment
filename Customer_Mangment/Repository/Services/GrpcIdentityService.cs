@@ -18,11 +18,10 @@ public sealed class GrpcIdentityService(
             new ValidateUserRequest { Email = email, Password = password });
 
         if (!response.Success)
-            return LocalizedError.Conflict(localizer,
-                "Password_Incorrect", ResourceKeys.Validation.PasswordRequired);
+            return LocalizedError.Unauthorized(localizer,
+                "Password_Incorrect", ResourceKeys.Auth.Unauthorized);
 
-        return new AppUserDto(response.UserId, response.Email,
-            response.Roles.ToList(), []);
+        return new AppUserDto(response.UserId, response.Email, response.Roles.ToList(), []);
     }
 
     public async Task<Model.Results.Result<AppUserDto>> GetUserByIdAsync(string userId)
@@ -34,8 +33,7 @@ public sealed class GrpcIdentityService(
             return LocalizedError.NotFound(localizer,
                 "User_Not_Found", ResourceKeys.User.NotFound, userId);
 
-        return new AppUserDto(response.UserId, response.Email,
-            response.Roles.ToList(), []);
+        return new AppUserDto(response.UserId, response.Email, response.Roles.ToList(), []);
     }
 
     public async Task<bool> IsInRoleAsync(string userId, string role)
@@ -43,8 +41,7 @@ public sealed class GrpcIdentityService(
         var response = await grpcClient.GetUserByIdAsync(
             new GetUserByIdRequest { UserId = userId });
 
-        return response.Found &&
-               response.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+        return response.Found && response.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
     }
 
     public Task<bool> AuthorizeAsync(string userId, string? policyName)

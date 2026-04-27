@@ -12,7 +12,7 @@ using Wolverine;
 
 namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 {
-    public class CreateAddressHandler(IGenericRepo<User> userRepo,
+    public class CreateAddressHandler(IIdentityService identityService,
                                              IGenericRepo<Customer> customerRepo,
                                              IGenericRepo<Address> adressRepo,
                                              ISyncGenericRepo<Address> SyncadressRepo,
@@ -23,7 +23,7 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
                                              ILogger<CreateAddressHandler> logger) : IAppRequestHandler<AddAddressCommand, Model.Results.Result<AddressDto>>
 
     {
-        private readonly IGenericRepo<User> _userRepo = userRepo;
+        private readonly IIdentityService _identityService = identityService;
         private readonly IGenericRepo<Customer> _customerRepo = customerRepo;
         private readonly IGenericRepo<Address> _adressRepo = adressRepo;
         private readonly ISyncGenericRepo<Address> _syncadressRepo = SyncadressRepo;
@@ -35,13 +35,9 @@ namespace Customer_Mangment.CQRS.Customers.Addresses.Commands.CreateAddress
 
         public async Task<Model.Results.Result<AddressDto>> Handle(AddAddressCommand request, CancellationToken ct)
         {
-            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == request.UserId, ct);
+            var userResult = await _identityService.GetUserByIdAsync(request.UserId);
+            if (userResult.IsError) return userResult.Errors;
 
-            if (user == null)
-            {
-                _logger.LogWarning("User with id {UserId} not found", request.UserId);
-                return LocalizedError.Unauthorized(_localizer, "UserNotFound", ResourceKeys.User.NotFound, request.UserId);
-            }
             var customer = await _customerRepo.Include(c => c.Addresses).FirstOrDefaultAsync(c => c.Id == request.CustomerId, ct);
             if (customer == null)
             {
