@@ -118,7 +118,9 @@ namespace Customer_Mangment
 
             // Services
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
-            builder.Services.AddScoped<IIdentityService, IdentityService>();
+            //builder.Services.AddScoped<IIdentityService, IdentityService>();
+            builder.Services.AddScoped<IIdentityService, GrpcIdentityService>();
+
             builder.Services.AddScoped<ICustomerMapper, CustomerMapper>();
             builder.Services.AddScoped<ICustomerReportBuilder, CustomerReportBuilder>();
             builder.Services.AddHttpClient<RabbitMQ_ManagementController>(client =>
@@ -142,6 +144,9 @@ namespace Customer_Mangment
             builder.Services.AddCaching(builder.Configuration);
             //GraphQL
             builder.Services.AddGraphQL();
+            //gRPC
+            builder.Services.AddGrpcClients(builder.Configuration);
+
 
             var app = builder.Build();
 

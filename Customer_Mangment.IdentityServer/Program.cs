@@ -1,5 +1,6 @@
 using Customer_Mangment.IdentityServer.Data;
 using Customer_Mangment.IdentityServer.Extensions;
+using Customer_Mangment.IdentityServer.GrpcServices;
 using Customer_Mangment.IdentityServer.Middlewares;
 using Customer_Mangment.IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
@@ -75,6 +76,10 @@ builder.Services.AddAppLocalization();
 //rate limiting
 builder.Services.AddRateLimiting();
 
+// gRPC
+builder.Services.AddGrpc();
+
+
 
 var app = builder.Build();
 
@@ -91,6 +96,7 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.MapGrpcService<IdentityGrpcServiceImpl>();
 app.MapControllers();
 
 app.Run();

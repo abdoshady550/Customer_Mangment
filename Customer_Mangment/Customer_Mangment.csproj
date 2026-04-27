@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+ <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
+ <PackageReference Include="Grpc.Net.ClientFactory" Version="2.76.0" />
  <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.1.0" />
 <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.1" />
 <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
@@ -68,9 +70,11 @@
 
   <ItemGroup>
     <Folder Include="Docker\" />
+    <Folder Include="Protos\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Customer_Mangment.Contracts\Customer_Mangment.Contracts.csproj" />
     <ProjectReference Include="..\Customer_Mangment.ServiceDefaults\Customer_Mangment.ServiceDefaults.csproj" />
   </ItemGroup>
 
