@@ -1,6 +1,7 @@
 using Customer_Mangment.Controllers;
 using Customer_Mangment.CQRS.Customers.Mappers;
 using Customer_Mangment.Data;
+using Customer_Mangment.Endpoints.Customer;
 using Customer_Mangment.Extensions;
 using Customer_Mangment.Hubs;
 using Customer_Mangment.Middlewares;
@@ -23,6 +24,8 @@ using Microsoft.EntityFrameworkCore;
 using Quartz;
 using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Customer_Mangment
@@ -146,7 +149,11 @@ namespace Customer_Mangment
             builder.Services.AddGraphQL();
             //gRPC
             builder.Services.AddGrpcClients(builder.Configuration);
-
+            //WebhookClient
+            builder.Services.AddHttpClient("WebhookClient", client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
 
             var app = builder.Build();
 
@@ -205,7 +212,30 @@ namespace Customer_Mangment
             app.UseResponseCaching();
 
             app.MapGraphQL();
+            app.MapCustomerGroupEndpoints();
+            // Example receiver endpoint
+            app.MapPost("/my-webhook", async (HttpRequest request) =>
+            {
+                var signature = request.Headers["X-Webhook-Signature"]
+                    .ToString().Replace("sha256=", "");
 
+                var body = await new StreamReader(request.Body).ReadToEndAsync();
+
+                var expectedSignature = Convert.ToHexString(
+                    HMACSHA256.HashData(
+                        Encoding.UTF8.GetBytes("YOUR_SECRET_HERE"),
+                        Encoding.UTF8.GetBytes(body)
+                    )).ToLowerInvariant();
+
+                if (!CryptographicOperations.FixedTimeEquals(
+                    Convert.FromHexString(signature),
+                    Convert.FromHexString(expectedSignature)))
+                {
+                    return Results.Unauthorized();
+                }
+
+                return Results.Ok();
+            });
             app.MapControllers();
 
             app.MapDefaultEndpoints();

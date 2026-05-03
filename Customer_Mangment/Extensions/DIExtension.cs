@@ -5,9 +5,11 @@ using Customer_Mangment.MultiTenancy;
 using Customer_Mangment.Repository;
 using Customer_Mangment.Repository.Interfaces;
 using Customer_Mangment.Repository.Interfaces.Audit;
+using Customer_Mangment.Repository.Interfaces.Webhooks;
 using Customer_Mangment.Repository.Services;
 using Customer_Mangment.Repository.Services.AuditServices;
 using Customer_Mangment.Repository.Services.AuditServices.MongoDB;
+using Customer_Mangment.Repository.Services.Webhooks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -81,6 +83,8 @@ namespace Customer_Mangment.Extensions
 
             services.AddScoped<IHistoryService, SqlHistoryService>();
             services.AddScoped(typeof(ISyncGenericRepo<>), typeof(SyncMongoGenericRepo<>));
+            services.AddScoped<IWebhookDispatcher, WebhookDispatcher>();
+
 
 
             return services;

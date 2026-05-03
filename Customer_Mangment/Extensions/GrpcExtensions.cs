@@ -1,4 +1,5 @@
 ﻿using Customer_Mangment.Contracts.Grpc;
+using ProtoBuf.Grpc.ClientFactory;
 
 namespace Customer_Mangment.Extensions;
 
@@ -11,7 +12,7 @@ public static class GrpcExtensions
         var identityAddress = configuration["Auth:Authority"]
             ?? throw new InvalidOperationException("Auth:Authority required.");
 
-        services.AddGrpcClient<IdentityGrpcService.IdentityGrpcServiceClient>(o =>
+        services.AddCodeFirstGrpcClient<IIdentityGrpcService>(o =>
         {
             o.Address = new Uri(identityAddress);
         })

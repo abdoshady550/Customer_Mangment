@@ -72,8 +72,7 @@ public sealed class TenantResolutionMiddleware(
             || path.StartsWith("/scalar", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/hubs", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/graphqL/", StringComparison.OrdinalIgnoreCase)
-
-
+            || path.StartsWith("/api/webhooks", StringComparison.OrdinalIgnoreCase)
             ;
     }
 }
@@ -83,7 +82,7 @@ public sealed class TenantClaimValidationMiddleware(RequestDelegate next,
 {
     private static readonly HashSet<string> _bypassPaths = new(StringComparer.OrdinalIgnoreCase)
     {
-        "/health", "/alive", "/api/auth", "/openapi", "/swagger", "/scalar", "/hubs"
+        "/health", "/alive", "/api/auth", "/openapi", "/swagger", "/scalar", "/hubs","/webhooks"
     };
 
     public async Task InvokeAsync(HttpContext context)
